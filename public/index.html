@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>virtual-desktop / split rendering lab</title>
+  <link rel="stylesheet" href="/style.css" />
+  <script type="module" src="/viewer.js"></script>
+</head>
+<body>
+  <header><div class="brand"><span class="brand-icon">v.</span><div>virtual-desktop<small>SPLIT RENDERING LAB</small></div></div><span class="badge">v0 / local experiment</span></header>
+  <div class="layout">
+    <aside>
+      <h1>Execution sessions</h1>
+      <p>Page logic in the cloud.<br />Pixels on this device.</p>
+      <label for="admin-token">Local management token</label>
+      <input id="admin-token" type="password" value="dev-local" autocomplete="off" />
+      <button id="create-session" class="primary">+ Create session</button>
+      <div id="sessions" aria-label="Sessions"></div>
+      <div class="scope"><strong>Protocol proof of concept</strong><p>Trusted demo application and limited layout. General websites and browser compatibility are future work.</p></div>
+    </aside>
+    <main>
+      <div class="toolbar"><div><span class="eyebrow">CLIENT DRAWING SURFACE</span><h2 id="session-title">Create a session to begin</h2></div><div class="status"><i></i><span id="mode">Read only</span></div></div>
+      <div class="actions"><button id="run-agent" disabled>Run example agent</button><button id="take-control" disabled>Take control</button><button id="release-control" disabled>Return to agent</button><button id="save-close" disabled>Save &amp; close</button><button id="resume" disabled>Resume profile</button></div>
+      <div class="metrics"><div><span>TRANSPORT</span><strong>Draw commands</strong></div><div><span>LAST UPDATE</span><strong id="frame-kind">—</strong></div><div><span>FRAME / PAYLOAD</span><strong id="frame-stats">—</strong></div><div><span>CLOUD PIXEL ENGINE</span><strong>None in v0</strong></div></div>
+      <div class="canvas-shell"><canvas id="desktop" width="960" height="720" aria-label="Remote application rendered locally"></canvas><div id="empty">Your session will appear here</div></div>
+      <form id="input-form"><label for="remote-input">Selected remote input</label><input id="remote-input" placeholder="Take control, then click an input in the canvas" disabled /><button id="send-input" disabled>Set value</button></form>
+      <div class="footer"><span id="notice" role="status">Viewer connects with observe capability. Taking control revokes the agent epoch.</span><span id="connection">Disconnected</span></div>
+    </main>
+  </div>
+</body>
+</html>
