@@ -1,0 +1,8 @@
+node_modules/
+.cache/
+.data/
+test-results/
+*.log
+.env
+.test-data-*/
+.benchmark-data-*/

@@ -1,0 +1,26 @@
+{
+  "name": "virtual-desktop",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Agent session and client-side drawing protocol proof of concept",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "node --test test/*.test.js",
+    "test:e2e": "node --test test/e2e/*.test.js",
+    "bench": "node scripts/benchmark.js",
+    "demo:agent": "node scripts/agent-demo.js",
+    "check": "node scripts/check.js"
+  },
+  "dependencies": {
+    "linkedom": "0.18.14",
+    "yoga-layout": "3.2.1"
+  },
+  "devDependencies": {
+    "@napi-rs/canvas": "1.0.13",
+    "playwright": "1.64.1"
+  }
+}
