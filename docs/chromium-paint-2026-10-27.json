@@ -1,0 +1,329 @@
+{
+  "version": 1,
+  "recordedAt": "2026-10-27T05:05:30.413Z",
+  "environment": {
+    "platform": "macOS arm64",
+    "hardware": "Apple M4",
+    "node": "v24.21.0",
+    "browser": {
+      "product": "Chrome/156.0.8078.48",
+      "revision": "@d0c02bfad08ec92a6ffcf989e53cd995e6381a4c"
+    },
+    "canvasKit": "0.42.0/full"
+  },
+  "command": "CHROMIUM_EXECUTABLE_PATH=/Applications/Google Chrome.app/Contents/MacOS/Google Chrome npm run experiment:paint -- --serve",
+  "fixture": {
+    "viewport": {
+      "width": 960,
+      "height": 720
+    },
+    "fontBytes": 21232,
+    "fontSha256": "c52e024b0e36b06ccf319a934862675adbbdc1aac76e66cb60fb718f05426637"
+  },
+  "acceptance": {
+    "serverRasterBypassed": false,
+    "nativePicturesCaptured": true,
+    "traceComplete": true,
+    "explanation": "Stock Chromium still runs its normal rendering pipeline. SKPs are debug exports of native paint records, not evidence of a raster bypass.",
+    "limitations": [
+      "Trace event absence is not proof that raster or draw work was absent.",
+      "Only pictures from renderer PIDs tied to the exact fixture URL by Chromium frame trace metadata are accepted. Browser UI pictures are excluded.",
+      "Snapshots without a stable explicit or enclosing UpdateLayer id remain recorded diagnostics and are not stacked as independent layers.",
+      "Layer records are debug artifacts, not a complete layer/property-tree or incremental resource protocol. Unchanged layers are carried into the after stage; layer removals are not reconciled.",
+      "SKP and font/image serialization compatibility must be verified by actual client replay; captured bytes alone do not prove visual fidelity."
+    ],
+    "clientReplayRendered": true,
+    "fixtureReplayPassed": false,
+    "engineSplitGate": "not-passed"
+  },
+  "stages": [
+    {
+      "name": "before",
+      "recordedPictures": 3,
+      "pictures": [
+        {
+          "bytes": 24621,
+          "sha256": "682b63778250d4667c06a2352dfad3b02e1d841e666ead526474b92de98af8f5",
+          "layerId": 8,
+          "pid": 2617,
+          "traceEventIndex": 4679
+        }
+      ],
+      "visual": {
+        "passed": true,
+        "meanAbsoluteChannelError": 0.30637152777777776,
+        "pixelsOver32Fraction": 0.005140335648148148,
+        "limits": {
+          "maxMeanAbsoluteChannelError": 3,
+          "maxPixelsOver32Fraction": 0.02
+        },
+        "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+      },
+      "regions": [
+        {
+          "selector": "h1",
+          "bounds": {
+            "x": 48,
+            "y": 75,
+            "width": 864,
+            "height": 55
+          },
+          "passed": false,
+          "meanAbsoluteChannelError": 1.368385241301908,
+          "pixelsOver32Fraction": 0.021254208754208755,
+          "limits": {
+            "maxMeanAbsoluteChannelError": 3,
+            "maxPixelsOver32Fraction": 0.02
+          },
+          "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+        },
+        {
+          "selector": "#description",
+          "bounds": {
+            "x": 48,
+            "y": 148,
+            "width": 864,
+            "height": 26
+          },
+          "passed": false,
+          "meanAbsoluteChannelError": 3.0363841405508074,
+          "pixelsOver32Fraction": 0.04972400284900285,
+          "limits": {
+            "maxMeanAbsoluteChannelError": 3,
+            "maxPixelsOver32Fraction": 0.02
+          },
+          "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+        },
+        {
+          "selector": "#count",
+          "bounds": {
+            "x": 84,
+            "y": 276.203125,
+            "width": 552,
+            "height": 105.59375
+          },
+          "passed": true,
+          "meanAbsoluteChannelError": 0.11717254580257042,
+          "pixelsOver32Fraction": 0.0031788351107465136,
+          "limits": {
+            "maxMeanAbsoluteChannelError": 3,
+            "maxPixelsOver32Fraction": 0.02
+          },
+          "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+        },
+        {
+          "selector": "#status",
+          "bounds": {
+            "x": 48,
+            "y": 534,
+            "width": 864,
+            "height": 26
+          },
+          "passed": true,
+          "meanAbsoluteChannelError": 1.019542378917379,
+          "pixelsOver32Fraction": 0.017895299145299144,
+          "limits": {
+            "maxMeanAbsoluteChannelError": 3,
+            "maxPixelsOver32Fraction": 0.02
+          },
+          "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+        },
+        {
+          "selector": "#increment",
+          "bounds": {
+            "x": 48,
+            "y": 458,
+            "width": 241.921875,
+            "height": 56
+          },
+          "passed": false,
+          "meanAbsoluteChannelError": 1.8257575757575757,
+          "pixelsOver32Fraction": 0.031508264462809916,
+          "limits": {
+            "maxMeanAbsoluteChannelError": 3,
+            "maxPixelsOver32Fraction": 0.02
+          },
+          "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+        }
+      ],
+      "referenceState": {
+        "count": "0",
+        "expectedCount": "0",
+        "passed": true
+      }
+    },
+    {
+      "name": "after",
+      "recordedPictures": 1,
+      "pictures": [
+        {
+          "bytes": 24709,
+          "sha256": "4dfed0c7b5e91521c01881714f6037e3872be2dac2a18310b5d10a45912aa17e",
+          "layerId": 8,
+          "pid": 2617,
+          "traceEventIndex": 8640
+        }
+      ],
+      "visual": {
+        "passed": true,
+        "meanAbsoluteChannelError": 0.33556278935185185,
+        "pixelsOver32Fraction": 0.005470196759259259,
+        "limits": {
+          "maxMeanAbsoluteChannelError": 3,
+          "maxPixelsOver32Fraction": 0.02
+        },
+        "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+      },
+      "regions": [
+        {
+          "selector": "h1",
+          "bounds": {
+            "x": 48,
+            "y": 75,
+            "width": 864,
+            "height": 55
+          },
+          "passed": false,
+          "meanAbsoluteChannelError": 1.368385241301908,
+          "pixelsOver32Fraction": 0.021254208754208755,
+          "limits": {
+            "maxMeanAbsoluteChannelError": 3,
+            "maxPixelsOver32Fraction": 0.02
+          },
+          "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+        },
+        {
+          "selector": "#description",
+          "bounds": {
+            "x": 48,
+            "y": 148,
+            "width": 864,
+            "height": 26
+          },
+          "passed": false,
+          "meanAbsoluteChannelError": 3.0363841405508074,
+          "pixelsOver32Fraction": 0.04972400284900285,
+          "limits": {
+            "maxMeanAbsoluteChannelError": 3,
+            "maxPixelsOver32Fraction": 0.02
+          },
+          "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+        },
+        {
+          "selector": "#count",
+          "bounds": {
+            "x": 84,
+            "y": 276.203125,
+            "width": 552,
+            "height": 105.59375
+          },
+          "passed": true,
+          "meanAbsoluteChannelError": 0.13294139093975024,
+          "pixelsOver32Fraction": 0.0032301066447908123,
+          "limits": {
+            "maxMeanAbsoluteChannelError": 3,
+            "maxPixelsOver32Fraction": 0.02
+          },
+          "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+        },
+        {
+          "selector": "#status",
+          "bounds": {
+            "x": 48,
+            "y": 534,
+            "width": 864,
+            "height": 26
+          },
+          "passed": false,
+          "meanAbsoluteChannelError": 1.6664737654320987,
+          "pixelsOver32Fraction": 0.026842948717948716,
+          "limits": {
+            "maxMeanAbsoluteChannelError": 3,
+            "maxPixelsOver32Fraction": 0.02
+          },
+          "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+        },
+        {
+          "selector": "#increment",
+          "bounds": {
+            "x": 48,
+            "y": 458,
+            "width": 241.921875,
+            "height": 56
+          },
+          "passed": false,
+          "meanAbsoluteChannelError": 1.8257575757575757,
+          "pixelsOver32Fraction": 0.031508264462809916,
+          "limits": {
+            "maxMeanAbsoluteChannelError": 3,
+            "maxPixelsOver32Fraction": 0.02
+          },
+          "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+        }
+      ],
+      "referenceState": {
+        "count": "1",
+        "expectedCount": "1",
+        "passed": true
+      }
+    }
+  ],
+  "trace": {
+    "records": 12088,
+    "producerBuffer": {
+      "requestedBytes": 33554432,
+      "source": "https://chromium.googlesource.com/chromium/src/+/156.0.8078.48/services/tracing/public/cpp/tracing_features.cc",
+      "launchArgumentObserved": true,
+      "effectiveBytes": null,
+      "explanation": "Requested producer shared-memory capacity; actual allocation is not measured. Central trace-buffer size is configured separately."
+    },
+    "dataLossOccurred": false,
+    "raster": {
+      "eventCount": 620,
+      "byName": {
+        "RasterizerTaskImpl::RunOnWorkerThread": 25,
+        "RasterTask": 25,
+        "GpuRasterBuffer::Playback": 25,
+        "RasterImplementation::RasterCHROMIUM": 25,
+        "RasterDecoderImpl::DoBeginRasterCHROMIUM": 104,
+        "RasterDecoderImpl::DoRasterCHROMIUM": 104,
+        "RasterDecoderImpl::DoRasterCHROMIUM::Deserializing": 104,
+        "RasterDecoderImpl::DoEndRasterCHROMIUM": 104,
+        "RasterDecoderImpl::DoEndRasterCHROMIUM::Flush": 104
+      },
+      "byPhase": {
+        "X": 620
+      }
+    },
+    "draw": {
+      "eventCount": 42,
+      "byName": {
+        "Display::DrawAndSwap": 18,
+        "DirectRenderer::DrawFrame": 12,
+        "DirectRenderer::DrawFrame ProcessForOverlays": 12
+      },
+      "byPhase": {
+        "X": 42
+      }
+    },
+    "interpretation": "Counts matching trace event records; begin/end records and nested slices may describe the same work. Unobserved events do not prove raster or draw work was bypassed."
+  },
+  "headlessProbe": {
+    "browser": "HeadlessChrome/153.0.8010.12",
+    "status": "unsupported",
+    "gatePassed": false,
+    "failure": {
+      "stage": "Target.createTarget",
+      "message": "cdpSession.send: Protocol error (Target.createTarget): BeginFrameControl is not supported on MacOS yet",
+      "code": null
+    }
+  },
+  "artifacts": {
+    "directory": "test-results/chromium-paint",
+    "trace": "trace.json",
+    "capture": "capture.json",
+    "replay": "replay.json",
+    "localReplayImage": "replay-lab.png"
+  },
+  "scope": "Trusted single-content-layer fixture only; no server raster bypass, general resource protocol, image/iframe/Canvas/WebGL support or browser capacity claim."
+}

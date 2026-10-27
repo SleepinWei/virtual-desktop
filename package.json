@@ -13,7 +13,9 @@
     "test:e2e": "node --test test/e2e/*.test.js",
     "bench": "node scripts/benchmark.js",
     "demo:agent": "node scripts/agent-demo.js",
-    "check": "node scripts/check.js"
+    "check": "node scripts/check.js",
+    "experiment:paint": "node experiments/chromium-paint/run.js",
+    "experiment:headless": "node experiments/chromium-paint/run.js --headless-probe --output test-results/chromium-headless"
   },
   "dependencies": {
     "linkedom": "0.18.14",
@@ -21,6 +23,7 @@
   },
   "devDependencies": {
     "@napi-rs/canvas": "1.0.13",
+    "canvaskit-wasm": "0.42.0",
     "playwright": "1.64.1"
   }
 }

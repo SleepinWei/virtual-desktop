@@ -1,0 +1,19 @@
+@font-face { font-family: FixtureSans; src: url('/fonts/fixture-sans.otf') format('opentype'); font-display: block; }
+* { box-sizing: border-box; }
+html, body { margin: 0; width: 960px; min-height: 720px; background: #eef3fc; color: #15263f; font: 18px FixtureSans, sans-serif; -webkit-font-smoothing: antialiased; }
+main { padding: 40px 48px; }
+.label { margin: 0 0 18px; color: #516780; font-size: 12px; letter-spacing: 2px; }
+h1 { margin: 0 0 18px; font-size: 38px; font-weight: 600; }
+main > p { margin: 0 0 24px; }
+#panel { display: grid; grid-template-columns: 1fr 240px; align-items: center; height: 220px; margin: 32px 0; padding: 24px 36px; border-radius: 22px; background: #2563eb; color: white; }
+#panel span { display: block; }
+#count { display: block; font-size: 88px; line-height: 1.2; }
+.changed #panel { background: #16a34a; }
+.mark { display: grid; grid-template-columns: repeat(3, 36px); align-items: end; gap: 16px; height: 130px; }
+.mark span { background: #ffffff; border-radius: 8px 8px 0 0; }
+.mark span:nth-child(1) { height: 40px; }
+.mark span:nth-child(2) { height: 75px; }
+.mark span:nth-child(3) { height: 120px; }
+button { padding: 14px 20px; border: 1px solid #a9bbd5; border-radius: 9px; background: white; font: inherit; color: #15263f; }
+#status { margin-top: 20px; }
+footer { margin-top: 36px; font-size: 13px; color: #516780; }

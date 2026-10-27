@@ -56,6 +56,12 @@ BENCH_SESSIONS=8 BENCH_ITERATIONS=20 npm run bench
 
 这只衡量内置小应用的 HTTP/IPC、布局与指令生成路径，没有测真实网站、网络资源、完整浏览器或安全隔离成本。首次创建 p95 包含并发启动节流造成的排队；样本很少，不能当作 SLO。
 
+## Chromium 原生绘图实验
+
+`npm test` 另外覆盖 trace 原生字节提取、来源和阶段分类、损坏记录拒绝、空数据/错误像素拒绝、实验服务资源白名单及 headless 能力失败报告。这些纯分析测试不启动 Chromium，不能代替实际 SKP 解码与视觉验证。
+
+运行 `npm run experiment:paint` 验证本机浏览器的原生 SKP 捕获和客户端 CanvasKit 重放；`npm run experiment:headless` 配合显式 headless shell 二进制路径检测受控帧能力。版本耦合、输出和失败状态见 [CHROMIUM_PAINT.md](CHROMIUM_PAINT.md)。实验未作为当前 v0 CI 的兼容性保证，实际结果应记录浏览器版本和能力限制。
+
 ## 当前受限云端环境的结果
 
 实测结果见 [VALIDATION.md](VALIDATION.md)。浏览器 UI 测试如果无法运行，必须记录具体阻塞，不能将其改成 skip 并宣称端到端通过。

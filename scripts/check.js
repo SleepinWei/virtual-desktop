@@ -10,7 +10,7 @@ async function files(directory) {
   }
   return result;
 }
-const sources = [...await files('src'), ...await files('public'), ...await files('scripts'), ...await files('test')];
+const sources = [...await files('src'), ...await files('public'), ...await files('scripts'), ...await files('test'), ...await files('experiments')];
 for (const file of sources) {
   const check = spawnSync(process.execPath, ['--check', file], { encoding: 'utf8' });
   assert.equal(check.status, 0, `${file}: ${check.stderr}`);

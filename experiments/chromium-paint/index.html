@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Native paint replay lab</title>
+  <link rel="stylesheet" href="/lab.css">
+  <script defer src="/canvaskit.js"></script>
+  <script type="module" src="/replay.js"></script>
+</head>
+<body>
+  <header><span>virtual-desktop / native paint lab</span><strong id="state">Loading</strong></header>
+  <main>
+    <h1>Chromium paint, replayed locally.</h1>
+    <p>Original SKP bytes from Chromium's display list. CanvasKit creates pixels in this client.</p>
+    <p class="boundary">This export experiment does not disable the stock browser's server raster path. The engine split gate remains open.</p>
+    <div class="toolbar"><label>Capture stage <select id="stage"></select></label><label>Recorded picture <select id="picture"></select></label></div>
+    <div class="surface"><canvas id="skp" width="960" height="720" aria-label="Native SkPicture replay"></canvas></div>
+    <pre id="result" role="status"></pre>
+  </main>
+</body>
+</html>

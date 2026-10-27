@@ -1,6 +1,6 @@
 # 技术框架：云端执行，本地绘制
 
-状态：v0 协议 PoC；2026-10-27。本文取代先前研究报告中“完整 headless Chromium + 图像 viewer 为首版主路线”的选型结论。
+状态：v0 协议 PoC + 独立 Chromium 原生绘图实验；2026-10-27。本文取代先前研究报告中“完整 headless Chromium + 图像 viewer 为首版主路线”的选型结论。
 
 ## 1. 核心目标
 
@@ -87,6 +87,8 @@ Canvas getImageData、WebGL readPixels、依赖像素的脚本和视频等是关
 先验证本仓库的协议 PoC，再开展 Chromium/Skia 输出切分技术实验：识别 paint/display list 截取位置、图层与字体/图像资源依赖、浏览器版本耦合和稳定的序列化格式。CanvasKit 可以作为客户端执行图形 API 的候选，但不能直接假设内部 Chromium PaintRecord 可无损发送给它。
 
 通用浏览器 PoC 必须提交引擎改动、CPU/内存/线程 trace 与客户端视觉证据，证明实际绕过云端主要像素生成路径。单纯关闭 GPU、采用 headless、CDP 截图或 DOM 镜像均不构成该验收通过。
+
+当前独立 [Chromium 原生绘图实验](docs/CHROMIUM_PAINT.md) 开始验证真实 HTML/CSS/JavaScript 的 SKP 捕获与 CanvasKit 重放，并保留 native paint 来源和 raster trace。它使用普通浏览器，尚未改动或禁用 tile raster；不更新上述关卡结论，也没有替换 v0 生产入口。
 
 只有在同样任务成功率下，测得执行 worker 资源减少、传输和客户端负担可接受，才进入 100 活跃/1,000 冷 profile 的容量阶段。JS/DOM 内存仍保留；不能把降低显示带宽直接当作浏览器内存同比下降。
 

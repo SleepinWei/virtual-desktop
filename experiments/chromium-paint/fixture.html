@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Native Chromium paint fixture</title>
+  <link rel="stylesheet" href="/fixture.css">
+  <script defer src="/fixture.js"></script>
+</head>
+<body>
+  <main>
+    <p class="label">REAL HTML · CSS GRID · PAGE JAVASCRIPT</p>
+    <h1>Chromium → SKP → CanvasKit</h1>
+    <p id="description">真实网页绘图记录 · The pixels are replayed on the client.</p>
+    <section id="panel">
+      <div><span>Page counter</span><strong id="count">0</strong></div>
+      <div class="mark" aria-hidden="true"><span></span><span></span><span></span></div>
+    </section>
+    <button id="increment">Increment in Chromium</button>
+    <p id="status">Original page state</p>
+    <footer>A trusted, single-content-layer fixture. No images, iframe, Canvas or WebGL.</footer>
+  </main>
+</body>
+</html>

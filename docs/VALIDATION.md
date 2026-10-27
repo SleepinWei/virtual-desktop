@@ -1,12 +1,12 @@
-# v0 验证记录
+# 验证记录
 
 ## 当前本地验收
 
 2026-10-27，macOS arm64 / Apple M4，Node.js v24.21.0，Chrome 156.0.8078.48，Playwright 1.64.1。
 
-- `npm test`：16 项通过，0 失败、0 skip。
-- `npm run check`：18 个 JS 文件语法通过；服务端像素后端源码检查通过。
-- `CHROMIUM_EXECUTABLE_PATH='/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' npm run test:e2e`：3 项通过，0 失败、0 skip，约 7.1 秒。
+- `npm test`：36 项通过，0 失败、0 skip，包含 20 项新增绘图实验分析与边界检查。
+- `npm run check`：29 个 JS 文件语法通过；v0 服务端像素后端源码检查通过。
+- `CHROMIUM_EXECUTABLE_PATH='/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' npm run test:e2e`：3 项通过，0 失败、0 skip，约 5.7 秒。
 - 已人工检查生成的 `test-results/viewer.png`：示例 agent 与人工添加的任务、恢复后的计数器和两个会话可见。
 
 浏览器主流程验证真实 Canvas 像素变化、单步 delta、快速动作的合法 snapshot 回退、接管与归还、热切换和保存恢复后的持久区域像素一致性。另两项回归固定延迟响应次序，验证保存 A 期间切到 B 不会中断 B，以及迟到旧帧不会降低控制权 epoch。
@@ -16,6 +16,29 @@
 本轮同时修复了迟到 pointer 响应污染新会话输入选择、恢复结果抢占当前会话，以及示例 agent 跨接管继续使用新 epoch 的问题。示例 agent 的同批动作固定使用启动时 epoch。
 
 本地验收覆盖受限应用 PoC；真实网站与 Chromium/Skia 服务端输出拆分仍未实现。CI 在 main 推送或 PR 时重复执行语法、协议/集成和浏览器测试，具体运行结果以 GitHub Actions 为准。
+
+## Chromium 下一阶段实验
+
+同日、同机，Chrome 156.0.8078.48，CanvasKit 0.42.0/full。运行 `npm run experiment:paint -- --serve`，捕获浏览器与本地验证浏览器为独立进程，使用临时 profile；复现及边界见 [CHROMIUM_PAINT.md](CHROMIUM_PAINT.md)。结果摘要保存在 [chromium-paint-2026-10-27.json](chromium-paint-2026-10-27.json)。
+
+| 项目 | 结果 |
+| --- | --- |
+| 真实页面原生绘图记录 | 前后各 1 份最终 960×720 SKP，24,621 / 24,709 bytes，哈希不同 |
+| 来源 | 精确 fixture URL 的 renderer PID；同线程 UpdateLayer 将记录关联到 layer 8；排除 browser UI 小图 |
+| 本地重放 | CanvasKit 从原生字节解码并绘制，含中文和 JS 操作后的计数、颜色与状态变化 |
+| 完整 trace | 12,088 条记录，CDP 显式 `dataLossOccurred: false`；32 MiB producer 参数由实际 argv 确认 |
+| 常规像素路径 | 仍观察到 620 条匹配 raster、42 条匹配 draw 记录；它们不是唯一执行次数或 CPU 指标 |
+| 整图像素误差 | before / after 平均 RGB 绝对误差 0.3064 / 0.3356（0–255）；超 32 差值像素约 0.514% / 0.547% |
+| 严格视觉验收 | **未通过**：部分文字区域平滑差异超过独立区域容差；未放宽断言 |
+| 服务端 raster 绕过 | **未实现**，`serverRasterBypassed: false`，引擎关卡未通过 |
+
+系统字体对照出现 SKP 与阶段标记丢失。改用有许可的 21,232-byte 字体子集后，捕获到完整页面记录。进一步以相同 128 MiB central buffer 和相同自动化配置对照：默认 producer 仍报告丢数；请求 32 MiB producer 返回未丢数。实际分配量未测，不能据此推导运行内存成本或性能收益。
+
+默认系统字体平滑下，整图通过而中文等区域失败；显式灰度字体平滑减小差异，仍没有通过全部文字区域。客户端仅报告解码/绘制完成，视觉 gate 独立保留失败。后续需定制 CanvasKit 字体平滑构建并重新实测，不能把页面能看见当作完整视觉一致。
+
+headless shell 153.0.8010.12 的受控帧探针在 `Target.createTarget` 返回 `BeginFrameControl is not supported on MacOS yet`，保存 `unsupported` 报告并以状态 1 退出，没有创建非受控 target 回退。此时零 raster 记录来自未创建测量 target，不能当作绕过证据。
+
+下一步需要适配客户端字体栅格化，并在有足够空间的构建环境实现和验证 Chromium remote-paint 引擎改动。本机本轮起始可用磁盘约 29 GiB，未下载或编译完整 Chromium；没有提交未验证的 C++ 示意补丁。
 
 ## 历史云端环境
 
