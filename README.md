@@ -28,6 +28,8 @@ npm run test:e2e
 npm run bench
 ```
 
+`main` 推送和 PR 会自动执行语法、协议/集成和浏览器测试。E2E 截图与当前环境的验收结论见 [验证记录](docs/VALIDATION.md)。
+
 示例 agent 可以在没有打开 viewer 时完成填表、点击和读取结果：
 
 ```bash

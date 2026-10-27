@@ -13,6 +13,13 @@ async function api(path, credential, method = 'GET', payload) {
   return { data, bytes: new TextEncoder().encode(JSON.stringify(data)).byteLength };
 }
 function route(s, operation) { return `/api/sessions/${s.id}/${operation}`; }
+function isSelected(s, selectedGeneration) { return s === current && selectedGeneration === generation; }
+function mergeControl(s, control) {
+  // A frame requested before takeover can arrive after its newer control response.
+  if (control.epoch < s.epoch) return;
+  Object.assign(s, control);
+  if (s === current && s.owner !== 'human') selectedInput = null;
+}
 function controls() {
   const active = current?.state === 'ACTIVE';
   $('#run-agent').disabled = !active || current.owner !== 'agent';
@@ -38,12 +45,12 @@ function list() {
   });
 }
 async function poll(s, selectedGeneration) {
-  if (s !== current || selectedGeneration !== generation || s.state !== 'ACTIVE') return;
+  if (!isSelected(s, selectedGeneration) || s.state !== 'ACTIVE') return;
   try {
     const result = await api(`${route(s, 'frame')}${s.scene ? `?since=${s.scene.seq}` : ''}`, s.viewerToken);
-    if (selectedGeneration !== generation) return;
+    if (!isSelected(s, selectedGeneration) || s.state !== 'ACTIVE') return;
     const frame = result.data;
-    Object.assign(s, frame.control);
+    mergeControl(s, frame.control);
     if (frame.type !== 'unchanged') {
       s.scene = applyFrame(s.scene, frame);
       drawScene($('#desktop'), s.scene);
@@ -52,26 +59,27 @@ async function poll(s, selectedGeneration) {
     }
     $('#connection').textContent = `Connected · ${s.id.slice(0, 8)}`;
     controls();
-  } catch (error) { if (selectedGeneration === generation) { notice(error.message, true); $('#connection').textContent = 'Connection error'; } }
-  if (selectedGeneration === generation) setTimeout(() => poll(s, selectedGeneration), 350);
+  } catch (error) { if (isSelected(s, selectedGeneration) && s.state === 'ACTIVE') { notice(error.message, true); $('#connection').textContent = 'Connection error'; } }
+  if (isSelected(s, selectedGeneration) && s.state === 'ACTIVE') setTimeout(() => poll(s, selectedGeneration), 350);
 }
 function select(s) {
   current = s; generation++; selectedInput = null;
   $('#session-title').textContent = `Workspace ${sessions.indexOf(s) + 1}`;
   $('#remote-input').value = '';
   if (s.scene) drawScene($('#desktop'), s.scene);
-  else { const canvas = $('#desktop'); canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height); delete canvas.dataset.ready; }
+  else { const canvas = $('#desktop'); canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height); delete canvas.dataset.ready; delete canvas.dataset.seq; }
   list(); controls();
-  if (s.state === 'ACTIVE') poll(s, generation);
+  if (s.state === 'ACTIVE') { $('#connection').textContent = 'Connecting…'; poll(s, generation); }
   else $('#connection').textContent = 'Saved / no execution process';
 }
-async function perform(s, action, human = false) {
-  const { data } = await api(route(s, 'actions'), human ? s.humanToken : s.agentToken, 'POST', { epoch: s.epoch, actionId: crypto.randomUUID(), action });
+async function perform(s, action, human = false, epoch = s.epoch) {
+  const { data } = await api(route(s, 'actions'), human ? s.humanToken : s.agentToken, 'POST', { epoch, actionId: crypto.randomUUID(), action });
   return data;
 }
 function handler(selector, fn) {
   $(selector).addEventListener('click', async () => {
-    try { await fn(); } catch (error) { notice(error.message, true); }
+    const selectedGeneration = generation;
+    try { await fn(); } catch (error) { if (selectedGeneration === generation) notice(error.message, true); }
   });
 }
 handler('#create-session', async () => {
@@ -82,32 +90,39 @@ handler('#create-session', async () => {
   } finally { $('#create-session').disabled = false; }
 });
 handler('#run-agent', async () => {
-  const s = current;
-  await perform(s, { type: 'fill', selector: '#task-input', value: 'Submitted by the example agent' });
-  await perform(s, { type: 'click', selector: '#add-task' });
-  await perform(s, { type: 'click', selector: '#increment' });
-  notice('Agent filled the form, added a task, and incremented the counter.');
+  const s = current, epoch = s.epoch, selectedGeneration = generation;
+  await perform(s, { type: 'fill', selector: '#task-input', value: 'Submitted by the example agent' }, false, epoch);
+  await perform(s, { type: 'click', selector: '#add-task' }, false, epoch);
+  await perform(s, { type: 'click', selector: '#increment' }, false, epoch);
+  if (isSelected(s, selectedGeneration)) notice('Agent filled the form, added a task, and incremented the counter.');
 });
 handler('#take-control', async () => {
-  const s = current;
+  const s = current, selectedGeneration = generation;
   const { data } = await api(route(s, 'control'), s.humanToken, 'POST', { epoch: s.epoch, owner: 'human' });
-  Object.assign(s, data); controls(); notice('Human control acquired. Previous agent writes are rejected.');
+  mergeControl(s, data);
+  if (isSelected(s, selectedGeneration)) { controls(); notice('Human control acquired. Previous agent writes are rejected.'); }
 });
 handler('#release-control', async () => {
-  const s = current;
+  const s = current, selectedGeneration = generation;
   const { data } = await api(route(s, 'control'), s.humanToken, 'POST', { epoch: s.epoch, owner: 'agent' });
-  Object.assign(s, data); selectedInput = null; controls(); notice('Control returned. Agent must use the new epoch.');
+  mergeControl(s, data);
+  if (isSelected(s, selectedGeneration)) { controls(); notice('Control returned. Agent must use the new epoch.'); }
 });
 handler('#save-close', async () => {
   const s = current;
   const { data } = await api(route(s, 'release'), admin(), 'POST', { save: true });
-  Object.assign(s, data); generation++; list(); controls(); $('#connection').textContent = 'Saved / no execution process';
-  notice('Profile saved. Execution process has been released.');
+  Object.assign(s, data); list();
+  if (s === current) {
+    generation++; selectedInput = null; controls(); $('#connection').textContent = 'Saved / no execution process';
+    notice('Profile saved. Execution process has been released.');
+  }
 });
 handler('#resume', async () => {
   const old = current;
   const { data } = await api('/api/sessions', admin(), 'POST', { profileId: old.profileId });
-  sessions.splice(sessions.indexOf(old), 1, data); select(data); notice('Profile restored into a new execution process.');
+  sessions.splice(sessions.indexOf(old), 1, data);
+  if (old === current) { select(data); notice('Profile restored into a new execution process.'); }
+  else list();
 });
 $('#desktop').addEventListener('click', async event => {
   const s = current;
@@ -117,16 +132,21 @@ $('#desktop').addEventListener('click', async event => {
   const y = (event.clientY - rect.top) * s.scene.viewport.contentHeight / rect.height;
   const target = [...s.scene.targets].reverse().find(t => x >= t.x && x <= t.x + t.width && y >= t.y && y <= t.y + t.height);
   if (!target) return;
+  const selectedGeneration = generation, epoch = s.epoch;
   try {
-    await perform(s, { type: 'pointer', x, y, seq: s.scene.seq }, true);
+    await perform(s, { type: 'pointer', x, y, seq: s.scene.seq }, true, epoch);
+    if (!isSelected(s, selectedGeneration) || s.owner !== 'human' || s.epoch !== epoch) return;
     selectedInput = target.tag === 'input' ? target.selector : null;
     if (selectedInput) { $('#remote-input').value = target.value; $('#remote-input').focus(); }
     controls();
-  } catch (error) { notice(error.message, true); }
+  } catch (error) { if (isSelected(s, selectedGeneration)) notice(error.message, true); }
 });
 $('#input-form').addEventListener('submit', async event => {
   event.preventDefault();
   if (!selectedInput || current?.owner !== 'human') return;
-  try { await perform(current, { type: 'fill', selector: selectedInput, value: $('#remote-input').value }, true); notice('Remote input updated. Click Add task in the canvas to submit.'); }
-  catch (error) { notice(error.message, true); }
+  const s = current, selectedGeneration = generation;
+  try {
+    await perform(s, { type: 'fill', selector: selectedInput, value: $('#remote-input').value }, true);
+    if (isSelected(s, selectedGeneration)) notice('Remote input updated. Click Add task in the canvas to submit.');
+  } catch (error) { if (isSelected(s, selectedGeneration)) notice(error.message, true); }
 });

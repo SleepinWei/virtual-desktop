@@ -1,0 +1,67 @@
+{
+  "label": "Restricted trusted demo protocol PoC; not real-website browser capacity",
+  "recordedAt": "2026-10-26T16:31:54.004Z",
+  "environment": {
+    "node": "v24.22.1",
+    "platform": "linux",
+    "architecture": "x64",
+    "cpuModel": "unavailable"
+  },
+  "workload": {
+    "sessions": 8,
+    "actionsPerSession": 20,
+    "maxConcurrentStarts": 2,
+    "viewerAttached": false,
+    "measureIncludesHttpIpcAndLayout": true
+  },
+  "wallTimeMs": 1493.00253,
+  "results": {
+    "createMs": {
+      "samples": 8,
+      "min": 312.167877,
+      "mean": 695.145017625,
+      "p50": 588.638986,
+      "p95": 1065.921741,
+      "max": 1065.921741
+    },
+    "actionMs": {
+      "samples": 160,
+      "min": 4.279375000000073,
+      "mean": 11.838837581249999,
+      "p50": 10.915859000000182,
+      "p95": 21.161613999999872,
+      "max": 24.950538999999935
+    },
+    "snapshotBytes": {
+      "samples": 8,
+      "min": 3630,
+      "mean": 3630,
+      "p50": 3630,
+      "p95": 3630,
+      "max": 3630
+    },
+    "deltaBytes": {
+      "samples": 160,
+      "min": 1022,
+      "mean": 1023.7,
+      "p50": 1025,
+      "p95": 1025,
+      "max": 1025
+    },
+    "maxRssKiB": {
+      "samples": 8,
+      "min": 63620,
+      "mean": 64386.5,
+      "p50": 64364,
+      "p95": 65176,
+      "max": 65176
+    },
+    "currentRssBytes": null
+  },
+  "limitations": [
+    "maxRssKiB is per-worker lifetime peak; do not sum peaks as simultaneous measured RSS",
+    "Current RSS may be unavailable in restricted environments",
+    "Bytes are JSON response bodies; HTTP/TLS, website traffic, viewer client work and compression excluded",
+    "No Chromium, real websites or hostile-tenant security isolation in this benchmark"
+  ]
+}
