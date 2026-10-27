@@ -67,6 +67,8 @@ HEADLESS_SHELL_EXECUTABLE_PATH=/absolute/path/to/chrome-headless-shell npm run e
 
 ## 真正的下一关
 
+外置 APFS 构建环境和固定版本引擎补丁入口现位于 [Chromium 引擎构建与 picture-layer 实验](CHROMIUM_ENGINE.md)。这一步新增可关闭的 picture-layer 无 tile/quad 模式、正向 trace 证据和成对实验，完整引擎切分关卡仍未通过。
+
 需要匹配版本的 Chromium 源码构建，并实现显式 remote-paint 模式：在 Blink 完成真实 paint 记录后导出帧和资源；在 `LayerTreeHostImpl::PrepareTiles` / `TileManager::PrepareTiles` 调度像素工作之前切断常规 tile raster，同时维持 BeginFrame、提交/激活和 ACK 生命周期。直接跳过 `RasterTaskImpl::RunOnWorkerThread` 中的 Playback 会留下未初始化 tile 及状态机问题，不能作为可用实现。
 
 该改动必须同时提交引擎代码、构建版本、正常模式对照和 remote-paint 模式的 CPU/内存/线程 trace、本地视觉证据及不支持能力报告，才能更新 [技术框架中的关卡](../TECHNICAL_FRAMEWORK.md#8-通用浏览器路线与关卡)。本机磁盘资源不足时，应先准备可用构建机或大容量目录，不能把未编译的示意补丁当作完成。

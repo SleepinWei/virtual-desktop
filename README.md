@@ -9,6 +9,7 @@
 - [测试与后续 Codex 开发](docs/TESTING.md)
 - [实测结果与未验证项](docs/VALIDATION.md)
 - [Chromium 原生 SKP 与客户端重放实验](docs/CHROMIUM_PAINT.md)
+- [固定版本 Chromium 引擎构建与 picture-layer 补丁](docs/CHROMIUM_ENGINE.md)
 
 ## 运行
 

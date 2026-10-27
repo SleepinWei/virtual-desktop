@@ -38,6 +38,14 @@ export function producerLaunchArgs(producerBufferBytes) {
   return [`--enable-features=kPerfettoBackendParams:shared_memory_size_bytes/${producerBufferBytes}`];
 }
 
+export function captureLaunchArgs({ producerBufferBytes, remotePaint = false } = {}) {
+  if (typeof remotePaint !== 'boolean') throw new TypeError('remotePaint must be boolean');
+  const producer = producerLaunchArgs(producerBufferBytes);
+  const features = producer.map(argument => argument.slice('--enable-features='.length));
+  if (remotePaint) features.push('VirtualDesktopRemotePaint');
+  return ['--enable-automation', ...(features.length ? [`--enable-features=${features.join(',')}`] : [])];
+}
+
 function withoutPicturePayloads(value) {
   if (Array.isArray(value)) return value.map(withoutPicturePayloads);
   if (!value || typeof value !== 'object') return value;
@@ -81,6 +89,7 @@ export function extractPictures(trace) {
             layerEvidence: enclosing ? { source: 'enclosing UpdateLayer trace slice', eventIndex: enclosing.eventIndex,
               layerTreeId: enclosing.event.args.layerTreeId, args: structuredClone(enclosing.event.args) } : null,
             displayListId: displayListId ?? null,
+            sourceFrameNumber: Number.isInteger(args.source_frame_number) ? args.source_frame_number : null,
             layerKey: layerId != null ? `layer:${event.pid}:${layerId}`
               : displayListId != null ? `display-list:${event.pid}:${displayListId}`
                 : `unassociated:${eventIndex}:${itemPath.join('.')}`,
@@ -225,12 +234,13 @@ async function recordTrace(cdp, action) {
  * Capture before/after a real fixture button click using stock Chromium tracing.
  * No screenshot API, DOM reconstruction, or server-raster bypass is performed.
  */
-export async function capturePaint({ url, executablePath, outputDir, viewport = { width: 960, height: 720 }, producerBufferBytes }) {
+export async function capturePaint({ url, executablePath, outputDir, viewport = { width: 960, height: 720 }, producerBufferBytes, remotePaint = false }) {
   const fixtureUrl = loopbackUrl(url);
   const producerArgs = producerLaunchArgs(producerBufferBytes);
   // CDP Browser.getBrowserCommandLine requires this explicit instrumentation
   // flag. Both default and enlarged-buffer runs use it for a comparable control.
-  const launchArgs = ['--enable-automation', ...producerArgs];
+  const launchArgs = captureLaunchArgs({ producerBufferBytes, remotePaint });
+  if (remotePaint && !executablePath) throw new TypeError('remotePaint requires an explicit patched executablePath');
   if (typeof outputDir !== 'string' || !outputDir) throw new TypeError('outputDir is required');
   if (!Number.isInteger(viewport.width) || !Number.isInteger(viewport.height) || viewport.width < 1 || viewport.height < 1) {
     throw new TypeError('viewport width and height must be positive integers');
@@ -305,20 +315,24 @@ export async function capturePaint({ url, executablePath, outputDir, viewport = 
       stages.push({ name: stage.name, pictures: [...latestPictures.values()], recordedPictures, excludedPictures,
         observedPictureCount: observedPictures.length, trace: analyzeTrace(stage.events) });
     }
+    const producerFeature = producerArgs[0]?.slice('--enable-features='.length);
     const manifest = {
       version: 1, capturedAt: new Date().toISOString(), url: fixtureUrl, browser: browserInfo, viewport,
-      stages, provenance,
+      stages, provenance, remotePaintRequested: remotePaint,
       captureStrategy: 'One continuous trace after fixture navigation; viewport width pulse forces baseline repaint; a real #increment click creates the after state. Native User Timing marks assign stages by renderer timestamps.',
       trace: { path: 'trace.json', categories: TRACE_CATEGORIES, config: TRACE_CONFIG,
         producerBuffer: { requestedBytes: producerBufferBytes ?? null, source: PRODUCER_BUFFER_SOURCE,
-          launchArgumentObserved: producerArgs.length > 0 && commandLine.arguments?.includes(producerArgs[0]) === true,
+          launchArgumentObserved: Boolean(producerFeature && commandLine.arguments?.some(argument =>
+            argument.startsWith('--enable-features=') && argument.slice('--enable-features='.length).split(',').includes(producerFeature))),
           effectiveBytes: null, explanation: 'Requested producer shared-memory capacity; actual allocation is not measured. Central trace-buffer size is configured separately.' },
         transport: 'ReturnAsStream', stages: traceStages, dataLossOccurred: traceResult.dataLossOccurred, ...analyzeTrace(traceEvents) },
       acceptance: {
         serverRasterBypassed: false,
         nativePicturesCaptured: stages.every(stage => stage.recordedPictures.length > 0 && stage.pictures.length > 0),
         traceComplete: traceResult.dataLossOccurred === false,
-        explanation: 'Stock Chromium still runs its normal rendering pipeline. SKPs are debug exports of native paint records, not evidence of a raster bypass.',
+        explanation: remotePaint
+          ? 'Experimental picture-layer mode requested. Engine trace, lifecycle and visual evidence must be assessed separately; the full server pixel-path gate remains unverified.'
+          : 'Stock Chromium still runs its normal rendering pipeline. SKPs are debug exports of native paint records, not evidence of a raster bypass.',
         limitations: [
           'Trace event absence is not proof that raster or draw work was absent.',
           'Only pictures from renderer PIDs tied to the exact fixture URL by Chromium frame trace metadata are accepted. Browser UI pictures are excluded.',

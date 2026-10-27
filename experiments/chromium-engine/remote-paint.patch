@@ -1,0 +1,244 @@
+diff --git a/cc/base/features.cc b/cc/base/features.cc
+index ab8882d..9bedc44 100644
+--- a/cc/base/features.cc
++++ b/cc/base/features.cc
+@@ -15,6 +15,8 @@
+ 
+ namespace features {
+ 
++BASE_FEATURE(kVirtualDesktopRemotePaint, base::FEATURE_DISABLED_BY_DEFAULT);
++
+ namespace {
+ std::atomic<bool> s_is_eligible_for_throttle_main_frame_to_60hz = false;
+ }  // namespace
+diff --git a/cc/base/features.h b/cc/base/features.h
+index 88a3749..ffb71f0 100644
+--- a/cc/base/features.h
++++ b/cc/base/features.h
+@@ -14,6 +14,10 @@
+ 
+ namespace features {
+ 
++// Experimental record-only picture layers for the virtual-desktop fixture.
++// Does not cover Canvas/WebGL/video or Viz display/background drawing.
++CC_BASE_EXPORT BASE_DECLARE_FEATURE(kVirtualDesktopRemotePaint);
++
+ CC_BASE_EXPORT BASE_DECLARE_FEATURE(kComputeRasterTranslateForExternalScale);
+ CC_BASE_EXPORT BASE_DECLARE_FEATURE(kSizeOopifEffectSurfacesAtExternalScale);
+ 
+diff --git a/cc/layers/picture_layer_impl.cc b/cc/layers/picture_layer_impl.cc
+index 0d868a4..f36c729 100644
+--- a/cc/layers/picture_layer_impl.cc
++++ b/cc/layers/picture_layer_impl.cc
+@@ -18,6 +18,7 @@
+ #include "base/no_destructor.h"
+ #include "base/system/sys_info.h"
+ #include "base/time/time.h"
++#include "base/trace_event/trace_event.h"
+ #include "base/trace_event/traced_value.h"
+ #include "build/build_config.h"
+ #include "cc/base/features.h"
+@@ -354,6 +355,27 @@ bool PictureLayerImpl::ComputeCheckerboardedNeedsRecord() {
+   return false;
+ }
+ 
++bool PictureLayerImpl::WillDraw(
++    DrawMode draw_mode,
++    viz::ClientResourceProvider* resource_provider) {
++  if (layer_tree_impl()->settings().remote_paint_only) {
++    return false;
++  }
++  return LayerImpl::WillDraw(draw_mode, resource_provider);
++}
++
++void PictureLayerImpl::AppendQuads(const AppendQuadsContext& context,
++                                   viz::CompositorRenderPass* render_pass,
++                                   AppendQuadsData* append_quads_data) {
++  if (layer_tree_impl()->settings().remote_paint_only) {
++    // Also reject direct calls, including the resourceless software path.
++    // An absent tile must never be replaced by checkerboard pixel work.
++    return;
++  }
++  TileBasedLayerImpl<PictureLayerTiling>::AppendQuads(context, render_pass,
++                                                      append_quads_data);
++}
++
+ void PictureLayerImpl::WillAppendQuads() {
+   set_produced_tile_last_append_quads(false);
+ }
+@@ -583,6 +605,19 @@ void PictureLayerImpl::UpdateRasterSourceInternal(
+ 
+   raster_source_->set_debug_name(DebugName());
+ 
++  if (layer_tree_impl()->settings().remote_paint_only && recording_updated &&
++      !pending_set) {
++    if (const auto* display_list = raster_source_->GetDisplayItemList().get()) {
++      // Record before the no-tiling branch below. SkPictureRecorder records
++      // operations, rather than rasterizing the page into a pixel surface.
++      // Serialization only runs when this trace category is enabled.
++      TRACE_EVENT_INSTANT("cc", "VirtualDesktop.RemotePaintRecord", "layer_id",
++                          id(), "source_frame_number",
++                          layer_tree_impl()->source_frame_number(), "snapshot",
++                          display_list->CreateTracedValueForRemotePaint());
++    }
++  }
++
+   UpdateDirectlyCompositedImageFromRasterSource();
+ 
+   if (pending_set) {
+@@ -615,6 +650,11 @@ void PictureLayerImpl::UpdateRasterSourceInternal(
+     layer_tree_impl()->set_needs_update_draw_properties();
+ 
+   if (!can_have_tilings) {
++    if (layer_tree_impl()->settings().remote_paint_only) {
++      TRACE_EVENT_INSTANT("cc", "VirtualDesktop.RemotePaintNoTiles", "layer_id",
++                          id(), "source_frame_number",
++                          layer_tree_impl()->source_frame_number());
++    }
+     RemoveAllTilings();
+     return;
+   }
+@@ -1662,6 +1702,9 @@ void PictureLayerImpl::ResetRasterScale() {
+ }
+ 
+ bool PictureLayerImpl::CanHaveTilings() const {
++  if (layer_tree_impl()->settings().remote_paint_only) {
++    return false;
++  }
+   if (!raster_source_)
+     return false;
+   if (solid_color()) {
+diff --git a/cc/layers/picture_layer_impl.h b/cc/layers/picture_layer_impl.h
+index c25d647..7652dae 100644
+--- a/cc/layers/picture_layer_impl.h
++++ b/cc/layers/picture_layer_impl.h
+@@ -53,6 +53,11 @@ class CC_EXPORT PictureLayerImpl
+ 
+   // LayerImpl overrides.
+   mojom::LayerType GetLayerType() const override;
++  bool WillDraw(DrawMode draw_mode,
++                viz::ClientResourceProvider* resource_provider) override;
++  void AppendQuads(const AppendQuadsContext& context,
++                   viz::CompositorRenderPass* render_pass,
++                   AppendQuadsData* append_quads_data) override;
+   std::unique_ptr<LayerImpl> CreateLayerImpl(
+       LayerTreeImpl* tree_impl) const override;
+   void CopyPropertiesTo(LayerImpl* layer) const override;
+diff --git a/cc/layers/picture_layer_impl_unittest.cc b/cc/layers/picture_layer_impl_unittest.cc
+index 4072fcf..eb189ff 100644
+--- a/cc/layers/picture_layer_impl_unittest.cc
++++ b/cc/layers/picture_layer_impl_unittest.cc
+@@ -330,6 +330,53 @@ class PictureLayerImplTest : public TestLayerTreeHostBase {
+   void TestQuadsForSolidColor(bool test_for_solid, bool partial_opaque);
+ };
+ 
++class RemotePaintPictureLayerImplTest : public PictureLayerImplTest {
++ public:
++  LayerTreeSettings CreateSettings() override {
++    auto settings = PictureLayerImplTest::CreateSettings();
++    settings.remote_paint_only = true;
++    return settings;
++  }
++};
++
++TEST_F(RemotePaintPictureLayerImplTest, PreservesRecordingWithoutTilings) {
++  SetupDefaultTrees(gfx::Size(128, 128));
++  for (auto* layer : {active_layer(), pending_layer()}) {
++    ASSERT_TRUE(layer->GetRasterSource());
++    EXPECT_TRUE(layer->GetRasterSource()->HasRecordings());
++    EXPECT_FALSE(layer->CanHaveTilings());
++    EXPECT_FALSE(layer->UpdateTiles());
++    EXPECT_EQ(0u, layer->num_tilings());
++    EXPECT_EQ(0u, layer->GPUMemoryUsageInBytes());
++  }
++}
++
++TEST_F(RemotePaintPictureLayerImplTest, ActivatesSuccessiveRecordings) {
++  SetupDefaultTrees(gfx::Size(128, 128));
++  ActivateTree();
++  for (int i = 0; i < 3; ++i) {
++    auto source = FakeRasterSource::CreateFilled(gfx::Size(128 + i, 128));
++    SetupPendingTreeWithInvalidation(source, Region(gfx::Rect(source->size())));
++    EXPECT_EQ(0u, pending_layer()->num_tilings());
++    ActivateTree();
++    EXPECT_EQ(source.get(), active_layer()->GetRasterSource());
++    EXPECT_EQ(0u, active_layer()->num_tilings());
++  }
++}
++
++TEST_F(RemotePaintPictureLayerImplTest, RejectsEveryPictureDrawBackend) {
++  SetupDefaultTrees(gfx::Size(128, 128));
++  for (auto mode : {DRAW_MODE_HARDWARE, DRAW_MODE_SOFTWARE,
++                    DRAW_MODE_RESOURCELESS_SOFTWARE}) {
++    EXPECT_FALSE(active_layer()->WillDraw(mode, nullptr));
++    auto render_pass = viz::CompositorRenderPass::Create();
++    AppendQuadsData data;
++    active_layer()->AppendQuads(AppendQuadsContext{mode, {}, false},
++                                render_pass.get(), &data);
++    EXPECT_TRUE(render_pass->quad_list.empty());
++  }
++}
++
+ // Legacy PictureLayerImplTest which forces SW rasterization. New tests should
+ // default to the more common GPU rasterization path.
+ class LegacySWPictureLayerImplTest : public PictureLayerImplTest {
+diff --git a/cc/paint/display_item_list.cc b/cc/paint/display_item_list.cc
+index 6f828b0..7e8c35f 100644
+--- a/cc/paint/display_item_list.cc
++++ b/cc/paint/display_item_list.cc
+@@ -240,6 +240,11 @@ void DisplayItemList::EmitTraceSnapshot() const {
+       "snapshot", CreateTracedValue(include_items));
+ }
+ 
++std::unique_ptr<base::trace_event::TracedValue>
++DisplayItemList::CreateTracedValueForRemotePaint() const {
++  return CreateTracedValue(false);
++}
++
+ std::string DisplayItemList::ToString() const {
+   base::trace_event::TracedValueJSON value;
+   AddToValue(&value, true);
+diff --git a/cc/paint/display_item_list.h b/cc/paint/display_item_list.h
+index 42ef9d4..33f5313 100644
+--- a/cc/paint/display_item_list.h
++++ b/cc/paint/display_item_list.h
+@@ -167,6 +167,11 @@ class CC_PAINT_EXPORT DisplayItemList
+ 
+   void EmitTraceSnapshot() const;
+ 
++  // A complete recording-only snapshot for experimental remote-paint tracing.
++  // Omits per-item debug snapshots and never creates a pixel surface.
++  std::unique_ptr<base::trace_event::TracedValue>
++  CreateTracedValueForRemotePaint() const;
++
+   gfx::Rect VisualRectForTesting(int index) const {
+     return visual_rects_[static_cast<size_t>(index)];
+   }
+diff --git a/cc/trees/layer_tree_settings.h b/cc/trees/layer_tree_settings.h
+index eb3c404..66661e6 100644
+--- a/cc/trees/layer_tree_settings.h
++++ b/cc/trees/layer_tree_settings.h
+@@ -60,6 +60,10 @@ class CC_EXPORT LayerTreeSettings {
+   // performed if one of the last |damaged_frame_limit| frames had no damage.
+   int damaged_frame_limit = 3;
+   bool can_use_lcd_text = true;
++  // Preserve picture recordings but create no tiles or picture draw quads.
++  // Immutable for the lifetime of this tree; only enabled for experimental
++  // Blink compositors. Other layer types and Viz display work are unaffected.
++  bool remote_paint_only = false;
+   bool gpu_rasterization_disabled = false;
+   int gpu_rasterization_msaa_sample_count = -1;
+   float gpu_rasterization_skewport_target_time_in_seconds = 0.2f;
+diff --git a/third_party/blink/renderer/platform/widget/compositing/layer_tree_settings.cc b/third_party/blink/renderer/platform/widget/compositing/layer_tree_settings.cc
+index 1d963f8..af73437 100644
+--- a/third_party/blink/renderer/platform/widget/compositing/layer_tree_settings.cc
++++ b/third_party/blink/renderer/platform/widget/compositing/layer_tree_settings.cc
+@@ -212,6 +212,8 @@ cc::LayerTreeSettings GenerateLayerTreeSettings(
+     float initial_device_scale_factor) {
+   const base::CommandLine& cmd = *base::CommandLine::ForCurrentProcess();
+   cc::LayerTreeSettings settings;
++  settings.remote_paint_only =
++      base::FeatureList::IsEnabled(::features::kVirtualDesktopRemotePaint);
+ 
+   Platform* platform = Platform::Current();
+ 

@@ -1,0 +1,48 @@
+{
+  "version": "156.0.8078.48",
+  "revision": "d0c02bfad08ec92a6ffcf989e53cd995e6381a4c",
+  "repository": "https://chromium.googlesource.com/chromium/src.git",
+  "depotToolsRepository": "https://chromium.googlesource.com/chromium/tools/depot_tools.git",
+  "depotToolsRevision": "3218cfc968b246bf2498fd13f707851a0b1cd408",
+  "patch": "remote-paint.patch",
+  "feature": "VirtualDesktopRemotePaint",
+  "engineSplitGate": "not-passed",
+  "files": {
+    "cc/base/features.h": {
+      "upstreamSha256": "149eafbbe558862ae0d32184d5a1261d11a132f2d49b2521915bd1da428104b7",
+      "patchedSha256": "1724f787e19fbea19c95f6f65c9895bf9d329b3ed11b27cffd83865e5ba17aeb"
+    },
+    "cc/base/features.cc": {
+      "upstreamSha256": "16f3fcda57535af7c92a4309e33a64037ce959d3592d50d4d24d60157e6afa90",
+      "patchedSha256": "4fc9c7c48a9b45b21c6fe34de0efa6fb58a4dd3995b2c9055bc7bcb8e6ce30e3"
+    },
+    "cc/trees/layer_tree_settings.h": {
+      "upstreamSha256": "42582cb158e3ed2e91a59e0f6daa276452a7fcd4c6eec49f0cc74e7eaa876566",
+      "patchedSha256": "8e74b66a67ee89fee25207f200cc8fb897f11f4fd21d614ab683e343bcf1a3dc"
+    },
+    "third_party/blink/renderer/platform/widget/compositing/layer_tree_settings.cc": {
+      "upstreamSha256": "2b7f8fa022b8e28c4b2173eebcc608c9ed6658a827afec0d36b5a83ce0e24769",
+      "patchedSha256": "5b9db110f35584720ec43dea2af3f90370af27b119677292bcd245ab4d7c591f"
+    },
+    "cc/layers/picture_layer_impl.h": {
+      "upstreamSha256": "50f1591112bd4db28f5fdb1150281436b0691b79f36be415423675190fee99a7",
+      "patchedSha256": "844ffd239f13308d533384bf8085e62f968f1741cede08845f0bf1213516eee1"
+    },
+    "cc/layers/picture_layer_impl.cc": {
+      "upstreamSha256": "92cd641635fdd538b5dffbba29a8bf0ddf4b8b57cd33515cfe7079ae1f3134e2",
+      "patchedSha256": "97828bb0884828e15dbfde95f197adee910ccd04774aef89362a5ae62be90a91"
+    },
+    "cc/layers/picture_layer_impl_unittest.cc": {
+      "upstreamSha256": "e225d313417c515f832c8967b8d18a74755eac17eaee7b06a8adc5ef6f086bdd",
+      "patchedSha256": "5741d625b98aaf0243bf46f6c9503a4aa992099965552a536b544d815ecd66ff"
+    },
+    "cc/paint/display_item_list.h": {
+      "upstreamSha256": "8796e36b51876a6a715e53939181a115fe9fbbc439e71600c311a3e9d73b3a35",
+      "patchedSha256": "6e19861a4f06ac26726c6f0b61cc7c3191a799c5e3fc27f03eb9f1f29f02538a"
+    },
+    "cc/paint/display_item_list.cc": {
+      "upstreamSha256": "e88babbfb156dfd3d2e0cce4734ee08ac6431daaa6b1a428c77e120a184cb181",
+      "patchedSha256": "7b2cd610936bffea1fda57fdcb94ce8874b14439682852a1a2cbb4312cf0eacd"
+    }
+  }
+}

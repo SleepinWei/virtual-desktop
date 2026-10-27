@@ -13,9 +13,11 @@
     "test:e2e": "node --test test/e2e/*.test.js",
     "bench": "node scripts/benchmark.js",
     "demo:agent": "node scripts/agent-demo.js",
-    "check": "node scripts/check.js",
+    "check": "node scripts/check.js && npm run test:engine-build",
     "experiment:paint": "node experiments/chromium-paint/run.js",
-    "experiment:headless": "node experiments/chromium-paint/run.js --headless-probe --output test-results/chromium-headless"
+    "experiment:headless": "node experiments/chromium-paint/run.js --headless-probe --output test-results/chromium-headless",
+    "experiment:engine": "node experiments/chromium-engine/run.js",
+    "test:engine-build": "python3 -B -m unittest discover -s experiments/chromium-engine -p '*_test.py'"
   },
   "dependencies": {
     "linkedom": "0.18.14",
