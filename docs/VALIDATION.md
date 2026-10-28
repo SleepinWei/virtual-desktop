@@ -1,5 +1,26 @@
 # 验证记录
 
+## Chromium 完整帧验收：2026-10-28 后续
+
+同一固定版本 Chromium 和匹配 Skia 的 CanvasKit，新增完整活跃树导出及本地合成，达到 **native-frame-candidate**。详细约定见 [CHROMIUM_FRAMES.md](CHROMIUM_FRAMES.md)，构建/资源指纹、各区域指标、反例与同构建旧模式回归见 [chromium-frames-2026-10-28.json](chromium-frames-2026-10-28.json)。
+
+| 验证项 | 本机结果 |
+| --- | --- |
+| 原生层与分组 | 6→5 个内容层、2 个 surface；实际删层已反映到完整成员列表 |
+| 合成变化 | 层序、平移及 7° 旋转、矩形 clip、重叠子层的组 opacity、180px wheel 滚动 |
+| 四阶段整图平均 RGB 误差 | 0.261 / 0.288 / 0.286 / 0.272；每阶段 7 个独立区域也全部通过 |
+| 被删层原位置 | 最终平均误差 0、异常像素 0，无旧层残留 |
+| 服务端 trace | 显式未丢数；raster 0、renderer DrawFrame 0、7 个正向 display skipped 标记 |
+| 客户端传输 | 4 帧 ACK 完整；迟到帧不覆盖新画面；损坏 SKP 保持旧画面且不 ACK |
+| SKP 复用 | 正向客户端 9 份唯一资源、207,309 bytes；逐帧全部引用合计 23 份、529,015 bytes，未计 HTTP/JSON/runtime/trace |
+| 回归测试 | 60 JS、5 Python 构建保护、50 个 JS 语法、11 C++、5 本地浏览器 E2E 通过 |
+
+旧单层三模式在当前构建重新通过：ordinary raster/draw 为 315/17，remote-paint 为 0/15，record-only-display 为 0/0，后者 16 个 skip 标记；全部视觉和交互/刷新/存储活性通过。这些是匹配记录的条数，不能当作执行次数或 CPU 收益。
+
+默认文字平滑反例的整图通过，但标题区域平均误差 5.070、异常像素 5.97%，仍判失败。显式 A8、固定字体后通过，原阈值保持 ≤3 / ≤2%，不代表任意默认文字策略兼容。
+
+此阶段通过 trace 批量捕获后重放，没有接入持续运行的 Chromium 会话；没有证明一般图片、iframe、IME、缩放/DPR、Canvas/WebGL/video/readback 或生产成本。`engineSplitGate: not-passed`、`serverRasterBypassed: false` 保留。CI 中两个依赖本机原生捕获的 E2E 在缺少输入时显式跳过；本机本轮 5 项全部实际执行。以下记录保留为此前里程碑。
+
 ## Chromium 引擎验收进展：2026-10-28
 
 macOS arm64 / Apple M4 / 16 GiB，外置 APFS 构建 Chromium 156.0.8078.48 固定提交。原生 `headless_shell`、`cc_unittests` 和 `viz_unittests` 构建成功；4 项 picture-layer 与 4 项 Viz 生命周期/普通绘制对照测试全部通过。匹配 Skia 的 CanvasKit CPU 构建完成，沿用原有逐区域阈值，三种模式的 before/after 画面和全部文字区域均通过。完整指纹、反例和指标见 [chromium-engine-2026-10-28.json](chromium-engine-2026-10-28.json)，复现及后续任务见 [CHROMIUM_ENGINE.md](CHROMIUM_ENGINE.md)。

@@ -175,7 +175,7 @@ export function partitionTrace(trace, { beforeStart, boundary, afterEnd }) {
   });
 }
 
-function loopbackUrl(input) {
+export function loopbackUrl(input) {
   const url = new URL(input);
   if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password ||
       !['127.0.0.1', 'localhost', '[::1]'].includes(url.hostname)) {
@@ -184,7 +184,7 @@ function loopbackUrl(input) {
   return url.href;
 }
 
-async function settlePage(page) {
+export async function settlePage(page) {
   await page.evaluate(async () => {
     await document.fonts.ready;
     await new Promise((resolveFrame, rejectFrame) => {
@@ -231,7 +231,7 @@ async function probeLifecycle(page, viewport, runId) {
     scope: 'Real input, scroll, reload and session liveness only; scrolled/multi-layer visual replay is not validated' };
 }
 
-async function recordTrace(cdp, action) {
+export async function recordTrace(cdp, action) {
   let tracing = false;
   try {
     await cdp.send('Tracing.start', {

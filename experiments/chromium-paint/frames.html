@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Native compositor frame fixture</title>
+  <link rel="stylesheet" href="/frames.css">
+  <script defer src="/frames.js"></script>
+</head>
+<body>
+  <header><h1>Native compositor frames</h1><p>Transforms, clipping, group opacity, scrolling and layer removal.</p></header>
+  <button id="advance">Next state</button><output id="phase">before</output>
+  <main id="scene">
+    <article id="back"><h2>Blue layer</h2><p>Order and transform</p></article>
+    <section id="group"><div id="red">Red child</div><div id="yellow">Yellow child</div></section>
+    <article id="removable">Remove this layer</article>
+  </main>
+  <aside id="scroller" aria-label="Scrollable native content"><div id="rows"></div></aside>
+</body>
+</html>

@@ -18,6 +18,7 @@
     "experiment:replay": "node experiments/chromium-paint/verify-saved.js",
     "experiment:headless": "node experiments/chromium-paint/run.js --headless-probe --output test-results/chromium-headless",
     "experiment:engine": "node experiments/chromium-engine/run.js",
+    "experiment:frames": "node experiments/chromium-engine/run-frames.js",
     "test:engine-build": "python3 -B -m unittest discover -s experiments/chromium-engine -p '*_test.py'"
   },
   "dependencies": {

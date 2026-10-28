@@ -6,6 +6,8 @@
 
 2026-10-28 已达到 **record-only-display-candidate**：三种模式的原生 SKP 一致、严格本地视觉比较通过；无绘制模式记录到明确的 native skip 标记，且真实输入、滚动、刷新和会话存储检查通过。完整记录见 [chromium-engine-2026-10-28.json](chromium-engine-2026-10-28.json)。
 
+同日后续已完成 **native-frame-candidate**：完整活跃树导出、原生层序/变换/裁剪/透明度分组、滚动、删层及本地 ACK 通道均通过固定页面验收。复现、协议和最新后续任务见 [CHROMIUM_FRAMES.md](CHROMIUM_FRAMES.md)，最新指纹与指标见 [chromium-frames-2026-10-28.json](chromium-frames-2026-10-28.json)。它仍使用批量 trace 捕获，尚未接入持续运行的 Chromium 会话。
+
 ## 构建
 
 本次构建根目录为 `/Volumes/Extreme-APFS/Builds`，位于外置 APFS SSD。路径不能含空格。工具先核对外置卷及 UUID，磁盘断开时拒绝向同名内置目录写入。源码、depot_tools、CIPD/vpython 缓存、临时目录、日志和输出均置于该根目录；Xcode/SDK 继续使用本机安装。
@@ -27,7 +29,7 @@ npm run experiment:engine
 
 `sync` 使用 shallow checkout，固定 revision，禁用自动 depot_tools 更新和工具指标上报。它也执行官方 `ensure_bootstrap`；单独运行过 gclient 的目录可能还没有 GN/autoninja 需要的 Python shim，可用 `build.py bootstrap` 补齐。后续同步遇到本地修改会拒绝覆盖；补丁输入哈希不符、已有不同 `args.gn` 或 `.gclient` 也会停止。
 
-默认构建使用 macOS arm64、release/component、`symbol_level=0`、保留 DCHECK、关闭 PGO 和远程执行，默认 2 个本地编译任务，本机实测可用 `--jobs 4`。构建目标包含 `headless_shell`、`cc_unittests` 和 `viz_unittests`。`objects` 只编译变动源文件和 C++ 测试对象；它成功不等于完整目标已链接或测试已运行。`test` 执行 4 项 cc、4 项 Viz 测试，全部成功后状态为 `engine-tests-complete`，并不代表整个 Chromium 测试集已跑完。
+默认构建使用 macOS arm64、release/component、`symbol_level=0`、保留 DCHECK、关闭 PGO 和远程执行，默认 2 个本地编译任务，本机实测可用 `--jobs 4`。构建目标包含 `headless_shell`、`cc_unittests` 和 `viz_unittests`。`objects` 只编译变动源文件和 C++ 测试对象；它成功不等于完整目标已链接或测试已运行。`test` 当前执行 7 项 cc/paint、4 项 Viz 测试，全部成功后状态为 `engine-tests-complete`，并不代表整个 Chromium 测试集已跑完。
 
 运行状态位于 `chromium/virtual-desktop-build-state.json`，日志位于 `logs/chromium-*.log`，输出位于 `chromium/src/out/VirtualDesktop`。失败保留增量构建；修复后重跑对应阶段。运行前检查状态和实际进程，不能同时启动两个写入同一 checkout 的作业。`status` 只读检查当前空间、SDK、版本及记录阶段。
 
@@ -81,7 +83,7 @@ npm run experiment:engine -- --root /Volumes/Extreme-APFS/Builds \
 
 ## 后续任务
 
-1. **帧与合成协议**：导出权威 frame id、完整层序/property tree、真实 scroll offsets、viewport/DPR、资源引用和层移除；实现 ACK、重连快照与过期帧拒绝。当前 debug SKP 的零滚动偏移与“保留旧层”策略不能用于通用页面。
+1. **持续帧与恢复**：固定二维 fixture 的完整帧、分组、真实 scroll offsets、资源引用/复用、删层、ACK 与过期帧保护已完成；接下来从批量 trace 转为运行中会话的持续输出，补断线恢复、资源失败恢复和 DPR/zoom。旧 `experiment:paint` 仍是 debug 单 picture 路线。
 2. **真实页面视觉与输入**：覆盖 transform/clip/opacity、多个图层、iframe、文本输入/IME、滚动和缩放，逐区域比较重放与本地原页面；扩展字体和图片资源版本/生命周期协议。
 3. **能力边界**：明确 Canvas/WebGL/video/readback 的拒绝或协作方案，避免这些路径静默恢复服务端像素生成。当前无显示模式不提供 screenshot/copy-output。
 4. **运行时与成本**：从 component 开发构建整理最小分发包；在无调试 trace 的对照下测 CPU、RSS、线程、网络字节及本地绘制成本。WASM heap 固定大小不等于进程 RSS，记录条数不等于 CPU 节省。

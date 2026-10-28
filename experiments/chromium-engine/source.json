@@ -34,15 +34,15 @@
     },
     "cc/layers/picture_layer_impl_unittest.cc": {
       "upstreamSha256": "e225d313417c515f832c8967b8d18a74755eac17eaee7b06a8adc5ef6f086bdd",
-      "patchedSha256": "5741d625b98aaf0243bf46f6c9503a4aa992099965552a536b544d815ecd66ff"
+      "patchedSha256": "356976ba8caa12a0987df7d8e231fd4fb4c2437e4d76f9a8104cb7cf7d828875"
     },
     "cc/paint/display_item_list.h": {
       "upstreamSha256": "8796e36b51876a6a715e53939181a115fe9fbbc439e71600c311a3e9d73b3a35",
-      "patchedSha256": "6e19861a4f06ac26726c6f0b61cc7c3191a799c5e3fc27f03eb9f1f29f02538a"
+      "patchedSha256": "477c6cce3d7a39d1f4ba19d74f8be329f119b6b624b4b28460a60e1ede954dc1"
     },
     "cc/paint/display_item_list.cc": {
       "upstreamSha256": "e88babbfb156dfd3d2e0cce4734ee08ac6431daaa6b1a428c77e120a184cb181",
-      "patchedSha256": "7b2cd610936bffea1fda57fdcb94ce8874b14439682852a1a2cbb4312cf0eacd"
+      "patchedSha256": "93c78622a86e5feb9f97d52ae2be25b6f806e34224a6d9a7eda1199ef7bc2e4c"
     },
     "components/viz/service/BUILD.gn": {
       "upstreamSha256": "15c828cd6a1bf5552b480b5574827359f8a3377ae4e9e8f7f1860511f827f875",
@@ -59,8 +59,25 @@
     "components/viz/service/display_embedder/output_surface_provider_impl.cc": {
       "upstreamSha256": "c9f9d5264b177991ee347970972ab8219f4e9cb41d07cb2111d7841c9a4d171e",
       "patchedSha256": "a4f378b30d48f67c432bab03598ce18a42d606bb6ec2658b0f35c58cd34f5888"
+    },
+    "cc/paint/display_item_list_unittest.cc": {
+      "upstreamSha256": "42673400361b98333520503067a618f2b1d9c559c1e8d0552f4460d19a0638ed",
+      "patchedSha256": "a5b0c2b28b08cbd62ab6c983835f3002613d95cc788f41e3c1bd0fd6df13979c"
+    },
+    "cc/trees/layer_tree_host_impl.cc": {
+      "upstreamSha256": "d96b905bf5e63dcd9e76707df8c119294651540d671bfc5b0ff14b03ad740efd",
+      "patchedSha256": "21118121c1aaba81ad0ab31b190a9d8449b661ae00bc4f2412af670e23822529"
+    },
+    "cc/trees/layer_tree_impl.cc": {
+      "upstreamSha256": "16ec1ac875aa36b063faecf1dde840db8a0f17cdb92c100f6f4720ed0b605924",
+      "patchedSha256": "880aaa24879e4a063319b99b339fe809a015aed6ffbfdd918b695b6bbc6d153b"
+    },
+    "cc/trees/layer_tree_impl.h": {
+      "upstreamSha256": "0d8014fa6b7af4e744e7911163f5e80de20b9799433d4681e0ef1bd3326faeba",
+      "patchedSha256": "6c804ec96d26e65aeb4b97cd08136fbe76ae79c794fd87853587fb3a55a0a450"
     }
   },
   "skiaRevision": "886e42fda11610a56dd1b22e8697e27f9d1e34f2",
-  "displayFeature": "VirtualDesktopRemotePaintNoDisplay"
+  "displayFeature": "VirtualDesktopRemotePaintNoDisplay",
+  "frameEvent": "VirtualDesktop.RemotePaintFrame"
 }

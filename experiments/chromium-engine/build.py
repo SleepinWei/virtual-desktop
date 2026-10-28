@@ -240,7 +240,10 @@ class Build:
         targets = ['obj/cc/base/base/features.o',
                    'obj/cc/paint/paint/display_item_list.o',
                    'obj/cc/cc/picture_layer_impl.o',
+                   'obj/cc/cc/layer_tree_impl.o',
+                   'obj/cc/cc/layer_tree_host_impl.o',
                    'obj/cc/cc_unittests/picture_layer_impl_unittest.o',
+                   'obj/cc/cc_unittests/display_item_list_unittest.o',
                    'obj/components/viz/service/service/display.o',
                    'obj/components/viz/service/service/output_surface_provider_impl.o',
                    'obj/components/viz/service/service/output_surface_unified.o',
@@ -254,6 +257,7 @@ class Build:
         self.head()
         self.run('cc-tests', [self.src / OUT / 'cc_unittests',
                  '--gtest_filter=RemotePaintPictureLayerImplTest.*:'
+                 'DisplayItemListTest.RemotePaint*:'
                  'LegacySWPictureLayerImplTest.UpdateTilesCreatesTilings',
                  '--test-launcher-jobs=1'])
         self.save(ccTestsPassed=True)

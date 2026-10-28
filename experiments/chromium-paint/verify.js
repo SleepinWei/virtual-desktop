@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { createCanvas, loadImage } from '@napi-rs/canvas';
 import { chromium } from 'playwright';
 
-async function decoded(bytes) {
+export async function decoded(bytes) {
   const image = await loadImage(bytes), canvas = createCanvas(image.width, image.height);
   const context = canvas.getContext('2d'); context.drawImage(image, 0, 0);
   return { width: image.width, height: image.height, data: context.getImageData(0, 0, image.width, image.height).data };
@@ -33,7 +33,7 @@ export function comparePixels(reference, actual) {
     scope: 'Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility' };
 }
 
-function crop(image, bounds) {
+export function crop(image, bounds) {
   const left = Math.max(0, Math.floor(bounds.x)), top = Math.max(0, Math.floor(bounds.y));
   const right = Math.min(image.width, Math.ceil(bounds.x + bounds.width)), bottom = Math.min(image.height, Math.ceil(bounds.y + bounds.height));
   const width = right - left, height = bottom - top;

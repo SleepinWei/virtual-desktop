@@ -1,0 +1,23 @@
+@font-face { font-family: Fixture; src: url('/fonts/fixture-sans.otf') format('opentype'); font-display: block; }
+* { box-sizing: border-box; }
+html, body { margin: 0; width: 960px; min-height: 720px; background: #e9eef7; font-family: Fixture, sans-serif; color: #17243b; -webkit-font-smoothing: antialiased; }
+header { position: absolute; left: 24px; top: 16px; }
+h1 { margin: 0; font-size: 30px; line-height: 42px; }
+header p { margin: 0; font-size: 16px; line-height: 28px; }
+#advance { position: absolute; left: 24px; top: 98px; width: 140px; height: 38px; border: 0; background: #17243b; color: white; font: 16px Fixture; }
+#phase { position: absolute; left: 184px; top: 106px; font-size: 18px; }
+#scene { position: absolute; left: 24px; top: 156px; width: 600px; height: 500px; overflow: hidden; background: white; }
+#back { position: absolute; left: 12px; top: 14px; width: 280px; height: 200px; background: #2b68ca; color: white; padding: 20px; will-change: transform; transform: translate(20px, 12px); z-index: 1; }
+h2 { font-size: 24px; margin: 8px 0; }
+#back p { font-size: 17px; }
+#group { position: absolute; left: 230px; top: 100px; width: 340px; height: 260px; opacity: .58; will-change: opacity; z-index: 2; }
+#red, #yellow { position: absolute; width: 220px; height: 170px; padding: 20px; font-size: 22px; will-change: transform; transform: translate(0, 0); }
+#red { left: 0; top: 0; background: #ef364d; color: white; }
+#yellow { left: 90px; top: 70px; background: #ffce42; }
+#removable { position: absolute; left: 32px; top: 356px; width: 220px; height: 100px; padding: 16px; background: #703cc2; color: white; font-size: 18px; will-change: transform; transform: translate(0, 0); }
+#scroller { position: absolute; left: 656px; top: 156px; width: 280px; height: 500px; overflow: auto; scrollbar-width: none; background: #c9d6ed; border: 4px solid #17243b; }
+.row { height: 80px; padding: 22px 16px; background: #e2f1e8; font-size: 22px; border-bottom: 2px solid #9cbca9; }
+.row:nth-child(even) { background: #c6e3d1; }
+body.changed #back { transform: translate(110px, 42px) rotate(7deg); z-index: 3; }
+body.changed #group { opacity: .72; transform: translate(18px, -18px); }
+body.changed #scene { width: 560px; }

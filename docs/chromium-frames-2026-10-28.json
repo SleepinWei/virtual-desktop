@@ -1,0 +1,2032 @@
+{
+  "version": 1,
+  "startedAt": "2026-10-28T09:08:58.087Z",
+  "status": "native-frame-candidate",
+  "engineSplitGate": "not-passed",
+  "serverRasterBypassed": false,
+  "build": {
+    "revision": "d0c02bfad08ec92a6ffcf989e53cd995e6381a4c",
+    "skiaRevision": "886e42fda11610a56dd1b22e8697e27f9d1e34f2",
+    "binary": "/Volumes/Extreme-APFS/Builds/chromium/src/out/VirtualDesktop/headless_shell",
+    "binarySha256": "f5c4f1a743604aebf5c98aa11192cae1298d1ca3e6dad8b8d711681bd57cda6b",
+    "artifacts": {
+      "cc_unittests": "41450968405da793539dda2ee25a8243752a2067fd2e9f25064f67c4c07a2293",
+      "headless_command_resources.pak": "4eecdc01a7158a78f68b6b20f1452586aa04d2ed2e1b56084c55d51ec3f31707",
+      "headless_lib_data.pak": "a18ca6b79b0f8f8e44a9732061debc04eff3930f8fb648071806c497688f3210",
+      "headless_lib_strings.pak": "f790c80e2a8cdf4196754ae26c4e2ab30f4f5036afc92218b2c1968f8aff5692",
+      "headless_shell": "f5c4f1a743604aebf5c98aa11192cae1298d1ca3e6dad8b8d711681bd57cda6b",
+      "icudtl.dat": "02a01b3188b6a41a756f7322fdb5e6b5ca6573b327b01dfc8ed662d571a6f769",
+      "libEGL.dylib": "1f5c80c3347cd4fe073ce66822943877535c247dd55f0d24ac8dcf97987d8ab3",
+      "libGLESv2.dylib": "ac9faa8f94a531496196ae68125bee4042193488ffcca9ce06ee3c073d533d04",
+      "libVkICD_mock_icd.dylib": "6bfc174bf02d25946df0dfa3acc12c76981e3e6528ac10197b513984624cebba",
+      "libVkLayer_khronos_validation.dylib": "56b395dbfce1ddb394c7be8749502948cb7911782bca2da2ee2aa88867bc5b8e",
+      "libaccessibility_platform.dylib": "975de244c9d33307843760e4fcc089c0578c683b6d580e4d5aca7405e154ab69",
+      "libandroid_mojo_bindings_shared.dylib": "b361f0c3ba85564cf5d6a7a63e5f4253fd0440b6874e5ce567f17e61ae512706",
+      "libaudio_public_cpp.dylib": "8ac98594c78ae82d1495311e5a806bafbdd733ea9236bcf8eca5aec192a498b1",
+      "libauthenticator_mojom.dylib": "3109bf174408002b4f100793315e0486c9ff12438a514d14e18c5d382aeb2e3a",
+      "libauthenticator_mojom_shared.dylib": "d3487853cb9e07b34382137d356d847cbcceedfb9230a06631bb60c6c6a05248",
+      "libautofill_core_common_features.dylib": "fb72d3a00ac4662b05137ff608011c99da39071b68dde13b158d75d9c1c52f17",
+      "libbase.dylib": "630d65e4ff29c56bb4c70ceed96f307f594a415ffc9003500aaa9dee4d81fc40",
+      "libbase_allocator_partition_allocator_src_partition_alloc_allocator_base.dylib": "ea915a84ba86b8cfad499d3dd15f812db39995ab7c5e5bfb65748eca4692e1ad",
+      "libbase_allocator_partition_allocator_src_partition_alloc_allocator_core.dylib": "5b05a30d4e70c02fcf848b5b6b5c89b0f04c71090361462ba6b5842ca7aaea59",
+      "libbase_allocator_partition_allocator_src_partition_alloc_allocator_shim.dylib": "1896243213aa4c3454d7ea8b603ee7ebb6bdbfcb188f6b5269f41c00fa95373f",
+      "libbase_allocator_partition_allocator_src_partition_alloc_raw_ptr.dylib": "8264c64afb3f883d19d0fab05edb214aec7ead5d4cb3220ad8c2d35f42c5b9a0",
+      "libbase_i18n.dylib": "e42e655357c82ee0b838fb7eafcc6bcce94db796deacfa4af96780e50845aeae",
+      "libbase_i18n_internal.dylib": "5a3bbfa855661ee9c2e12c3e1d66fd44cb6011c683521609e241e43bc7e5dba2",
+      "libbase_test_proto_test_support.dylib": "e142cf664cba8d5e2fb0d453befc9d3dd2dc6f6c8c692f0e1be1998dfe4df587",
+      "libblink_common.dylib": "e35041625d16dd9fe5653e3a23a3817b839f8b423488190e727ff3d22ea287d6",
+      "libblink_controller.dylib": "c469baaf602830d2552057f8297e8e210506dd8b540c890c545637289f3df5f7",
+      "libblink_core.dylib": "eae34c9ce429e98e98c771c732547bafdd642ff0ac501a9744674a55f843576d",
+      "libblink_embedded_frame_sink_mojo_bindings_shared.dylib": "7a65ef5914c0170a5ea49e5074e29e9f88a476d7b9458f4ed7598936dbd36316",
+      "libblink_gpu_mojom.dylib": "26aecee151743d1c7d7a450f10683d9a12d87c57826f560d250ed9c94dadc936",
+      "libblink_gpu_mojom_shared.dylib": "18971d33210a0cabbbb20359fa13601aff99abe0c6174463cbec90719b882662",
+      "libblink_histogram.dylib": "b71c0f35ae0f789c4bd6fe2417b65f5af6a43765b5694ed62068f1dc335a23f6",
+      "libblink_modules.dylib": "41549d0d6595464ae8bdc4b10ad62f396549e51f5299e5d67c63d2324d6e88e9",
+      "libblink_platform.dylib": "5462f8d67635aed088a7c9074ccbaf711ba5034610499638f18c2c1a449b2c3b",
+      "libblink_platform_media.dylib": "f00b1c3916ce775662745282982eb3862883dd20b61096c60b7333195d36c97b",
+      "libblink_platform_wtf.dylib": "b7741cb79f81a89e0182211744a92b44ce04c659e17fd815157f22bd6b159c3b",
+      "libc++_chrome.dylib": "ee4094b5e9f55f298ea3e7dd3a9608ee5759c9affc75653ca32dba69055758c3",
+      "libcaptive_portal_core.dylib": "0ca1080bba62df3b824d367765e9f7078546afc7b726c9cbe4f11a9a3e7b3711",
+      "libcaptive_portal_features.dylib": "6fac27a134c7bc363e4c91a7c192aacd446a10adbfe0cf291665b9307f84672b",
+      "libcc.dylib": "8aa347abeddf1e895970ef5bd6835806b95fd79db9776d573c1dcb07cb3f5b86",
+      "libcc_animation.dylib": "303ab64ee532a7df50eac5778ea80a3aeedec67e2a32e8c4b44532df8e2c3fba",
+      "libcc_base.dylib": "f4b218fe401e9d33dc138415ac74cf78f478212a70183e9b5b022600626e75ff",
+      "libcc_debug.dylib": "38e97c149d9bbe64f62393446b31de62766282356e02fb2b253eac61869ed252",
+      "libcc_layer_selection_bound.dylib": "86674a213edf6e34a757cf5e00abadf6eb0953dd2900fc568e0ba84d2271a2e6",
+      "libcc_mojo_embedder.dylib": "e5611b313e76b69177b346c0f1948c6845bea4051ff639fc299b21ab2ce2633a",
+      "libcc_paint.dylib": "b8144cc4f1ef636bc1ea74bc62db56b61e3652866d66cd12925b8cc07cdcf9f0",
+      "libcc_shared_mojom_traits.dylib": "09fbc50264c5f43b28ba5f5f0c60ccfaac7fdd61ef8904d5c24ba7f652efdcec",
+      "libcc_slim.dylib": "3cd85ce0dfe6b0ab6b0f0646414d4f11b88a8b0d3707a20ace529018bec7a9b6",
+      "libchrome_zlib.dylib": "332d9f45b942e87258e1ef93901de5fbbf29247dbbe07579b050225a4d76d5ba",
+      "libcolor_scheme_mojo_bindings_shared.dylib": "acf5f5b9422c557d6d95db1f3e8a114137f6331f684c490be14d52492e1b5445",
+      "libcomponents_account_id.dylib": "5e56edbe1f3a32c10069bf136db1f10914821ab47299a5517b03051d136f9a6b",
+      "libcomponents_apdu.dylib": "1fe989ae4e1367ef434a44a21995c179f946dffdfe15a205af1c36fb555f5029",
+      "libcomponents_attribution_reporting_features.dylib": "54f2eaf8cd4a600b2abb73d5099c8f0d510dffc3cc4df45f9695957e10b0b4f8",
+      "libcomponents_base32_features.dylib": "df4664a84261f970c7c5da44be9527f060e09453208c9c44b941961065c050bf",
+      "libcomponents_cbor.dylib": "6d0dff17824d7ff7a04a676a5b01ce80a7098a95227e8c335c6e9d85262e022d",
+      "libcomponents_certificate_transparency.dylib": "53744b65bdba5144ec2030e1ddaf3a5930aab4ef88b9a29265fd16e1b461f055",
+      "libcomponents_component_updater_component_updater_paths.dylib": "f603f8fbd34695a830538a07b3cb69b45aa76fa730e3813b9f4eee8f2c0cccbe",
+      "libcomponents_cookie_config.dylib": "bfeb4725bb2cac0104843451c017d5fa88e717550f1def9d45166ef22995c7d0",
+      "libcomponents_country_codes.dylib": "e2baf92ff406fac2206243d468a35a944c4d48f1b1232e1a5dcb80d6524e93fc",
+      "libcomponents_crash_content_browser_error_reporting.dylib": "b28c8f89da94798a1b8e8402dffda78c926dabe4ca38f04ee8cbe2461e59789d",
+      "libcomponents_crash_core_common_zombies.dylib": "e4f81c89663341a9d98a6b2b640d3ae820f6ad767f92adc683b6024d985a2370",
+      "libcomponents_device_event_log.dylib": "4de9e2c834f7cb4e1a8d811abf99d431e1f01f86863a68ecd5019c10ee8c3a26",
+      "libcomponents_dom_distiller_core_dom_distiller_features.dylib": "43ecc581c7aea5789259131c0ac91c917a7931a93810cf3c92929a16d4ada7fe",
+      "libcomponents_domain_reliability.dylib": "5283bb02715ae3d7e47ce099f6f1faa3d98ec8fd385ba5773166e378976d358a",
+      "libcomponents_download_public_background_service_public.dylib": "3244e13684fd63b90800704f2c5df77b2f7af1db4ee3d63ffed8a241e08b050b",
+      "libcomponents_download_public_common_public.dylib": "b33a16abc5ea528bbe8dd71030e63dd9bc22eeec28adb30dbcb556fb075dd072",
+      "libcomponents_download_public_task_public.dylib": "df45e02cf3e390dbb485ca4548ce02c446850dcdb9de9a547be486705761e5be",
+      "libcomponents_enterprise_obfuscation_core_enterprise_obfuscation.dylib": "0e86fe1bbf1d099be8426d743517c5ecad86b26b657b386e399b10334795f6b0",
+      "libcomponents_enterprise_platform_auth_enterprise_platform_auth.dylib": "f5a978dba6c446a2571f8fd65b0e779ce93c98b24c543e66506a5d728647a879",
+      "libcomponents_gcm_driver_common.dylib": "a8001dcb8ec678a09b434bd99d2dcd2af2258d443f4cbbc32823918c1e356d07",
+      "libcomponents_headless_select_file_dialog.dylib": "285a40b95d0a461f479fa9550a5d9ea6b8abcb5267caefe6b8b1003828dc57f5",
+      "libcomponents_input.dylib": "0420e72d4a93302b32266ac79ccf6d659dfc4004de65e485d3a5a397260b4b12",
+      "libcomponents_input_mojom.dylib": "e856cf76fb27c9b6d808d2eeeeb0e41fdc2f1405d57a1db32695c33be51c4af7",
+      "libcomponents_input_mojom_shared.dylib": "25e3f0628d87e6c625d8b647e4a15a18df3624078c334d9093106f16cdc54dc1",
+      "libcomponents_language_detection_core.dylib": "562cbb6178f958d9e86c92f96518f7b3b843d7614afaf256e4fd9f3f3b230b70",
+      "libcomponents_leveldb_proto.dylib": "973c46b45ddab1baab90237133bc779b58ca55819407dcd1340a403e56d0ab0e",
+      "libcomponents_manta.dylib": "4a14f9836b0303600ca87bea2950bfaa127771bddeb51843abbdd12329e7c540",
+      "libcomponents_metrics_mapping.dylib": "48dc0b95e80f5c835c8d4a4108f153eb6cd6a1e5c142e27090bf052a2cb01ba9",
+      "libcomponents_metrics_metrics_component.dylib": "8f09201f2c231b3c3dda949f306ca94278b544602642994348c759751080e464",
+      "libcomponents_metrics_private_metrics_dwa_recorder.dylib": "794a2503753edc1de0f8843d4d2a64c24d10c6ee13556f2f77dadfd43146685f",
+      "libcomponents_metrics_private_metrics_private_metrics_features.dylib": "6b4a0cd57f8c0c1fef266d459b89f126180d33ec872945e09fb3e1d8a64c5fba",
+      "libcomponents_metrics_private_metrics_private_metrics_recorders.dylib": "83d765f800ff4c21dee37dc4daea8222aaa672b4ae0290fb4613454bd1cad68a",
+      "libcomponents_optimization_guide_core_features.dylib": "0b29fa3f43eefe9bf6e4eaf9815310e350407a650402427b7fe0d6d264e83aac",
+      "libcomponents_os_crypt_async_browser.dylib": "7fce9719a3a4ab6ea64ed670b76e905adcf6754eaef75f72a9a789da77528926",
+      "libcomponents_os_crypt_async_common.dylib": "cecde209a667f069fece5031d9f8c0e8224833f55d8869e3a623f56f750fb8b5",
+      "libcomponents_performance_manager_scenario_api.dylib": "ba2712e9e4dcbc0e3b4a8e2bc1791557198772fe30bd0ba87f73c84e79ff028d",
+      "libcomponents_persistent_cache.dylib": "dfd61a54e316edc587d181fcd6de3d599ea1102bf6c6f0da03bf38f55f54f498",
+      "libcomponents_persistent_cache_mojom_mojom_traits.dylib": "ea1c47ed607f3470c531f7f302c5a324bb197c9e3510a34f33fa66b74233a975",
+      "libcomponents_policy_cloud_policy_proto_generated_compile.dylib": "1935ab95dae2bac628fb145238b083b8e79067f1e780749ea368c664348ef329",
+      "libcomponents_pref_registry.dylib": "6cfc23464c3af12b7d491aee1158a5aa44e84b72482bd787107282abbbf5cdc9",
+      "libcomponents_prefs.dylib": "654815f048c414215972555b4e233d7255d220f47b6f5576b8360b10b5b3816b",
+      "libcomponents_remote_cocoa_app_shim.dylib": "396af1e1b4c542d9990e684018e94d1cb3c3832c04280b9129b2cc3b99c451d8",
+      "libcomponents_remote_cocoa_app_shim_features.dylib": "fa69e786fa6a42a1f42d41befb6d4407b2c3f0c5dcaa15b5613869353a70f010",
+      "libcomponents_remote_cocoa_browser.dylib": "57fb0a2d9ee390b45a6275b1e7edb0a022c60e7efbee0d773f275a6e90cd4717",
+      "libcomponents_services_storage_filesystem_proxy_factory.dylib": "ec95e390e2fcc4565ca1b6f596f1f3eaa286e6529f3229ea42eed631819bfd8d",
+      "libcomponents_services_storage_storage_features.dylib": "980124e5d7d32cc56dbfc7aa78c33d6e63e8b3e0dada2796e1087a80bae40591",
+      "libcomponents_services_storage_test_api_stubs.dylib": "9fc771284ef488a9c573c40f63b4d62c85a0b2310324e369d53d7291051538a4",
+      "libcomponents_soda.dylib": "e7355c94b8ed42486304cc6c3deb04f4606b7e934c1a1f10c22c7446c336383e",
+      "libcomponents_sqlite_vfs.dylib": "fff4d189e4318da44b7caaaaab524f3ddf758feb577138287c8912fabf7eddcf",
+      "libcomponents_sqlite_vfs_mojom_mojom_traits.dylib": "b1874a246938001e333d5a0f06f2f708dec7906732887f57174495e4f57c4795",
+      "libcomponents_sqlite_vfs_pending_file_set.dylib": "c92b1db2113c5f1c7a76ba272fc09100feec96a76b9b603352da1155e0dc3487",
+      "libcomponents_startup_metric_utils.dylib": "0717d44754f149a1b9cc0d3764f436407821ea2c91736bcce4f86440ead452cc",
+      "libcomponents_system_media_controls.dylib": "55687bfdfd7ef7fc039c3918d8455eb6f97ce50260578339159ee3a5258152e4",
+      "libcomponents_tracing_background_tracing_utils.dylib": "80c24265b9acfb94ea4168de76ce9a8c91ea7726fec541e46b87a5555eaedbe1",
+      "libcomponents_tracing_tracing_config.dylib": "77c08ad47fd2f302557cf3ec6f97e81ce157095187670d990da8f2f4c300df16",
+      "libcomponents_unexportable_keys.dylib": "27b3cd6ce8e7e1c2b01898bc705bf061b05156a642f5a1429b8796fab2907924",
+      "libcomponents_update_client_background_downloader_delegate.dylib": "4fe58503a9c67b4b35c69fb37f64c49f4afb1b8f32525798dc2f2b3b2e223bf5",
+      "libcomponents_url_matcher.dylib": "e4a800bfe21fd0065681f4f265ec52a966f4e1758c51c7446c13e4b7fb5a65b0",
+      "libcomponents_user_manager.dylib": "3849d2b8aabf679d82bd177517e1ef5d12d6d33e4d1b568206ab34eaf7457401",
+      "libcomponents_user_manager_common.dylib": "05eb3d44dfdf05d65d40167ac5e14bcdb752b338a95fa95e361192c423a455fc",
+      "libcomponents_user_prefs.dylib": "eb7647f5ef52556c6029667a13c755189092f59603f6124748592fdc3409175e",
+      "libcomponents_variations.dylib": "b28cd1a9215c57053dee13e2c2fe7b2b7f170fbf98f2e3522b3d3d456730ae60",
+      "libcomponents_viz_client.dylib": "d5f8a9c4ceb6602e3f1b7b34d085fa8881ba1f6eb48b0462020979c449515c03",
+      "libcomponents_viz_host.dylib": "338d78cdc833e126f5a96274b2c51d885c95b4b9d2429cc91b28b4d4c7ef8e0a",
+      "libcomponents_viz_service.dylib": "d40a784dacc315b34f70e5229b884780f2a3973dfb193d730b8685cc3edebf27",
+      "libcomponents_vrp_flags.dylib": "a80efd63c79368d8822e2732c53c3896e7521f818832fd137913b10cc78cfc5f",
+      "libcomponents_webrtc_features.dylib": "f57b0b1a1e96fb4c4bffef4efa0c3abff662c75a2aa07fededb4a0e54d126a1b",
+      "libcontent.dylib": "77a9d747e1b3f324a59e12415126d221492b8284a15b2b68a4fecb9bc9a1581f",
+      "libcontent_browser_memory_coordinator_mojom.dylib": "a237bdef934a92ecf83e6130a65100b55b77ac0bc9009c3cda40e06bb9ec2209",
+      "libcontent_browser_memory_coordinator_mojom_shared.dylib": "04115830f85566ba2930bdc44c87555ff2cbb8b59ecfadd5b27e06dd544b3e0b",
+      "libcontent_common_main_frame_counter.dylib": "f88c115214a2cb8c7dd5cab2dda7b6c35923f1455cb2f40f413bc139de03b17c",
+      "libcontent_common_mojo_bindings_shared.dylib": "40a783bb3ab7e4eb5d1e7a6680fbf6d0d17760e32328a75986671050b94f146f",
+      "libcontent_extraction_shared.dylib": "5a74a2b8def8c0441a3bbea188cb7ef7190047d34db241bff9f5dd86f2d2c6f6",
+      "libcontent_public_common_main_function_params.dylib": "d1dab14b9c6912d83ec045f23b3866391b279fd1aa92037557bd95c991666d09",
+      "libcontent_public_common_mojo_bindings_shared.dylib": "76d415dc7ef15226150760c70349d13e79edd132335169b693fd4d2b5bf950df",
+      "libcontent_public_common_result_codes.dylib": "515523ca94a9c1bc713bb184bb1f4d4ffb9def0c57f966c7c13d54694d516584",
+      "libcontent_services_resource_broker_public_mojo_bindings_shared.dylib": "03c9e6aa0f3b4f91d480b4e367329e7e209772f42575ee7d0e7c064dfd27bf45",
+      "libcontent_settings_features.dylib": "a7f8490bf9346dd3fb71a01c570a1e04273990db7ffefa30aea0b9422b493614",
+      "libcppgc.dylib": "ddc045026b946f0dcb75f191edc77aa676e3431b22368379ae29b491db083ead",
+      "libcrcrypto.dylib": "4428e260a1ea4571c9dc900fea72c657a2902ad15715cce61daf0210e8d238ca",
+      "libcredentialmanagement_mojom.dylib": "9d710e4af82d4f96bae7edbc503bccadacdac42d36b478f990bd910e0ca10ce9",
+      "libcredentialmanagement_mojom_shared.dylib": "287b0eec53169fe5aed25c773f57b7cfc391e2c177a07eef4d217b5f7d9aa818",
+      "libdawn_native.dylib": "5fe37fdedfa28f75b256ac911cdf3cc5fa9a8cfffcc98a5a0441da397bfdffd9",
+      "libdawn_platform.dylib": "62da522ace783191fa1f5718c930c427e945647efbd2bd320985315f087eb1ab",
+      "libdawn_proc.dylib": "56af4f13c6ed09504f4e4c68938fbfd6f62885a1e73c77ee178b1c33251f1fe3",
+      "libdawn_wire.dylib": "5b1a759be4289bcf8eee681f54d2ee224919e93e066a2c2cb84f6ccfa8f5a952",
+      "libdevice_base.dylib": "daf94406d3b3c7cd8e43180c7f732592e1d2d41bdbab93d7bf2c7f37d0cd52d0",
+      "libdevice_bluetooth.dylib": "c23f3ab9262ad05371d092410c24728927eec0430c40c2f91ff2e7d8a033d3ae",
+      "libdevice_bluetooth_public_cpp_features.dylib": "9b4dda61b6ec2ffa159694acc50a7f17facc4c8c09b0c31069983de870652a08",
+      "libdevice_fido.dylib": "6b660abc88395ef5b182e9fa4a4fd9b583048a1b7bd4925f43568d6ddf5fbf3e",
+      "libdevice_fido_public.dylib": "d14a649f53c187712d205bb50f3595fb8c3552240c26d2d6e015e89786372b11",
+      "libdevice_gamepad.dylib": "05cc52775a7052b1d3eb2a011069853d45fa005fe1cb21b7e5ba5709f14a26e7",
+      "libdevice_gamepad_public_cpp_shared_with_blink.dylib": "449ef31707f28062139eaa9c0bfa19f5067ae42565a3bd4df066246e75b34851",
+      "libdevice_gamepad_public_cpp_switches.dylib": "e4dde9d3fa58a3ec027d1c5d0eecb8ee9e87c73605ad2169f932bd6c56061dd2",
+      "libdevice_service_binder_overrides.dylib": "b2270f0d718f8ff203cddeb1054ab34450139d55f129b8122b7d6dd0e56f5160",
+      "libdevice_vr_isolated_xr_service_mojo_bindings.dylib": "c07ff19087f14c2c2d6cb73f085405386ce40422ec026ea4d0927db35d464eb1",
+      "libdevice_vr_isolated_xr_service_mojo_bindings_shared.dylib": "340de101aa4563258f0d115d32c3da9840729077e223928021384adb7386db98",
+      "libdevice_vr_public_typemaps.dylib": "b83ca60bbf790de6ada7b6d1d3fcee167410bd9698d66899a0a8aecbcedaa3e4",
+      "libdevice_vr_service_mojo_bindings.dylib": "911b3dcdb8e718c6459757605517b73341ec4bbb1bc3dc45f1b35b2b45db6896",
+      "libdevice_vr_service_mojo_bindings_blink.dylib": "a91d3b900cfb1ca257119942ec24879acdbd2c5811af34e0cd91f2c4507be5fe",
+      "libdevice_vr_service_mojo_bindings_shared.dylib": "123f29e3596abee9dc5e03f0ef3767e37eb41617c554de5e9c5cbb6a0b9aa9bd",
+      "libdevice_xr_common_mojo_bindings.dylib": "6d24c3a20ee958d578bd844fba4aeb27a3d46fc761f8fd592b7b104c3a75730c",
+      "libdevice_xr_common_mojo_bindings_blink.dylib": "2ee0aadce30bcec21fa470220f3e83fa1ecbb78a65295790c12b9dca0398f9cd",
+      "libdevice_xr_common_mojo_bindings_shared.dylib": "4b57230395e4b984e21d68ff43ef12287e6433ce23483930aae373f9b67272dc",
+      "libdiscardable_memory_client.dylib": "8ef541f5bdecc88dee53e7c54d787d5c2028504a1d9ce29c12ade48115e5e0e5",
+      "libdiscardable_memory_common.dylib": "0e40a1b28dc65bb57bdf84d8a292a24d3890672b549ca54082feac7c94a8cb31",
+      "libdiscardable_memory_service.dylib": "dd5a91584b8c8e5abb78de3fd338b5d4cbc14245d38f07051fc1fc5634821764",
+      "libdisplay_features.dylib": "20a4f0796ed5c927f6255b92a1f89bd55ea91241876871dab685824d38e116ba",
+      "libdisplay_shared_mojom_traits.dylib": "8bb8daf512be9e612fe70a4536a0c8857c9812e5a1b9a8ea58a0d6a21b1ebab3",
+      "libdisplay_types.dylib": "6cd3bcf1ebdd1e222dfa3b616d037a12e3a86eb61e8f1c178b9d83a7eb56fb1c",
+      "libdisplay_util.dylib": "5f4bc8582a8b0174ea0061e30d3603adce3a0266c75e5354999a5dcf94479e93",
+      "libdom_node_id_shared.dylib": "c38787656e3c1d904510bfed81d56e89a00d6c7c42f205cbc3a79f5374f166fe",
+      "libffmpeg.dylib": "2a43ffb1ceef567e1efc4bba8489a03914ad69217f97fc68b224151e080a3206",
+      "libfile_access_lib.dylib": "cb7c8350397edfdee908636a3ec0d180cb676ae47124bdd52de8e12c28eefbd9",
+      "libfingerprinting_protection_shared.dylib": "50aeabb632e479aa839f5745c0cd522dee2730b3ebae79c286c527e75fe81e28",
+      "libgamepad_mojom.dylib": "3be1a6f7ba04089a3a1675c426bff869e990f0c385fe3312cbd3e428b3ca6f09",
+      "libgamepad_mojom_blink.dylib": "2340acf1e44055f697c1228ad26dbc48828ebe38ab56254ee10e22025f9e9999",
+      "libgamepad_mojom_shared.dylib": "4405cadb6ae76f64873aa81a5084babb5f68d1a53179246d00d62bb7734f0f29",
+      "libgamepad_shared_typemap_traits.dylib": "ad2ec17111baaafc3bb2c0191ee87f1ba1fb3d542ee794e2b01d407d515504f2",
+      "libgeolocation_service.dylib": "aa1bbd97fe75826e01043f0d25eaecaf1b94b918cd30e4aa60b480067416f77a",
+      "libgfx_ipc.dylib": "6aa5780b25e56e00811336cad23f28f5e23d14e6fa918e3d687ac41f06908147",
+      "libgfx_ipc_geometry.dylib": "5da26e56ddc2d3d843986acd1cbdf94924d9c3b17ea1fc7edffcd1acd82db412",
+      "libgfx_native_types_shared_mojom_traits.dylib": "d5d91d95efc320b8eb60fd6d734abf85b0dfe081bd291461fcfcb05ed9b47bab",
+      "libgfx_shared_mojom_traits.dylib": "092dbb60db1d2e497968dcd155b202370478911684b56cdc5b8f428698a75c08",
+      "libgin.dylib": "8ec52bcdcd53eef92b2ae73bbd576ad88de8099c4e4757ab6b2fd47a8c000ecf",
+      "libgl_init.dylib": "dcd5cc0c47578a92498b6a5f5fc213c6cd18197bd8d41e2066ba70a9459dde4e",
+      "libgl_mojom.dylib": "6ca5cdc4a891c292136ef1d5674b72631920f3587d1b594cc62970a336b4450f",
+      "libgl_mojom_blink.dylib": "6e3a5bb998a12cdd553388ac7933f14f3b3015b2c6e6d15821452e2271dad9d4",
+      "libgl_mojom_shared.dylib": "ae3e7620968c204bb3da7881b486b557dc8f121b2ede15a9e9c3bf718982a13d",
+      "libgl_wrapper.dylib": "1a03feb78ba967fc73f17d31d22d335d38a6f7b7c697d65831f75f327678bb1a",
+      "libgoogle_apis.dylib": "c186cd12f75e4bf198be296d7520819b1342e12ef3e1b102b04cc6d8bf6caee9",
+      "libgoogle_apis_gcm.dylib": "e9b143c5df707922a0741af4435bcb27144349cfde3ebc80308133c0a1704c1d",
+      "libgpu.dylib": "a684058e0ac1980c422e9d0a98677bc2f6fafe87f5f1146bad3b84ece7b71575",
+      "libgpu_channel_mojom_shared.dylib": "c8471a947a06e03cc586d4cb25c59486efa61da98e922c1355afdefd9200baab",
+      "libgpu_command_buffer_client.dylib": "28967b704406c93c1f6ae1442533741d2b2e40e6bbe9554bdfed58dbdb6f6a07",
+      "libgpu_command_buffer_client_gles2_implementation.dylib": "c6d43fdbc4a018ba7f33674ce2e36a4e5363a2bb5213da4a3ebfa86f07cadd09",
+      "libgpu_command_buffer_client_internal.dylib": "71593c43b848afe673b8e3a72941823231135ed479588f9109dccca2df8a4d26",
+      "libgpu_command_buffer_common.dylib": "12cfdf2930aee665247f5d320da16bf60f5802615879b19885e684822222e4e1",
+      "libgpu_command_buffer_common_gles2_utils.dylib": "c922790a102c127f49da7210626ee33d4a30a7b646e0f0131d4e9c8c28b8efab",
+      "libgpu_command_buffer_service.dylib": "9010d56ca27dc16fce54eec760a66081b743e0f94e75f8399c80d1c6b1447288",
+      "libgpu_common_interfaces_shared.dylib": "3422db3f0ec2781a6c2a8beb4af9b041583e35115010bcd304ce03efdebcea9a",
+      "libgpu_config.dylib": "5b5e4e3d072eb72308b7ab30eb657e7470848faaa084031e919a37cecc851287",
+      "libgpu_gles2.dylib": "686dd501c67d52ed6762e908c7c74b7c1cd11c1646a59d85f0949273f22367b0",
+      "libgpu_ipc_client.dylib": "e1117bc66e9ee65acb8d30d7243790f8b7b8d7950c139e719aae90c2a6eb57a0",
+      "libgpu_ipc_gl_in_process_context.dylib": "864e91ab46be9fb0c9c9f84e9566af235d32859cf5d4b927d52de68b53b00cf7",
+      "libgpu_ipc_gpu_thread_holder.dylib": "1a1b6b6bc8ae73c002c9360ef2e58bc75354d2d2b65e0c7d9233d6825d43405d",
+      "libgpu_ipc_service.dylib": "bc481cee89c14482e6b5c829dc849440796ce2e8164d7f32a365b8cee7937777",
+      "libgpu_mailbox.dylib": "091a80bb4ea7eff3c41f90258bbfba47d63fe911c4cf1173a45aba38534db109",
+      "libgpu_raster.dylib": "7ac5bcdda3d093eba3962fe30d7c61036d7080169df990f59e5847e3fe3a1bb9",
+      "libgpu_webgpu.dylib": "6bb2833aab92bcbf048e0035e6cb352121cb4e8567573e46643e463e66062cb7",
+      "libgwp_asan_client.dylib": "1e8544c10b0a53bcac63bcfca8f0dc16f140bdebb146e8306f1f2673c7f1cb17",
+      "libheadless_headless_shell_lib.dylib": "eb375c1e5e8e72aa4c4947930e9366d73f118fc6dc62aa4499e59ef5ec848282",
+      "libicuuc.dylib": "0523c3747c2944c218c8d2b06c780b275052792e8f9d3726072c12d92a9f8d60",
+      "libimage_decoders.dylib": "4c99e96cfce4437ef84a17d6b857e850180678203946351d72ba97d6499812bc",
+      "libime_shared_mojom_traits.dylib": "33b74d1af8cadb6905e99e22e688ad8c84c877f87d35be8d2ddba36c05d9d1fa",
+      "libinterfaces_shared.dylib": "cc337a5643aa86a8248d61d1cce48e40a7288ea729dbb4e2821bcf018020e2e8",
+      "libipc.dylib": "4556f1c1135bb8beec7860966384751dac1357ab5c6bbe45bb9d72fb85377722",
+      "libipc_message_support.dylib": "843dea6d8defef0609c108abde9103ce04c16354b44e0f0de474627ac210f37b",
+      "libipc_mojom.dylib": "c86cd6099e632242034b4e16dc815c16df84a17504e7f2dae17fb5341fd82ef8",
+      "libipc_mojom_shared.dylib": "2e6ba1ec1bc171ac4e48d77b72a22a53f4f20bb7e1d8939fafc8129a42499540",
+      "libkeyed_service_content.dylib": "43c2104cfe25fb9796a174bd72c000c0b7743e0f8a190bdf4453d4c6d3180880",
+      "libkeyed_service_core.dylib": "5683a3d1f5ceb50e3a5bd02d8ffc4573d56dbf7a9e0537b9d8cbfcef4e3ec3d6",
+      "liblanguage_tag.dylib": "138e3e2e273f5206d7468a919836cb28d57a1b2950bc2a3288f0584a51d9928d",
+      "liblanguage_tag_no_icu.dylib": "632270f732fc317191e423dcf1bc62985ae73d23d0d14c6f2b3ae044ae214c68",
+      "liblatency_shared_mojom_traits.dylib": "59ec0ae1e5a2fa31b18a112d452961d43cb912b1de08c6efccf3defdb19c6de8",
+      "libmedia.dylib": "b14b3eb61529857f25614f7d60106f6549441ac2e2143af5805c9a11c22a1af1",
+      "libmedia_capture_capture_base.dylib": "13e4d48948ce62aa3aa30e0b672d1f8122e164a8ab633a817bfbdb4dd7ec0967",
+      "libmedia_capture_capture_lib.dylib": "6db3926f594f458a117d8148b52773c82d91bc90a6d80a8e24e2a957d9d534d0",
+      "libmedia_capture_capture_switches.dylib": "a7cd0e689f3c08325479ce105e879b8c261ac62a40b2561c15459e4aacab7cfe",
+      "libmedia_capture_mojom_video_capture_mojom_support.dylib": "0c0d2832137bb834f445d1e1274fd598e0ddfb9e43706a8ad912f9819618344d",
+      "libmedia_gpu.dylib": "bfc611792ca77b1e4c70c6ae74ff0dc95c19071e1d5fff2bd31c3e5eee2b75a7",
+      "libmedia_midi.dylib": "eda82b8fb456f3700bf3071da887e10b44525c370e051b69834aa76c2716a6f3",
+      "libmedia_mojo_services.dylib": "505005281309a7e4b160d9dd80bbf0346fbe1c6f59afbba1937f88d366646198",
+      "libmedia_session_base_cpp.dylib": "5b8de4d80f3dba6d6c3b1032271ac666078bfb20d55be07242a6020ba3d8bb32",
+      "libmedia_session_cpp.dylib": "bd5a174ed09e525d583a0dc8113ea0479bb9012e0ff8ba67c8a76d92cc0bd4e1",
+      "libmedia_webrtc.dylib": "825458c636d6765965c2b52e3b5e527f440c39412e74e56f365cdb262fcca6a5",
+      "libmetal.dylib": "f3e2246042f5449cea90f3ee278644cb0559ccf926fa2d02e1e17750a87ba68b",
+      "libmojo_base_lib.dylib": "c11dbf8c194d87fbc63ebb6c95b926a4ae56881f4941b994f5b9f91cc6fd43d8",
+      "libmojo_base_mojom.dylib": "ac4f8050779aa20095e81501a56ad5888be278ecd17b5fd66785dc0b89a992c8",
+      "libmojo_base_mojom_blink.dylib": "76be9ef46677cc23e4a32fa8a4cc3d34ac4012479bd14164f9601ae34ff9d65d",
+      "libmojo_base_mojom_protobuf_support.dylib": "f3ffdc58bbaa21234e3138f9b9fb6233202dd320266bf44090c1fc4f6876a727",
+      "libmojo_base_mojom_protobuf_support_blink.dylib": "78a9b71785315a38185c1fa21f343d180560ecaa2019dab95af4a61b42a465a3",
+      "libmojo_base_mojom_protobuf_support_shared.dylib": "ce783dba69a722ebf0b27d8ccc7c26135869e0da74af1975ce6fa8e0d99cea05",
+      "libmojo_base_mojom_shared.dylib": "2aac18d4b5765e1012aae1bc9c170ebc254e77f336e5a539fcab234c62f3cd92",
+      "libmojo_base_protobuf_support.dylib": "48c71c7718fba4fc7ca7220fcf381c0e001ae07b884a8215545f3841daeee520",
+      "libmojo_base_protobuf_support_traits.dylib": "471b874dc1efe4218525d82674365af82007929341f80fc139e1250588962f71",
+      "libmojo_base_shared_typemap_traits.dylib": "2d1750a60c2ccf1a2625e876c63f758f4b1e61b60bfae770502b18e19a6e82d6",
+      "libmojo_base_typemap_traits.dylib": "8571bd546358fb0e48f07d0a3efd544af7e22f44323bcd3be1222856e62f5b19",
+      "libmojo_core_embedder.dylib": "104f08c1ecb4e027ba2f22b3649dad37a1e8c82b8957ed3639cfd674afd301b5",
+      "libmojo_core_embedder_features.dylib": "1b8486c9c604639370627fb8fc1239d6e88eebc0075cba90812df77188f96701",
+      "libmojo_core_embedder_internal.dylib": "b9ac89b5a8dcdd85945232800e45d9bf16a8712a758ed4b821057104f382c07a",
+      "libmojo_cpp_platform.dylib": "074fe684b5750776ffdf9c305a5dad17172086d4a8285930720c2f3c57496e87",
+      "libmojo_mojom_bindings.dylib": "7730774ddcb9d942876e79df5228dd4b069ae3a8d2df70287baf8937cb3a3b7e",
+      "libmojo_mojom_bindings_shared.dylib": "84d1dd91bbecd5c9392bdad7028b7715cbae4445ef81df895b63eb10b728da0b",
+      "libmojo_public_cpp_bindings.dylib": "0ea1cd4215c279294511044b8e385c5996c71a747579db313597fe6aaa824a6d",
+      "libmojo_public_cpp_bindings_bindings_base.dylib": "fd3352caf4ffc22aec48b8339b728fa8292351df0d978d7cac0bf38c37464d83",
+      "libmojo_public_cpp_bindings_wtf_support.dylib": "aaa4e93bf1a820083635db314d9c7fca1f10857e259745474bdd43beb0c616fe",
+      "libmojo_public_system.dylib": "2a779ab3b9d46390ee39133be54714a00f2edcaf5bd9bb634604869bbe7328d0",
+      "libmojo_public_system_cpp.dylib": "916c44101e6a83a79f32b2e175105c0a22356d6268e4765533270a95d2b9522b",
+      "libmojom_core_shared.dylib": "a2c96d20e338e9802f67be51fa8cc93174c5fd570d3701c2c46af5a3a02896b3",
+      "libmojom_mhtml_load_result_shared.dylib": "defd0177186bbd4b804ace4100ddee9dfa575933a08e7fe31aa8a3d0202e0b09",
+      "libmojom_modules_shared.dylib": "47640af37b7895105ab0f01b62e7f426a6fb515f7b77a33aeb68000562050337",
+      "libmojom_platform_shared.dylib": "a74d95a60f129f6332ca0f6b9ca227e032513137dc55688386a989c49c12b018",
+      "libnative_theme_features.dylib": "76f9088b4737a84c1032e096ba09e9657f0e05805d3744c1acf53f3884418447",
+      "libnet.dylib": "e37b29b4e675d9b21ccc40d8f23e2edf59c1d3fd0840e0a09a85c344740e0c55",
+      "libnet_extras.dylib": "2fef237038fb32fad5a62b08171771257540639fb27cbe5e73e2f022fdff5e24",
+      "libnet_shared_dictionary_info.dylib": "521745a0e6a31644a9c2b944b85f9654b6fb44fe210689ecfeffb75ef9c77468",
+      "libnet_third_party_quiche.dylib": "18e0a5022319cac7b3961df96264cec6f66b66e5277a4bd4df3cbaea157f9821",
+      "libnet_third_party_quiche_blind_sign_auth.dylib": "57f11744242962928ca7de8b5700c518014f6551a65ca93e04d1deea3886d0e9",
+      "libnet_third_party_uri_template.dylib": "0b9b8a4f30dd98de6d20515c07c6cb926ea42bfa1dcec12d47617212537ed678",
+      "libnetwork_cpp.dylib": "0f97b29e7b8e6323d4c6fb0f04ae37136390b2b208c8b63aa53883e77abfcfbd",
+      "libnetwork_cpp_base.dylib": "7a68ee540a8d56f98d4bc32077b83ac2db8ce24057d486086462cb41ad0dce3a",
+      "libnetwork_cpp_p2p.dylib": "31fa09558c95df0a9f505240f5a19f94e5a6d2e09cff8a085ad48524319bd2d6",
+      "libnetwork_session_configurator.dylib": "d512080713cc4d2bd7ba58d1010042b5d223689e21afe484c5afd8cd2567963e",
+      "libon_device_model_cpp.dylib": "2ee7c1a3a5d7f1438a2e537c103a2292c3854e6ada7b46c4f4db8cd9d00bfc91",
+      "liborigin_trial_feature_shared.dylib": "293444dbda647f887312a7255acb62e93fb243a83e8f7fa2e20512053706ed8e",
+      "liborigin_trial_state_shared.dylib": "d3d4e4fd0595b00fbcdeb8796e1a0d933f20f573bf35acbafe1270cc40e4b0d2",
+      "libpdfium.dylib": "a250056d47b164866f09b59ae85218d381fa84424bb627e228acd5adb0b8f93b",
+      "libperformance_manager_public_mojom.dylib": "d6b226529b08b7e0d6a2b771ccb046096fdd64abda62e26530be6826080bd81f",
+      "libperformance_manager_public_mojom_blink.dylib": "14eb1d98d126742886f1b0c4c3a118d0793278f128b827fec83a87a96179be64",
+      "libperformance_manager_public_mojom_shared.dylib": "eb9da1207bf4b77ec78af9a7e4ae4b98df7d89ff01726d919b7303c9217944af",
+      "libpolicy_component.dylib": "9aff10babd44500a8eb11daab4de717b9d9b92b0c14f86323e0f681aeecceb7e",
+      "libpolicy_proto.dylib": "53c644ced8a1a4d6a5e3db5d0136e261b5ec180193e5de212130bea5334cf2d3",
+      "libprinting.dylib": "550ce00c033fa20c46afe5bba6ab8f3e79c33d8a68944188ed2d2377be8afdf9",
+      "libprinting_backend.dylib": "9ace5aa3072c1823dc11e182cdc90f14a9968fbb0269d616765df33295ca422e",
+      "libprinting_metafile.dylib": "da3afbc0f217c8f0491afe364fb4d8bfa1b4bd8277e94cb109c91cef66b0283c",
+      "libprinting_printing_base.dylib": "8b23b62a0b92f33d4a1863de95dd33386ceee830bc00d6d263f85a2c86b210d1",
+      "libprinting_settings.dylib": "8ad5cb39c5fd25a9efcbfd93327d431588b65fc73a909b1138f6d8769cd9abcf",
+      "libprivacy_sandbox_features.dylib": "d424b7c60cf90859586275f6507d6ed8037677d33577a3ee93f43620f8f190e9",
+      "libquota_shared.dylib": "3b4790b10ff136a13cd589bbd492fd54f011e142f0f0c742c93055c65f14da35",
+      "libresource_coordinator_public_mojom.dylib": "4eba2adf352a2ca7da7d251bff452162b7fea62308b250b8ee8c42ae0aefd82c",
+      "libresource_coordinator_public_mojom_blink.dylib": "8e034d817b4249c0da1acbdd9cbdeeb0c0de1107d9afded43656a0a791d9c535",
+      "libresource_coordinator_public_mojom_shared.dylib": "d79ba571ac14ac6b199fd18212e3c5e1d7be25fbdbf11821327ef4eccb27c690",
+      "libruntime_feature_state_shared.dylib": "f2a753ad3d9688eef7fe84944494927c2a4ece54dcb438c63c6b144ea7a9f4aa",
+      "libsandbox_mac_seatbelt.dylib": "dd9e6944e468a64b4b8168d30f57b257ca4a9f7da54d21e5db58418afcb161d2",
+      "libsandbox_mac_seatbelt_extension.dylib": "dce498342ba7d99ccff0ad9d764efd70db4f47e0cb714ab77db484c2cc7b12d0",
+      "libsandbox_mac_system_services.dylib": "1ba80fcd92cf15b6dae64edc439e54272a118bcca03acd698d771a502208b4d9",
+      "libsandbox_policy.dylib": "bdadd87ea2e2fc3349a28b7370ad3f68347345a82242ce4b0bd44daa2a7ec9bd",
+      "libscript_type_mojom.dylib": "2ad73e897e77766c578f091904691c920924a3848537e77d9bf7f156656c9b62",
+      "libscript_type_mojom_shared.dylib": "f3b5b6906e2b9a45bd7d8beb882127abfee3a6c130b560b680ff35d9c0f9a38f",
+      "libservice_manager_cpp.dylib": "79c8230580e118f4366d535e7f90a117afbca60501857fc7d273c9577827dc71",
+      "libservice_manager_cpp_types.dylib": "00efe290efa9963b4d079e2ae41a5bcff00365ed4f44b8598f90689658c5dd15",
+      "libservice_manager_mojom.dylib": "3155aca0048ddb0b0a3333d886170b6f1bb944dc063031532d91f0e2c2393245",
+      "libservice_manager_mojom_blink.dylib": "c0f76360ca3b1eb1be94175e329bb529ac9a2af9a9c67c973897fc56b438e31d",
+      "libservice_manager_mojom_constants.dylib": "ae3ac63cfaae80085d6e11151c3d4e997289178cb4b1cde1c03d430d6f3d50b4",
+      "libservice_manager_mojom_constants_blink.dylib": "7817a7f96cccdc926a26ebad8389f215ff44f4b8dda8a7fb0c1dd366097f4b8d",
+      "libservice_manager_mojom_constants_shared.dylib": "dcf1caef37880c60163331b254fa4b76e0078372c6d4e3ff4db12ec2fc8bd3be",
+      "libservice_manager_mojom_shared.dylib": "32f692a7f20a7b545a1f711fd3dc282e02666d496ac04be9f7568e4068b14a50",
+      "libservice_manager_mojom_traits.dylib": "ccc8b696d81d17bcd0760ac84167cf0bfd281cdf90a256988f97fc14a81c88d5",
+      "libservice_worker_storage_mojom.dylib": "6d800df0cf8ade67b086d6d4aec0d70f9d74777b6f4a23ad95fbfd12bc417f6d",
+      "libservice_worker_storage_mojom_shared.dylib": "b5168740638f958eee244abd1c9c5b42871b3acfb4af9f372d64d388a63613f3",
+      "libservices_audio_testing_api_support.dylib": "97f8ee040f1cd76879affd5c0b82c7092287b539ccea1e7ad2ddb6801aa18c46",
+      "libservices_cert_verifier_cert_net_url_loader.dylib": "28fadbec071d8346cc6ee641338ac394522785757723ffbd5dc8b540c80dfa37",
+      "libservices_data_decoder_public_cpp_service_provider.dylib": "99579e408ba1de4e78ab530379bf5d483dcb6b8324f1c67b183f67453e000620",
+      "libservices_device_fingerprint.dylib": "cd8069ea3f56f1ed3d75a15f6f6915cff195e45caab265324e23a170fd699c48",
+      "libservices_device_public_cpp_bluetooth.dylib": "e25a51797aaa1a7cd01081c92bf4e5284526c1279fb66d2100f53f0b04519afe",
+      "libservices_device_public_cpp_device_features.dylib": "3fc826044def7484e1ae8fbb16ce30afc5f3146635f20e107bedc5ad82067ae3",
+      "libservices_metrics_public_cpp_metrics_cpp.dylib": "a6b5f1a6f2106e6970499f7316252089a4d13b7fdb7fe7e9588cd0791469608c",
+      "libservices_network_network_service.dylib": "dc802a6c74ab3801ee11ca34b771e9528763aff90468bce3272109f422b770e4",
+      "libservices_network_public_cpp_connection_allowlist.dylib": "0c41dc73dc86d25f9859b17dfc0a80e3216261e401319e2ac6da0d9e8111329b",
+      "libservices_network_public_cpp_cookies_mojom_support.dylib": "687ee01de93ef635265c1b88a801900e3a64b1cdcfdf35cb989ee440c558a644",
+      "libservices_network_public_cpp_crash_keys.dylib": "b79b99a00c288aca10b9a40dbbf99d1508c57e15012212afc961d9df8a337188",
+      "libservices_network_public_cpp_cross_origin_embedder_policy.dylib": "8212c86d62a73c86c020dbcf0781b7bf661a02d3f6d05ee8ad7ea61097c05f64",
+      "libservices_network_public_cpp_document_isolation_policy.dylib": "89ac3896e1b108dccb91fc012a573cf6e4577726890e44228eb3556bb2c659ce",
+      "libservices_network_public_cpp_fetch_retry_options.dylib": "3a59daf248b93c8cc1af6f81f0e0eb70e4d8893a9ad1fded4dde22513bba44c8",
+      "libservices_network_public_cpp_flags_and_switches.dylib": "1c80d7810b082dab0d54cdd5a6766737783e1c6fe3336283508a7eaf837fb305",
+      "libservices_network_public_cpp_host_resolver_mojom_support.dylib": "0a048d892d39695baa86888533743eff0978afae055759231965f3ee1e915909",
+      "libservices_network_public_cpp_integrity_metadata_mojom_support.dylib": "77d4469ba31039b15590aaac1edfb2d0ebbd77dabfde848f9d6ec28c2d2b0d76",
+      "libservices_network_public_cpp_integrity_policy.dylib": "495756454e2b9745e9cc09ea1bbab35397505eb5130b01b14d8d2968a86154de",
+      "libservices_network_public_cpp_ip_address_mojom_support.dylib": "e16a05abf111763c819b59baf9b8fc8be4efc03d3693d71aadb9911dba0f6c7d",
+      "libservices_network_public_cpp_network_param_mojom_support.dylib": "f255d8460021aa390ba611a5f6cf00191c08a4cbc0c2ec3dccc0ba8e127a6c71",
+      "libservices_network_public_cpp_proxy_config_mojom_support.dylib": "d1ece6e4114c72b2b5c3a733ead3a9f16aa4775837e4b965d5c0f37e5cee92a8",
+      "libservices_network_public_cpp_schemeful_site_mojom_support.dylib": "f3fda812017aedb25453713554224666cfba13133721c297fb0a4ee2bc2a3676",
+      "libservices_network_public_cpp_storage_access_api_mojom_support.dylib": "b1f4486e6118eb8bc6173e37f17bf96edd3271dd1d15d9ee4109609652265982",
+      "libservices_network_public_cpp_structured_headers_mojom_support.dylib": "e34573d56267f95af812566403ceb5dc3f6791e9dd04e4be318be1b7e4ac558c",
+      "libservices_network_public_cpp_web_platform.dylib": "2acdae42bcbcb42b71a48e315f561a4cb7a936df44174e4cd1bba19e67a279fb",
+      "libservices_on_device_model_backend_interfaces.dylib": "8b743d48dc7c0e3cd335fe8d4f06e5ddfcffacb05b09f5806275979f53873a0f",
+      "libservices_on_device_model_fake.dylib": "ba73f20841010091dea315414403c73588131b1511e664bdd6f2d40dbe7f6817",
+      "libservices_on_device_model_ml_ml_no_internal.dylib": "206038d0efcb7e687fe7cd4527936e906efdb8ee05fe640c68199b3cbfed676a",
+      "libservices_on_device_model_on_device_model_service.dylib": "c770d3eab3476365102ec024df86202ac03891398b9543494124574d380a90eb",
+      "libservices_on_device_model_public_cpp_types.dylib": "31d4157bfeb20f8da6f9e703064af5dcaaa670680194776da987249a2bc15c81",
+      "libservices_proxy_resolver_public_cpp_proxy_resolver_mojom_support.dylib": "1d2c6f28dde6c72cb7fc7d100415dd31832119f619e42c0d94ed371f598a2a23",
+      "libservices_resource_coordinator_public_cpp_memory_instrumentation.dylib": "1fd8750c10b3d76e5f86b53875d508ed97c0558cf5518d39cb501876055659d0",
+      "libservices_tracing_public_cpp_background_tracing.dylib": "8d0474b6abe33318e2a81f35f4a9bd6b0ac5ba3befe5ea5f508bc3ffb1557b56",
+      "libservices_viz_privileged_features_mojom.dylib": "c0034f8a6f040f2cd48c85713c55c0945cd5ea1ad6b5a04975d521536cd32395",
+      "libservices_viz_privileged_features_mojom_shared.dylib": "7a7b78b1a386bc3b69344a5f89dc39f2c3d700f856aedba9463c275afa1db46a",
+      "libservices_webnn_host.dylib": "accbc8c018490abe9f349ce7a0f2a6587b13987d457f701887de5516f49d7ae7",
+      "libservices_webnn_public_cpp.dylib": "9fe1bf43aaf1c6ab2449448638dd3475e46ace300ad84f1da788dfcd6abbd709",
+      "libservices_webnn_public_mojom_webnn_mojom_traits.dylib": "61f70940b5566122c740916d848ea5c735ee77eb4792024874158d23f6bf3fc1",
+      "libservices_webnn_webnn_service.dylib": "91aa02c33f038113f9bebc182e22ecbe486be6949c3a696c7fa8c03826f90cc2",
+      "libshared_image_pool_client_interface_shared.dylib": "25cf8e891a8705bc977dd994d1a998e67c6b359d3668bc63b615daaf8ea51114",
+      "libsignin_switches.dylib": "9723723777c528db485c3d5b2132e7aeae0e0fcecf8e248576969218ff0d457e",
+      "libskia.dylib": "1bff35ac30e95af86ff428c9c464420283cbcab3ae0d3d969764d31fb598c23a",
+      "libskia_shared_typemap_traits.dylib": "5aa9073b390d47be1fc88d2d15c4aa8fff708247dee9044e0c63c30ee3296e89",
+      "libskia_skia_switches.dylib": "03bc83e5400062488a7b288003629ac2a578555d75462dfa2680742db9c9f036",
+      "libsql.dylib": "c0adb3cede72abb9149c234769c00d90fd6af1bd2babcd02c2bb30baa071a0c7",
+      "libstorage_browser.dylib": "1870b276295a17065ecb82494745b7dec5e80b90423ce5804fc13088060ec5c9",
+      "libstorage_browser_interfaces.dylib": "d43b137398f2a67ec81be974a31c5081bfa908d102c4576365371be7e7495b43",
+      "libstorage_browser_interfaces_shared.dylib": "f63277862d7fe6f2c8bfbd8ed3208848cdd81fa846df8401c321da66ff71c2b7",
+      "libstorage_common.dylib": "80a3c6f27d60945b7a0e13f7e67ef7160517b0bcc1f5b40b8d22dea3dcf1a7b8",
+      "libstorage_key_shared.dylib": "a7de4f00495cbfb8b4843debdd675801d53b74893f868be1aae0634d56776fb6",
+      "libstorage_service_buckets_support.dylib": "38fd27f4ebc0bec14a989c0a05cc69b8bbae84bcb00c70cc351e4e9d1388a68d",
+      "libstorage_service_filesystem_mojom.dylib": "692e5daf8b7f449e0708887d2c316fa4e9e25c53ea7b60e194f2328531d149c7",
+      "libstorage_service_filesystem_mojom_shared.dylib": "d2c283e564afa83ccd305cbe5f9a08df1fb8dd56fc28f7622e3658a1d9e8aa23",
+      "libstorage_service_filesystem_support.dylib": "d2053f234911cc3ff15f2e456299e47fd5f99f552bdf27af29e0b8bb645b4943",
+      "libstorage_service_public.dylib": "fd21a7c83c411eba0db62809a5dc06c71869f52e579db7baa6c5eca8ad4d0be5",
+      "libstorage_service_typemap_traits.dylib": "ebea58c8751d6d082970ed96429f5967125617ebc8b857f24f035f170e59e048",
+      "libtest_trace_processor.dylib": "b116193b162b78cd67b66b8badea1b05489216911be46a875829eba7c08faf3d",
+      "libthird_party_abseil-cpp_absl.dylib": "d86d6ba5fc98f1a3dee92cda8fef7092dae07042159e03c8c298d62c003edb99",
+      "libthird_party_blink_public_mojom_tokens_tokens_traits.dylib": "b1aa55a71716a052c570773ec0c9046c034c2f2770d15a9b34e741b7f305d15d",
+      "libthird_party_boringssl.dylib": "4d11b1031ee3db5bf5f8641ff59f9f0f867fec3c345cec832db56f46a7d9a8e3",
+      "libthird_party_freetype.dylib": "501dd8b0e8684133128157ab860c043e50a2ba431f987fbe905591a1a3e8827e",
+      "libthird_party_google_benchmark.dylib": "de9eb64423261e1730645542d95ede4f3a61ed1469c6581bab4f820372806aef",
+      "libthird_party_harfbuzz.dylib": "a1096575e8057f831ab3c757d7aef33ca8c69bf2462851f5e6bb71baaf801de1",
+      "libthird_party_icu_icui18n.dylib": "2f0a49de906465ce9f09b33398e4705db323b1452e0fdf00aae5d7ac7b03b250",
+      "libthird_party_inspector_protocol_crdtp.dylib": "264936ddbfe1551f7c7bb1bac726528d6466a922d0e0883a660595169bd6c3e0",
+      "libthird_party_leveldatabase.dylib": "79b6393eb2a9401f512a0a3387ab8a2e88f88f6aaeba5104277d0402b526dbfc",
+      "libthird_party_liburlpattern.dylib": "1777b3c30d41402568bced3124814cbf0c8fd2bc0f4880594bbe4e4a034b3719",
+      "libthird_party_perfetto_libperfetto.dylib": "af4b27c13530efb0a54aa7dbc478aa9d329e02794030e2588dd12f6fc4a40852",
+      "libthird_party_perfetto_perfetto_test_support.dylib": "223a5f3fda3b0d6fd8a1b89d5b3db2286a0c06b620409031858fb60c0034399d",
+      "libthird_party_protobuf_protobuf_full_and_lite_library.dylib": "14a2e7ba099351f9afaa867a0e964f5586f8a27b83709ce226f258083321041a",
+      "libthird_party_sqlite_chromium_sqlite3.dylib": "d37ed76d2b8ab59e0b39f274b6cbb708f96e0c2c0bec83a9df064c9c1ed3166c",
+      "libthird_party_webrtc_overrides_webrtc_component.dylib": "ae675ba10405ee00cb7cd6afa04a08cffb9fe9da409c4dd787834a8b6c9ac58f",
+      "libtokens_mojom_shared.dylib": "b715eb53615a59d70339024867f11a4dca42e2a2bc08c2e57cd7e1485a3f1993",
+      "libtracing_cpp.dylib": "69ac8881308b6b449737c5edf3d7a0ccdd8edd8a1338de7b61f45ed0933d6b53",
+      "libtracing_mojom.dylib": "ccd8ce54e96af3b9e8631824ae002dab383868bca6e3303056467ebb516282b9",
+      "libtracing_mojom_shared.dylib": "2291cc2b3be84063ba5eefd9fe9b57f48db1e9dd82dc36cafaa55e43fd3d5b45",
+      "libui_accelerated_widget_mac.dylib": "d3416b337fa95b3a695679b80caf378a513f2dc52bcc5493a2b36faa58430f7e",
+      "libui_accessibility_accessibility_internal.dylib": "1a234ffdd1854c3430ae6796f17804d3e273d2a81a2f02e603dabeddc03cd214",
+      "libui_accessibility_ax_base.dylib": "9ddc27cab84aa584b489c08e324dd8e782538bcf0b9be2ca15dd55e1f507f106",
+      "libui_accessibility_ax_features_mojom.dylib": "23ee103fcf3968ab4a74475ce83ab57ac5c34687d1ffe5dd344ebcd6e232541c",
+      "libui_accessibility_ax_features_mojom_shared.dylib": "4d7130741733e6ae08a33839e5128c2596ca2233de7b232587dd2f778d2b4871",
+      "libui_accessibility_ax_mojom.dylib": "7ba8973e358228a233eec54c4eef6fdcd03a69008286cf4849233af4e743120f",
+      "libui_accessibility_ax_mojom_blink.dylib": "bb1559efbd4a980b433888af0baaea5d24c7a79a305defc71479d2620b9b0a3b",
+      "libui_accessibility_ax_mojom_shared.dylib": "3ba8eb61e550bfa6bf9e0732ea1efee2fb8ab24650f28fe2361da36355906a20",
+      "libui_actions.dylib": "3c3af88427dcb8259ea848d8d4adfe94e9a9c59b79f99fbc60e88f50101b9c59",
+      "libui_base.dylib": "17b67b5c95865f4cfd91e797c391085f80e21079c1ecc37ffd2bd2dfaa089b28",
+      "libui_base_clipboard.dylib": "514c8c163fa953a1859cb3592c804698d4155dcb916f187c9b8031b3d2d5b490",
+      "libui_base_clipboard_types.dylib": "b76f409e8243bc47469c18e0f76d3ad9ea3bd9fc8400781531636e680a96318b",
+      "libui_base_cursor_base.dylib": "5d3aebf81ea26338c218b81392729fb7bc5f9c24c60b2cbfcb2aba360463b3e1",
+      "libui_base_data_exchange.dylib": "20378131cc27176de6ea7aa4ebe32145a27d1c68784966a87f3c85ed56438a10",
+      "libui_base_data_transfer_policy.dylib": "bdc599ca9f74ee9c39e959d00a820727721be654e371eb90706a985abbb646ef",
+      "libui_base_dragdrop_mojom.dylib": "8b91077d4424cbc14ae20a194f382806ce334245a99cde14a6355f5f0baab3fb",
+      "libui_base_dragdrop_mojom_blink.dylib": "8f51ac95fafdb896f70c8c72f821de67640a2136dd867316c2286cdd367b1c3e",
+      "libui_base_dragdrop_mojom_shared.dylib": "59c0d2966e1ffd6cf6feb4cd9332e53d05544ca9b73d871b87bb809de115e469",
+      "libui_base_dragdrop_types.dylib": "0a2fda5625f3c906e6840ab9aeecb7cf3592cc46c11ab8a408984bb1ef27a1dd",
+      "libui_base_emoji.dylib": "f1165779d0381188b3278159e12086d9d3d7c22c7561f542c079d73fd4801d76",
+      "libui_base_features.dylib": "23ab45288ff4024a85e46985dce696192715f173d58403fec86b6fc7b3a60d37",
+      "libui_base_file_info.dylib": "5be538046e260581f6f77b0d5750fe049d4d9b076e1e1cfd7c9ce01a5196e037",
+      "libui_base_identifier.dylib": "fd2a04ffc8c3e0dc62a913fe27a4a615d04187b7965e42fb50676d7e1208049a",
+      "libui_base_idle.dylib": "4c4ebc7784fc9782834ab86ee6b5dae61ab4c009e4339be31f7faaa546d362f2",
+      "libui_base_ime.dylib": "a3f54830988235b4be91e25e82bf37fcd594fda76e16410b65f96d1282f5c7ed",
+      "libui_base_ime_init.dylib": "7126452d9d2589c3dcc43e728229f0f9347bcfd197b5f93d3fb21cd60dd4aed8",
+      "libui_base_ime_mac.dylib": "e1389ffdfc6a2540ce573c5ebef7d35303c9088c5236a1ed0742dee5a35c6bb9",
+      "libui_base_ime_types.dylib": "5f0ca2cd3d6b5bb2fa212be61b64c8a5d6a4491774e9d582ba10a87e30bbc238",
+      "libui_base_interaction.dylib": "e2dd0e27400da64e8fd7e7ff6c101c686bbd99c186793b1a03f6c9d942a73836",
+      "libui_base_metadata.dylib": "845efdc7c710e7970247f6a2bc4ddf920f024063054b102938016d68f5c0f411",
+      "libui_base_prediction.dylib": "802a485e410169539d73afb616e88307aaab8917bc3bc79a53b426e9fee159ea",
+      "libui_base_ui_data_pack.dylib": "7798122a7aa638f8cd3c7e0a291c2d0c3797c4dcbac179177f6b6ff42a8d1116",
+      "libui_color.dylib": "5ad57e402cced350ae447b3b52b28f178eb3cd4bf198bc792e618e93c6a57257",
+      "libui_color_color_provider_key.dylib": "d838d7c857e856c4a97ab73a51cf2437bff73dfd01f2098ba87a5a47807966f1",
+      "libui_color_dynamic_color.dylib": "d00beb33eb6c772df392d1ac674bbf88d23315a0ff38bf1ac1818368c5c4b03c",
+      "libui_color_mixers.dylib": "7909cfd569439a3d08fa2dd8fe5b441ee4922197eea0bc7bddbcf7340f0cbefc",
+      "libui_compositor.dylib": "dc8907bb88a33fac95201be4bb4b29da5e5248a924be077c05db6c241327b5ac",
+      "libui_display.dylib": "5d27154d9c2f2d646bd58d152a0c84dde8e0a8dc533debaa6a3f48dfac45ee0a",
+      "libui_events.dylib": "13b0918c5794f6768c00b8027aa9e00c33188f30d8c364e071921d2ef952798a",
+      "libui_events_blink_blink_features.dylib": "4f89eff542c3e57d3716eec99c2db98905944c622050f0f3611aeef5ea074fe8",
+      "libui_events_devices.dylib": "c39e1b17f3776cb8cc2a77ddf705c875e5edfabd7db15c76c8afbe28715b4120",
+      "libui_events_events_base.dylib": "0daa4decfd0c4781105cc8f09883a5117d1f3fc994de4bc35cb149979b9aec34",
+      "libui_events_gesture_detection.dylib": "ffa4ed7fbfb19b9f89dc2658681bf6049d8449ea2d818e5352393694b12f3083",
+      "libui_events_ipc.dylib": "c984ff4e3c190f94378cd932e7414a7764cf4b5ac5bad7d9c790ceb9aa140f55",
+      "libui_events_keyboard_hook.dylib": "7275ac1f1782342b658f4b7a5a60c5e8d1391758ea5db5e8347d5b4484564f9f",
+      "libui_events_platform.dylib": "d03ede4a28647fc97911e3353014f5d9f016932cc55ab62029e832b6591248e0",
+      "libui_events_velocity_tracker.dylib": "08db262ac757f42d34b7a0ec5db992ffeb1f7d6f140bdcf7c6ebb5e348afde3b",
+      "libui_gfx.dylib": "32c6f2e457d3ffb6cdcec23063d7b4c7e0acbd0c902dfaa5b0859766a3718f5b",
+      "libui_gfx_animation.dylib": "dff942adc0675bd17e974aa1610432a096cc46a61b6d5a8fc7c263646b58cb24",
+      "libui_gfx_animation_keyframe.dylib": "106b8c4516a100db4bd7fbdf103e49c1d85b61dc123243da50c45a9a3152afac",
+      "libui_gfx_animation_scale.dylib": "a0d53af90072d9e7a1e358d754f115b01bbc103881e6bf74a781106a3ce547d6",
+      "libui_gfx_codec.dylib": "e54d6870b461b8ed1f83b6d38bf662a7f7985d86da0a95c5a7966972cd99ebed",
+      "libui_gfx_color_space.dylib": "b2d21e80d3c9c6d745b25dddd6b8352b8f6df7a96acd6deec83a189e9baa96d0",
+      "libui_gfx_color_utils.dylib": "cc2b4a14fa490246839898ff2f9da882ab3a79a2aecf910f1c28f17ac4c63ddb",
+      "libui_gfx_geometry.dylib": "cf4bf0a2b49280cd2627744420359bcca81ba172165d2b736c114fb8200e1258",
+      "libui_gfx_geometry_geometry_skia.dylib": "4aa5c690abd17999b6f97985850b9195353b322b578c4e692a9c757575067ba6",
+      "libui_gfx_gfx_skia.dylib": "423e2e57d4ce9212d506c60b289f35cd9db864989f04defd7ec55c2c0e59ca69",
+      "libui_gfx_gfx_switches.dylib": "071c0e7143be09f520ce2120b31846780e558a815eec8a21f662abc4be1e3f52",
+      "libui_gfx_range.dylib": "c1c8cd15d9cb5b43fe57d7ed818e31d2ed71dcb14dddc2a61a16f50031273318",
+      "libui_gl_gl_enums.dylib": "505b1d8a550b988d10c38d5233c97bb99d28eb0737da28eb4f43f4305e566e9d",
+      "libui_lottie.dylib": "d1ae54cdf4f27d6ff7d1eb9b61c13731bef8bed5bf43551cd52073d53cb73b3a",
+      "libui_menus.dylib": "d753d99264f1532d88ac0895f9345da7d3f03c965bd34df1dac66526f8eb4029",
+      "libui_native_theme.dylib": "53f98c675f0cdd4a0136d0dcdf3cec0291c64da32777c93527633c577d2cce4f",
+      "libui_platform_window.dylib": "5e8fd79d6484bc4f0bb7d5201d6ac15a3d95c75e9a1c9cfd5e986d7f9dcb8861",
+      "libui_shell_dialogs.dylib": "62834f3057505d979dd154864d980b3f4ca79bf984c909a9ce11213808f38b64",
+      "libui_snapshot.dylib": "202e550b578a38b0cd064ff1ad464d9c8c57c14031f6de57a77ef7b60e92b1cc",
+      "libui_touch_selection.dylib": "4b91a9e462b259f8b0fa2c76744aeb48f06fcb553fb469f6c09751d74d4ce2e2",
+      "libukm_recorder.dylib": "a6d5e8f77b40dcde0ef217207186e51886910cb8af818bea46121c639b0c24e8",
+      "liburl.dylib": "af5fd8a3a953d97d1704fa89b9bf846f0f4574012b9cc2c560ebac880b92bb84",
+      "liburl_ipc_url_ipc.dylib": "d3487a8d78c86cc9cab6c2c911986ffc11840d5273003ef36224d812cda77afb",
+      "liburl_mojom_traits.dylib": "d0e4aff6543601b80bcf416f78ea5153cca80dade6239657a33d95bc07adbf2e",
+      "libusb_shared.dylib": "4937bfa3fa0786288fc29098adb78bf08e229272f6475a5db7c65022b363824e",
+      "libv8.dylib": "354160b93541bb9494ff62c015a7028e23bb6cccd57a2a42df29d946d8fff36e",
+      "libv8_libbase.dylib": "ac140793d5fa3468e2c9d11ee9c4aea02c2040730a098ecf3918f355904395f1",
+      "libv8_libplatform.dylib": "fac36851cf103654ca20584e6685a27249faffe9299012b81175d15e2df076a6",
+      "libvariations_features.dylib": "e5e2a2fa8ac07d2551423e152617ae2cd42caff4e1fd1d59fd65aea885144bb2",
+      "libviz_common.dylib": "fa9787968aac70baabc807d94d347d7a7c476dadfeca9140be64156ef5d40799",
+      "libviz_shared_image_format.dylib": "5041ae8beb1d84614a3932b25f8dffd8625cbae7d9508a45be4a5b3b2172266c",
+      "libvk_swiftshader.dylib": "909be022d982f160ba22ad6fcd7715f7b5edcedf3da3c9ae371ba796d9ff9a36",
+      "libvrp_flags_mojom.dylib": "5f766418ec100f2305876bd99aae6c4408e6cbc50c7649e81dedb3273b40d231",
+      "libvrp_flags_mojom_blink.dylib": "8695557dfccb9685667d4785967597a7d300125fd63d0ac23590640b3ce882ad",
+      "libvrp_flags_mojom_shared.dylib": "74fff63797e522c543762774a6ff1b1089af25f31eada873b78925dddf2a3b21",
+      "libvulkan.dylib": "25e22b42474e0a2885d4b445736c23d09f756fa1c82901e53e670db0acbb358e",
+      "libweb_bluetooth_mojo_bindings_shared.dylib": "99dd550470e0aeae5a1c0d96b5b1c572b2b8f154b4a1f460416e5b8cc6f24569",
+      "libweb_feature_mojo_bindings_mojom.dylib": "d3cd3ab3f68b0209a8deeaf3488a4ca5f8be855896ffe1325a4f22eb5dde8c6b",
+      "libweb_feature_mojo_bindings_mojom_blink.dylib": "cf7eca2c33991e61cd99bc3c51c2b1322c446db5e48188ec6f65a7fe04258bfc",
+      "libweb_feature_mojo_bindings_mojom_shared.dylib": "6a7f6e1f01cbcbd91611cf0ab0914bc6cf7290ec564b10f77102777a25b2ec38",
+      "libwebdata_common.dylib": "cd610123632cadc6ab0a20c7f4acffe9b153abb40ddb7a6abe9b417405d892aa",
+      "libwebnn_mojom.dylib": "196dcba8efb3f4b4a9508fa5555dcc454bc50876b0c8d8cdc2c3363b8a703e3e",
+      "libwebnn_mojom_blink.dylib": "5b8d864f9e71da29a6a01a595fcfdbbcaf30f1d53b23f28f2cf7c1c96ca39f92",
+      "libwebnn_mojom_device.dylib": "4830b4ae4ae9ea13828c7b53a6083e8aeeeb28f0e28834587e0aa5a63076e90c",
+      "libwebnn_mojom_device_blink.dylib": "f47e62478466dffa88ed57da87f3a101a7f79d309ab83d055673ca732e676ab2",
+      "libwebnn_mojom_device_shared.dylib": "60ee48d3305ce7b8286f571ec74318d10fb3f48c68c823fb2d7c64094d4b695e",
+      "libwebnn_mojom_features.dylib": "b12e2e71eb03f3e6da9c06d53d210a7155d8cab96d13a76fd6946c74d7b69a4b",
+      "libwebnn_mojom_features_blink.dylib": "3bcf8456ec8627c0100095635a2404a94d269f7d09c68ba27c70fd9e602b7cef",
+      "libwebnn_mojom_features_shared.dylib": "c705ba024b5959b43af9b16b29ce6dee7720cb3be9d069eb232074b797b1a599",
+      "libwebnn_mojom_shared.dylib": "ba35071c4077fcede1c93a2116bce97da978a388749c7e5fd3dea80eb125e527",
+      "libwebnn_mojom_webnn_service_introspection.dylib": "5106442eb6ac2319174cfb11df107ca18c639ef743e7b28a5b8e573016bb5770",
+      "libwebnn_mojom_webnn_service_introspection_blink.dylib": "43b8ba55a39d87f9e5b9cfde51a14a5646be9cd2a529ce941f2b75a75ffd5e5f",
+      "libwebnn_mojom_webnn_service_introspection_shared.dylib": "dba8a0654eb53d2f5a39f9039c40cc5f3193687ead0a41d9b8ca820127664505",
+      "snapshot_blob.bin": "fd58c49e3f1f0bad65918f3e8ccd0e70690b07cb8920d84f084dfdc3c3dae509",
+      "v8_context_snapshot.arm64.bin": "6189df1ab6a4b82f2791c46746302563cd49e71861052a6e0080d84d822e1102",
+      "viz_unittests": "47e42c81f6f1341071b3fbb44ef64f3a441a35ff51ffc047cd85e29a9196ab1f"
+    },
+    "artifactsSha256": "b772aaaac43501516aabe8520401385b2368393502c1fad302cdd091002f79d1",
+    "patchSha256": "af9a9319ca6afdac48710f11a849e3ad4b4c1ec0f2fefad962629f4092fa64e2"
+  },
+  "runtime": {
+    "schemaVersion": 1,
+    "id": "chromium-skia-886e42fda116-mac-unhinted-cff",
+    "skiaRevision": "886e42fda11610a56dd1b22e8697e27f9d1e34f2",
+    "emsdkVersion": "4.0.7",
+    "profilingFunctions": true,
+    "gnArgsSha256": "a14179642173741b39db678279eb5ecf315dc9d429845ae49b093bac6d2da959",
+    "backend": "software",
+    "text": {
+      "gammaAppliesToA8": true,
+      "gamma": 1,
+      "contrast": 0,
+      "cffStemDarkening": true,
+      "darkeningCurve": "FreeType default"
+    },
+    "patchSha256": "d551def97ca46dda40220105492b7857e08fd5c3b176c35a049b79ca10fd0624",
+    "assets": {
+      "canvaskit.js": "4da0cf6c3cef74e7f79633a8db65e471366c324296a29be667115fbf6494d2fb",
+      "canvaskit.wasm": "04bd2e589d1ca7892247238baa71e8ea5c80a5c64e87bab09ac00d9519c5cf69"
+    },
+    "scope": "Experimental CPU SKP replay; no WebGL or paragraph shaping"
+  },
+  "engine": {
+    "status": "picture-layer-candidate",
+    "engineSplitGate": "not-passed",
+    "serverRasterBypassed": false,
+    "pictureLayerCandidate": true,
+    "recordOnlyDisplayCandidate": true,
+    "positiveEvidence": {
+      "recordCount": 5,
+      "pairedRecordCount": 5,
+      "noTileMarkerCount": 61,
+      "frameNumbers": [
+        4,
+        7,
+        12,
+        17,
+        24
+      ],
+      "framesByRenderer": {
+        "38549": [
+          4,
+          7,
+          12,
+          17,
+          24
+        ]
+      },
+      "rendererPids": [
+        38549
+      ]
+    },
+    "displayEvidence": {
+      "skippedFrameCount": 7,
+      "pids": [
+        38547
+      ],
+      "surfaceIds": [
+        "SurfaceId(FrameSinkId(0, 2), LocalSurfaceId(2, 1, 6E19...))",
+        "SurfaceId(FrameSinkId(0, 2), LocalSurfaceId(3, 1, 6E19...))"
+      ]
+    },
+    "raster": {
+      "eventCount": 0,
+      "byName": {},
+      "byPhase": {}
+    },
+    "draw": {
+      "eventCount": 7,
+      "byName": {
+        "Display::DrawAndSwap": 7
+      },
+      "byPhase": {
+        "X": 7
+      }
+    },
+    "pixelDraw": {
+      "eventCount": 0,
+      "byName": {},
+      "byPhase": {}
+    },
+    "limitations": [
+      "No trace events is not proof that a pixel path did not run.",
+      "The optional headless NullRenderer bypasses Viz pixel drawing; Canvas, WebGL, video and image decoding are outside its scope.",
+      "Consecutive source frame numbers show new recordings, not a complete acknowledgement or frame/property-tree protocol.",
+      "Client replay, visual equality, CPU/RSS/thread measurements and ordinary-mode controls are separate acceptance conditions."
+    ]
+  },
+  "replay": {
+    "version": 1,
+    "recordedAt": "2026-10-28T09:08:59.434Z",
+    "stages": [
+      {
+        "name": "before",
+        "passed": true,
+        "native": {
+          "pid": 38549,
+          "treeId": 2,
+          "ts": 11086661716,
+          "sourceFrameNumber": 9
+        },
+        "layerIds": [
+          8,
+          9,
+          15,
+          10,
+          12,
+          13
+        ],
+        "surfaces": 2,
+        "visual": {
+          "passed": true,
+          "meanAbsoluteChannelError": 0.2606225887345679,
+          "pixelsOver32Fraction": 0.0015248842592592592,
+          "limits": {
+            "maxMeanAbsoluteChannelError": 3,
+            "maxPixelsOver32Fraction": 0.02
+          },
+          "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+        },
+        "regions": [
+          {
+            "selector": "header",
+            "bounds": {
+              "x": 24,
+              "y": 16,
+              "width": 476.21875,
+              "height": 70
+            },
+            "passed": true,
+            "meanAbsoluteChannelError": 1.8259958071278826,
+            "pixelsOver32Fraction": 0.01734052111410602,
+            "limits": {
+              "maxMeanAbsoluteChannelError": 3,
+              "maxPixelsOver32Fraction": 0.02
+            },
+            "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+          },
+          {
+            "selector": "#scene",
+            "bounds": {
+              "x": 24,
+              "y": 156,
+              "width": 600,
+              "height": 500
+            },
+            "passed": true,
+            "meanAbsoluteChannelError": 0.17918111111111112,
+            "pixelsOver32Fraction": 0.0009366666666666667,
+            "limits": {
+              "maxMeanAbsoluteChannelError": 3,
+              "maxPixelsOver32Fraction": 0.02
+            },
+            "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+          },
+          {
+            "selector": "#back",
+            "bounds": {
+              "x": 56,
+              "y": 182,
+              "width": 280,
+              "height": 200
+            },
+            "passed": true,
+            "meanAbsoluteChannelError": 0.38136309523809525,
+            "pixelsOver32Fraction": 0.004303571428571428,
+            "limits": {
+              "maxMeanAbsoluteChannelError": 3,
+              "maxPixelsOver32Fraction": 0.02
+            },
+            "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+          },
+          {
+            "selector": "#group",
+            "bounds": {
+              "x": 254,
+              "y": 256,
+              "width": 340,
+              "height": 260
+            },
+            "passed": true,
+            "meanAbsoluteChannelError": 0.29979638009049775,
+            "pixelsOver32Fraction": 0,
+            "limits": {
+              "maxMeanAbsoluteChannelError": 3,
+              "maxPixelsOver32Fraction": 0.02
+            },
+            "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+          },
+          {
+            "selector": "#scroller",
+            "bounds": {
+              "x": 656,
+              "y": 156,
+              "width": 280,
+              "height": 500
+            },
+            "passed": true,
+            "meanAbsoluteChannelError": 0.3494761904761905,
+            "pixelsOver32Fraction": 0.00012857142857142858,
+            "limits": {
+              "maxMeanAbsoluteChannelError": 3,
+              "maxPixelsOver32Fraction": 0.02
+            },
+            "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+          },
+          {
+            "selector": "original removal region",
+            "bounds": {
+              "x": 56,
+              "y": 512,
+              "width": 220,
+              "height": 100
+            },
+            "passed": true,
+            "meanAbsoluteChannelError": 0.48822727272727273,
+            "pixelsOver32Fraction": 0.0018181818181818182,
+            "limits": {
+              "maxMeanAbsoluteChannelError": 3,
+              "maxPixelsOver32Fraction": 0.02
+            },
+            "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+          },
+          {
+            "selector": "overlapping opacity children",
+            "bounds": {
+              "x": 344,
+              "y": 326,
+              "width": 130,
+              "height": 100
+            },
+            "passed": true,
+            "meanAbsoluteChannelError": 0.5855384615384616,
+            "pixelsOver32Fraction": 0,
+            "limits": {
+              "maxMeanAbsoluteChannelError": 3,
+              "maxPixelsOver32Fraction": 0.02
+            },
+            "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+          }
+        ],
+        "referenceState": {
+          "phase": "before",
+          "scrollTop": 0,
+          "removablePresent": true
+        },
+        "semanticsPassed": true,
+        "details": {
+          "stage": "before",
+          "frameId": "38549:2:11086661716",
+          "native": {
+            "pid": 38549,
+            "treeId": 2,
+            "ts": 11086661716,
+            "sourceFrameNumber": 9
+          },
+          "layers": 6,
+          "surfaces": 2,
+          "scrollOffsets": [
+            {
+              "id": "(580)",
+              "offset": [
+                0,
+                0
+              ]
+            },
+            {
+              "id": "(836)",
+              "offset": [
+                0,
+                0
+              ]
+            },
+            {
+              "id": "(1540)",
+              "offset": [
+                0,
+                0
+              ]
+            }
+          ],
+          "removedLayerIds": [],
+          "receiver": {
+            "epoch": "62861397-978b-4586-912f-560e184e2ec2",
+            "seq": 1,
+            "highest": 1,
+            "frameId": "38549:2:11086661716",
+            "presented": 1,
+            "stale": 0,
+            "cachedResources": 6,
+            "cachedBytes": 137750
+          },
+          "channel": {
+            "epoch": "62861397-978b-4586-912f-560e184e2ec2",
+            "sent": 1,
+            "acked": 1,
+            "pending": 0,
+            "queued": false,
+            "coalesced": 0,
+            "knownResources": 6
+          },
+          "downloads": {
+            "resources": 6,
+            "bytes": 137750
+          },
+          "runtime": {
+            "schemaVersion": 1,
+            "id": "chromium-skia-886e42fda116-mac-unhinted-cff",
+            "skiaRevision": "886e42fda11610a56dd1b22e8697e27f9d1e34f2",
+            "emsdkVersion": "4.0.7",
+            "profilingFunctions": true,
+            "gnArgsSha256": "a14179642173741b39db678279eb5ecf315dc9d429845ae49b093bac6d2da959",
+            "backend": "software",
+            "text": {
+              "gammaAppliesToA8": true,
+              "gamma": 1,
+              "contrast": 0,
+              "cffStemDarkening": true,
+              "darkeningCurve": "FreeType default"
+            },
+            "patchSha256": "d551def97ca46dda40220105492b7857e08fd5c3b176c35a049b79ca10fd0624",
+            "assets": {
+              "canvaskit.js": "4da0cf6c3cef74e7f79633a8db65e471366c324296a29be667115fbf6494d2fb",
+              "canvaskit.wasm": "04bd2e589d1ca7892247238baa71e8ea5c80a5c64e87bab09ac00d9519c5cf69"
+            },
+            "scope": "Experimental CPU SKP replay; no WebGL or paragraph shaping"
+          },
+          "scope": "Authoritative full frame with native grouping; bounded 2D picture/solid subset.",
+          "engineSplitGate": "not-passed",
+          "serverRasterBypassed": false
+        },
+        "images": {
+          "reference": "reference-frame-before.png",
+          "client": "client-frame-before.png"
+        }
+      },
+      {
+        "name": "changed",
+        "passed": true,
+        "native": {
+          "pid": 38549,
+          "treeId": 2,
+          "ts": 11086727272,
+          "sourceFrameNumber": 12
+        },
+        "layerIds": [
+          8,
+          9,
+          15,
+          10,
+          12,
+          13
+        ],
+        "surfaces": 2,
+        "visual": {
+          "passed": true,
+          "meanAbsoluteChannelError": 0.2876437114197531,
+          "pixelsOver32Fraction": 0.002685185185185185,
+          "limits": {
+            "maxMeanAbsoluteChannelError": 3,
+            "maxPixelsOver32Fraction": 0.02
+          },
+          "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+        },
+        "regions": [
+          {
+            "selector": "header",
+            "bounds": {
+              "x": 24,
+              "y": 16,
+              "width": 476.21875,
+              "height": 70
+            },
+            "passed": true,
+            "meanAbsoluteChannelError": 1.8259958071278826,
+            "pixelsOver32Fraction": 0.01734052111410602,
+            "limits": {
+              "maxMeanAbsoluteChannelError": 3,
+              "maxPixelsOver32Fraction": 0.02
+            },
+            "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+          },
+          {
+            "selector": "#scene",
+            "bounds": {
+              "x": 24,
+              "y": 156,
+              "width": 560,
+              "height": 500
+            },
+            "passed": true,
+            "meanAbsoluteChannelError": 0.25149166666666667,
+            "pixelsOver32Fraction": 0.003857142857142857,
+            "limits": {
+              "maxMeanAbsoluteChannelError": 3,
+              "maxPixelsOver32Fraction": 0.02
+            },
+            "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+          },
+          {
+            "selector": "#back",
+            "bounds": {
+              "x": 134.85659790039062,
+              "y": 195.68368530273438,
+              "width": 302.28680419921875,
+              "height": 232.63262939453125
+            },
+            "passed": true,
+            "meanAbsoluteChannelError": 0.8058601364522417,
+            "pixelsOver32Fraction": 0.014619883040935672,
+            "limits": {
+              "maxMeanAbsoluteChannelError": 3,
+              "maxPixelsOver32Fraction": 0.02
+            },
+            "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+          },
+          {
+            "selector": "#group",
+            "bounds": {
+              "x": 272,
+              "y": 238,
+              "width": 340,
+              "height": 260
+            },
+            "passed": true,
+            "meanAbsoluteChannelError": 0.2013310708898944,
+            "pixelsOver32Fraction": 0.0033031674208144797,
+            "limits": {
+              "maxMeanAbsoluteChannelError": 3,
+              "maxPixelsOver32Fraction": 0.02
+            },
+            "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+          },
+          {
+            "selector": "#scroller",
+            "bounds": {
+              "x": 656,
+              "y": 156,
+              "width": 280,
+              "height": 500
+            },
+            "passed": true,
+            "meanAbsoluteChannelError": 0.3494761904761905,
+            "pixelsOver32Fraction": 0.00012857142857142858,
+            "limits": {
+              "maxMeanAbsoluteChannelError": 3,
+              "maxPixelsOver32Fraction": 0.02
+            },
+            "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+          },
+          {
+            "selector": "original removal region",
+            "bounds": {
+              "x": 56,
+              "y": 512,
+              "width": 220,
+              "height": 100
+            },
+            "passed": true,
+            "meanAbsoluteChannelError": 0.48822727272727273,
+            "pixelsOver32Fraction": 0.0018181818181818182,
+            "limits": {
+              "maxMeanAbsoluteChannelError": 3,
+              "maxPixelsOver32Fraction": 0.02
+            },
+            "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+          },
+          {
+            "selector": "overlapping opacity children",
+            "bounds": {
+              "x": 362,
+              "y": 308,
+              "width": 130,
+              "height": 100
+            },
+            "passed": true,
+            "meanAbsoluteChannelError": 0.3241025641025641,
+            "pixelsOver32Fraction": 0.002692307692307692,
+            "limits": {
+              "maxMeanAbsoluteChannelError": 3,
+              "maxPixelsOver32Fraction": 0.02
+            },
+            "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+          }
+        ],
+        "referenceState": {
+          "phase": "changed",
+          "scrollTop": 0,
+          "removablePresent": true
+        },
+        "semanticsPassed": true,
+        "details": {
+          "stage": "changed",
+          "frameId": "38549:2:11086727272",
+          "native": {
+            "pid": 38549,
+            "treeId": 2,
+            "ts": 11086727272,
+            "sourceFrameNumber": 12
+          },
+          "layers": 6,
+          "surfaces": 2,
+          "scrollOffsets": [
+            {
+              "id": "(580)",
+              "offset": [
+                0,
+                0
+              ]
+            },
+            {
+              "id": "(836)",
+              "offset": [
+                0,
+                0
+              ]
+            },
+            {
+              "id": "(1540)",
+              "offset": [
+                0,
+                0
+              ]
+            }
+          ],
+          "removedLayerIds": [],
+          "receiver": {
+            "epoch": "62861397-978b-4586-912f-560e184e2ec2",
+            "seq": 2,
+            "highest": 2,
+            "frameId": "38549:2:11086727272",
+            "presented": 2,
+            "stale": 0,
+            "cachedResources": 7,
+            "cachedBytes": 160935
+          },
+          "channel": {
+            "epoch": "62861397-978b-4586-912f-560e184e2ec2",
+            "sent": 2,
+            "acked": 2,
+            "pending": 0,
+            "queued": false,
+            "coalesced": 0,
+            "knownResources": 7
+          },
+          "downloads": {
+            "resources": 7,
+            "bytes": 160935
+          },
+          "runtime": {
+            "schemaVersion": 1,
+            "id": "chromium-skia-886e42fda116-mac-unhinted-cff",
+            "skiaRevision": "886e42fda11610a56dd1b22e8697e27f9d1e34f2",
+            "emsdkVersion": "4.0.7",
+            "profilingFunctions": true,
+            "gnArgsSha256": "a14179642173741b39db678279eb5ecf315dc9d429845ae49b093bac6d2da959",
+            "backend": "software",
+            "text": {
+              "gammaAppliesToA8": true,
+              "gamma": 1,
+              "contrast": 0,
+              "cffStemDarkening": true,
+              "darkeningCurve": "FreeType default"
+            },
+            "patchSha256": "d551def97ca46dda40220105492b7857e08fd5c3b176c35a049b79ca10fd0624",
+            "assets": {
+              "canvaskit.js": "4da0cf6c3cef74e7f79633a8db65e471366c324296a29be667115fbf6494d2fb",
+              "canvaskit.wasm": "04bd2e589d1ca7892247238baa71e8ea5c80a5c64e87bab09ac00d9519c5cf69"
+            },
+            "scope": "Experimental CPU SKP replay; no WebGL or paragraph shaping"
+          },
+          "scope": "Authoritative full frame with native grouping; bounded 2D picture/solid subset.",
+          "engineSplitGate": "not-passed",
+          "serverRasterBypassed": false
+        },
+        "images": {
+          "reference": "reference-frame-changed.png",
+          "client": "client-frame-changed.png"
+        }
+      },
+      {
+        "name": "scrolled",
+        "passed": true,
+        "native": {
+          "pid": 38549,
+          "treeId": 2,
+          "ts": 11086944600,
+          "sourceFrameNumber": 17
+        },
+        "layerIds": [
+          8,
+          9,
+          15,
+          10,
+          12,
+          13
+        ],
+        "surfaces": 2,
+        "visual": {
+          "passed": true,
+          "meanAbsoluteChannelError": 0.286171875,
+          "pixelsOver32Fraction": 0.002683738425925926,
+          "limits": {
+            "maxMeanAbsoluteChannelError": 3,
+            "maxPixelsOver32Fraction": 0.02
+          },
+          "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+        },
+        "regions": [
+          {
+            "selector": "header",
+            "bounds": {
+              "x": 24,
+              "y": 16,
+              "width": 476.21875,
+              "height": 70
+            },
+            "passed": true,
+            "meanAbsoluteChannelError": 1.8259958071278826,
+            "pixelsOver32Fraction": 0.01734052111410602,
+            "limits": {
+              "maxMeanAbsoluteChannelError": 3,
+              "maxPixelsOver32Fraction": 0.02
+            },
+            "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+          },
+          {
+            "selector": "#scene",
+            "bounds": {
+              "x": 24,
+              "y": 156,
+              "width": 560,
+              "height": 500
+            },
+            "passed": true,
+            "meanAbsoluteChannelError": 0.25149166666666667,
+            "pixelsOver32Fraction": 0.003857142857142857,
+            "limits": {
+              "maxMeanAbsoluteChannelError": 3,
+              "maxPixelsOver32Fraction": 0.02
+            },
+            "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+          },
+          {
+            "selector": "#back",
+            "bounds": {
+              "x": 134.85659790039062,
+              "y": 195.68368530273438,
+              "width": 302.28680419921875,
+              "height": 232.63262939453125
+            },
+            "passed": true,
+            "meanAbsoluteChannelError": 0.8058601364522417,
+            "pixelsOver32Fraction": 0.014619883040935672,
+            "limits": {
+              "maxMeanAbsoluteChannelError": 3,
+              "maxPixelsOver32Fraction": 0.02
+            },
+            "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+          },
+          {
+            "selector": "#group",
+            "bounds": {
+              "x": 272,
+              "y": 238,
+              "width": 340,
+              "height": 260
+            },
+            "passed": true,
+            "meanAbsoluteChannelError": 0.2013310708898944,
+            "pixelsOver32Fraction": 0.0033031674208144797,
+            "limits": {
+              "maxMeanAbsoluteChannelError": 3,
+              "maxPixelsOver32Fraction": 0.02
+            },
+            "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+          },
+          {
+            "selector": "#scroller",
+            "bounds": {
+              "x": 656,
+              "y": 156,
+              "width": 280,
+              "height": 500
+            },
+            "passed": true,
+            "meanAbsoluteChannelError": 0.3482452380952381,
+            "pixelsOver32Fraction": 0.00015714285714285713,
+            "limits": {
+              "maxMeanAbsoluteChannelError": 3,
+              "maxPixelsOver32Fraction": 0.02
+            },
+            "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+          },
+          {
+            "selector": "original removal region",
+            "bounds": {
+              "x": 56,
+              "y": 512,
+              "width": 220,
+              "height": 100
+            },
+            "passed": true,
+            "meanAbsoluteChannelError": 0.48822727272727273,
+            "pixelsOver32Fraction": 0.0018181818181818182,
+            "limits": {
+              "maxMeanAbsoluteChannelError": 3,
+              "maxPixelsOver32Fraction": 0.02
+            },
+            "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+          },
+          {
+            "selector": "overlapping opacity children",
+            "bounds": {
+              "x": 362,
+              "y": 308,
+              "width": 130,
+              "height": 100
+            },
+            "passed": true,
+            "meanAbsoluteChannelError": 0.3241025641025641,
+            "pixelsOver32Fraction": 0.002692307692307692,
+            "limits": {
+              "maxMeanAbsoluteChannelError": 3,
+              "maxPixelsOver32Fraction": 0.02
+            },
+            "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+          }
+        ],
+        "referenceState": {
+          "phase": "scrolled",
+          "scrollTop": 180,
+          "removablePresent": true
+        },
+        "semanticsPassed": true,
+        "details": {
+          "stage": "scrolled",
+          "frameId": "38549:2:11086944600",
+          "native": {
+            "pid": 38549,
+            "treeId": 2,
+            "ts": 11086944600,
+            "sourceFrameNumber": 17
+          },
+          "layers": 6,
+          "surfaces": 2,
+          "scrollOffsets": [
+            {
+              "id": "(580)",
+              "offset": [
+                0,
+                0
+              ]
+            },
+            {
+              "id": "(836)",
+              "offset": [
+                0,
+                0
+              ]
+            },
+            {
+              "id": "(1540)",
+              "offset": [
+                0,
+                180
+              ]
+            }
+          ],
+          "removedLayerIds": [],
+          "receiver": {
+            "epoch": "62861397-978b-4586-912f-560e184e2ec2",
+            "seq": 3,
+            "highest": 3,
+            "frameId": "38549:2:11086944600",
+            "presented": 3,
+            "stale": 0,
+            "cachedResources": 8,
+            "cachedBytes": 184124
+          },
+          "channel": {
+            "epoch": "62861397-978b-4586-912f-560e184e2ec2",
+            "sent": 3,
+            "acked": 3,
+            "pending": 0,
+            "queued": false,
+            "coalesced": 0,
+            "knownResources": 8
+          },
+          "downloads": {
+            "resources": 8,
+            "bytes": 184124
+          },
+          "runtime": {
+            "schemaVersion": 1,
+            "id": "chromium-skia-886e42fda116-mac-unhinted-cff",
+            "skiaRevision": "886e42fda11610a56dd1b22e8697e27f9d1e34f2",
+            "emsdkVersion": "4.0.7",
+            "profilingFunctions": true,
+            "gnArgsSha256": "a14179642173741b39db678279eb5ecf315dc9d429845ae49b093bac6d2da959",
+            "backend": "software",
+            "text": {
+              "gammaAppliesToA8": true,
+              "gamma": 1,
+              "contrast": 0,
+              "cffStemDarkening": true,
+              "darkeningCurve": "FreeType default"
+            },
+            "patchSha256": "d551def97ca46dda40220105492b7857e08fd5c3b176c35a049b79ca10fd0624",
+            "assets": {
+              "canvaskit.js": "4da0cf6c3cef74e7f79633a8db65e471366c324296a29be667115fbf6494d2fb",
+              "canvaskit.wasm": "04bd2e589d1ca7892247238baa71e8ea5c80a5c64e87bab09ac00d9519c5cf69"
+            },
+            "scope": "Experimental CPU SKP replay; no WebGL or paragraph shaping"
+          },
+          "scope": "Authoritative full frame with native grouping; bounded 2D picture/solid subset.",
+          "engineSplitGate": "not-passed",
+          "serverRasterBypassed": false
+        },
+        "images": {
+          "reference": "reference-frame-scrolled.png",
+          "client": "client-frame-scrolled.png"
+        }
+      },
+      {
+        "name": "removed",
+        "passed": true,
+        "native": {
+          "pid": 38549,
+          "treeId": 2,
+          "ts": 11087163197,
+          "sourceFrameNumber": 24
+        },
+        "layerIds": [
+          8,
+          15,
+          10,
+          12,
+          13
+        ],
+        "surfaces": 2,
+        "visual": {
+          "passed": true,
+          "meanAbsoluteChannelError": 0.27174527391975306,
+          "pixelsOver32Fraction": 0.0026374421296296298,
+          "limits": {
+            "maxMeanAbsoluteChannelError": 3,
+            "maxPixelsOver32Fraction": 0.02
+          },
+          "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+        },
+        "regions": [
+          {
+            "selector": "header",
+            "bounds": {
+              "x": 24,
+              "y": 16,
+              "width": 476.21875,
+              "height": 70
+            },
+            "passed": true,
+            "meanAbsoluteChannelError": 1.8259958071278826,
+            "pixelsOver32Fraction": 0.01734052111410602,
+            "limits": {
+              "maxMeanAbsoluteChannelError": 3,
+              "maxPixelsOver32Fraction": 0.02
+            },
+            "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+          },
+          {
+            "selector": "#scene",
+            "bounds": {
+              "x": 24,
+              "y": 156,
+              "width": 560,
+              "height": 500
+            },
+            "passed": true,
+            "meanAbsoluteChannelError": 0.2131309523809524,
+            "pixelsOver32Fraction": 0.0037142857142857142,
+            "limits": {
+              "maxMeanAbsoluteChannelError": 3,
+              "maxPixelsOver32Fraction": 0.02
+            },
+            "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+          },
+          {
+            "selector": "#back",
+            "bounds": {
+              "x": 134.85659790039062,
+              "y": 195.68368530273438,
+              "width": 302.28680419921875,
+              "height": 232.63262939453125
+            },
+            "passed": true,
+            "meanAbsoluteChannelError": 0.8058601364522417,
+            "pixelsOver32Fraction": 0.014619883040935672,
+            "limits": {
+              "maxMeanAbsoluteChannelError": 3,
+              "maxPixelsOver32Fraction": 0.02
+            },
+            "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+          },
+          {
+            "selector": "#group",
+            "bounds": {
+              "x": 272,
+              "y": 238,
+              "width": 340,
+              "height": 260
+            },
+            "passed": true,
+            "meanAbsoluteChannelError": 0.2013310708898944,
+            "pixelsOver32Fraction": 0.0033031674208144797,
+            "limits": {
+              "maxMeanAbsoluteChannelError": 3,
+              "maxPixelsOver32Fraction": 0.02
+            },
+            "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+          },
+          {
+            "selector": "#scroller",
+            "bounds": {
+              "x": 656,
+              "y": 156,
+              "width": 280,
+              "height": 500
+            },
+            "passed": true,
+            "meanAbsoluteChannelError": 0.3482452380952381,
+            "pixelsOver32Fraction": 0.00015714285714285713,
+            "limits": {
+              "maxMeanAbsoluteChannelError": 3,
+              "maxPixelsOver32Fraction": 0.02
+            },
+            "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+          },
+          {
+            "selector": "original removal region",
+            "bounds": {
+              "x": 56,
+              "y": 512,
+              "width": 220,
+              "height": 100
+            },
+            "passed": true,
+            "meanAbsoluteChannelError": 0,
+            "pixelsOver32Fraction": 0,
+            "limits": {
+              "maxMeanAbsoluteChannelError": 3,
+              "maxPixelsOver32Fraction": 0.02
+            },
+            "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+          },
+          {
+            "selector": "overlapping opacity children",
+            "bounds": {
+              "x": 362,
+              "y": 308,
+              "width": 130,
+              "height": 100
+            },
+            "passed": true,
+            "meanAbsoluteChannelError": 0.3241025641025641,
+            "pixelsOver32Fraction": 0.002692307692307692,
+            "limits": {
+              "maxMeanAbsoluteChannelError": 3,
+              "maxPixelsOver32Fraction": 0.02
+            },
+            "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+          }
+        ],
+        "referenceState": {
+          "phase": "removed",
+          "scrollTop": 180,
+          "removablePresent": false
+        },
+        "semanticsPassed": true,
+        "details": {
+          "stage": "removed",
+          "frameId": "38549:2:11087163197",
+          "native": {
+            "pid": 38549,
+            "treeId": 2,
+            "ts": 11087163197,
+            "sourceFrameNumber": 24
+          },
+          "layers": 5,
+          "surfaces": 2,
+          "scrollOffsets": [
+            {
+              "id": "(580)",
+              "offset": [
+                0,
+                0
+              ]
+            },
+            {
+              "id": "(836)",
+              "offset": [
+                0,
+                0
+              ]
+            },
+            {
+              "id": "(1540)",
+              "offset": [
+                0,
+                180
+              ]
+            }
+          ],
+          "removedLayerIds": [
+            9
+          ],
+          "receiver": {
+            "epoch": "62861397-978b-4586-912f-560e184e2ec2",
+            "seq": 4,
+            "highest": 4,
+            "frameId": "38549:2:11087163197",
+            "presented": 4,
+            "stale": 0,
+            "cachedResources": 9,
+            "cachedBytes": 207309
+          },
+          "channel": {
+            "epoch": "62861397-978b-4586-912f-560e184e2ec2",
+            "sent": 4,
+            "acked": 4,
+            "pending": 0,
+            "queued": false,
+            "coalesced": 0,
+            "knownResources": 9
+          },
+          "downloads": {
+            "resources": 9,
+            "bytes": 207309
+          },
+          "runtime": {
+            "schemaVersion": 1,
+            "id": "chromium-skia-886e42fda116-mac-unhinted-cff",
+            "skiaRevision": "886e42fda11610a56dd1b22e8697e27f9d1e34f2",
+            "emsdkVersion": "4.0.7",
+            "profilingFunctions": true,
+            "gnArgsSha256": "a14179642173741b39db678279eb5ecf315dc9d429845ae49b093bac6d2da959",
+            "backend": "software",
+            "text": {
+              "gammaAppliesToA8": true,
+              "gamma": 1,
+              "contrast": 0,
+              "cffStemDarkening": true,
+              "darkeningCurve": "FreeType default"
+            },
+            "patchSha256": "d551def97ca46dda40220105492b7857e08fd5c3b176c35a049b79ca10fd0624",
+            "assets": {
+              "canvaskit.js": "4da0cf6c3cef74e7f79633a8db65e471366c324296a29be667115fbf6494d2fb",
+              "canvaskit.wasm": "04bd2e589d1ca7892247238baa71e8ea5c80a5c64e87bab09ac00d9519c5cf69"
+            },
+            "scope": "Experimental CPU SKP replay; no WebGL or paragraph shaping"
+          },
+          "scope": "Authoritative full frame with native grouping; bounded 2D picture/solid subset.",
+          "engineSplitGate": "not-passed",
+          "serverRasterBypassed": false
+        },
+        "images": {
+          "reference": "reference-frame-removed.png",
+          "client": "client-frame-removed.png"
+        }
+      }
+    ],
+    "errors": [],
+    "passed": true,
+    "engineSplitGate": "not-passed",
+    "serverRasterBypassed": false,
+    "imageProvenance": "Independent local ordinary-mode reference/replay browser; no pixels captured by the server recorder.",
+    "localValidationBrowser": "156.0.8078.48",
+    "staleFrame": {
+      "previous": {
+        "receiver": {
+          "epoch": "62861397-978b-4586-912f-560e184e2ec2",
+          "seq": 4,
+          "highest": 4,
+          "frameId": "38549:2:11087163197",
+          "presented": 4,
+          "stale": 0,
+          "cachedResources": 9,
+          "cachedBytes": 207309
+        },
+        "downloads": {
+          "resources": 9,
+          "bytes": 207309
+        }
+      },
+      "response": {
+        "status": "stale"
+      },
+      "current": {
+        "receiver": {
+          "epoch": "62861397-978b-4586-912f-560e184e2ec2",
+          "seq": 4,
+          "highest": 4,
+          "frameId": "38549:2:11087163197",
+          "presented": 4,
+          "stale": 1,
+          "cachedResources": 9,
+          "cachedBytes": 207309
+        },
+        "downloads": {
+          "resources": 9,
+          "bytes": 207309
+        }
+      },
+      "pixelsUnchanged": true
+    },
+    "corruptResource": {
+      "injected": true,
+      "failure": {
+        "error": "Resource SHA-256 mismatch",
+        "fallback": "none"
+      },
+      "state": {
+        "receiver": {
+          "epoch": "1030a99e-2fde-4bc9-b48e-6b5802a93181",
+          "seq": 1,
+          "highest": 2,
+          "frameId": "38549:2:11086661716",
+          "presented": 1,
+          "stale": 0,
+          "cachedResources": 6,
+          "cachedBytes": 137750
+        },
+        "downloads": {
+          "resources": 6,
+          "bytes": 137750
+        }
+      },
+      "channel": {
+        "epoch": "1030a99e-2fde-4bc9-b48e-6b5802a93181",
+        "sent": 2,
+        "acked": 1,
+        "pending": 1,
+        "queued": false,
+        "coalesced": 0,
+        "knownResources": 6
+      },
+      "pixelsUnchanged": true
+    }
+  },
+  "stages": [
+    {
+      "name": "before",
+      "frameId": "38549:2:11086661716",
+      "native": {
+        "pid": 38549,
+        "treeId": 2,
+        "ts": 11086661716,
+        "sourceFrameNumber": 9
+      },
+      "layerIds": [
+        8,
+        9,
+        15,
+        10,
+        12,
+        13
+      ],
+      "surfaces": 2,
+      "resources": 6,
+      "resourceBytes": 137750,
+      "scrollOffsets": [
+        {
+          "id": "(580)",
+          "offset": [
+            0,
+            0
+          ]
+        },
+        {
+          "id": "(836)",
+          "offset": [
+            0,
+            0
+          ]
+        },
+        {
+          "id": "(1540)",
+          "offset": [
+            0,
+            0
+          ]
+        }
+      ],
+      "evidence": {
+        "eventIndex": 1595,
+        "observedFrames": 3,
+        "start": 11086448741,
+        "end": 11086682321
+      }
+    },
+    {
+      "name": "changed",
+      "frameId": "38549:2:11086727272",
+      "native": {
+        "pid": 38549,
+        "treeId": 2,
+        "ts": 11086727272,
+        "sourceFrameNumber": 12
+      },
+      "layerIds": [
+        8,
+        9,
+        15,
+        10,
+        12,
+        13
+      ],
+      "surfaces": 2,
+      "resources": 6,
+      "resourceBytes": 137758,
+      "scrollOffsets": [
+        {
+          "id": "(580)",
+          "offset": [
+            0,
+            0
+          ]
+        },
+        {
+          "id": "(836)",
+          "offset": [
+            0,
+            0
+          ]
+        },
+        {
+          "id": "(1540)",
+          "offset": [
+            0,
+            0
+          ]
+        }
+      ],
+      "evidence": {
+        "eventIndex": 2636,
+        "observedFrames": 1,
+        "start": 11086682885,
+        "end": 11086896090
+      }
+    },
+    {
+      "name": "scrolled",
+      "frameId": "38549:2:11086944600",
+      "native": {
+        "pid": 38549,
+        "treeId": 2,
+        "ts": 11086944600,
+        "sourceFrameNumber": 17
+      },
+      "layerIds": [
+        8,
+        9,
+        15,
+        10,
+        12,
+        13
+      ],
+      "surfaces": 2,
+      "resources": 6,
+      "resourceBytes": 137762,
+      "scrollOffsets": [
+        {
+          "id": "(580)",
+          "offset": [
+            0,
+            0
+          ]
+        },
+        {
+          "id": "(836)",
+          "offset": [
+            0,
+            0
+          ]
+        },
+        {
+          "id": "(1540)",
+          "offset": [
+            0,
+            180
+          ]
+        }
+      ],
+      "evidence": {
+        "eventIndex": 4354,
+        "observedFrames": 2,
+        "start": 11086897105,
+        "end": 11087132667
+      }
+    },
+    {
+      "name": "removed",
+      "frameId": "38549:2:11087163197",
+      "native": {
+        "pid": 38549,
+        "treeId": 2,
+        "ts": 11087163197,
+        "sourceFrameNumber": 24
+      },
+      "layerIds": [
+        8,
+        15,
+        10,
+        12,
+        13
+      ],
+      "surfaces": 2,
+      "resources": 5,
+      "resourceBytes": 115745,
+      "scrollOffsets": [
+        {
+          "id": "(580)",
+          "offset": [
+            0,
+            0
+          ]
+        },
+        {
+          "id": "(836)",
+          "offset": [
+            0,
+            0
+          ]
+        },
+        {
+          "id": "(1540)",
+          "offset": [
+            0,
+            180
+          ]
+        }
+      ],
+      "evidence": {
+        "eventIndex": 5928,
+        "observedFrames": 1,
+        "start": 11087134306,
+        "end": 11087315969
+      }
+    }
+  ],
+  "nativeChanges": {
+    "multiLayer": true,
+    "transform": true,
+    "rotation": true,
+    "clip": true,
+    "groupOpacity": true,
+    "order": true,
+    "scroll": true,
+    "removedLayerIds": [
+      9
+    ]
+  },
+  "transport": {
+    "resourceRequests": 16,
+    "resourceBytes": 368244,
+    "acknowledgements": 5,
+    "sessions": [
+      {
+        "epoch": "62861397-978b-4586-912f-560e184e2ec2",
+        "sent": 4,
+        "acked": 4,
+        "pending": 0,
+        "queued": false,
+        "coalesced": 0,
+        "knownResources": 9
+      },
+      {
+        "epoch": "1030a99e-2fde-4bc9-b48e-6b5802a93181",
+        "sent": 2,
+        "acked": 1,
+        "pending": 1,
+        "queued": false,
+        "coalesced": 0,
+        "knownResources": 6
+      }
+    ]
+  },
+  "limitations": [
+    "Trusted fixed 2D fixture and trace transport only; not a production Chromium backend.",
+    "Images, filters, masking, non-SrcOver blending, 3D, iframe surfaces, Canvas, WebGL, video and copy-output are rejected or unverified.",
+    "SKP resources include embedded fonts; independent font/image deltas, DPR/zoom, resumption, cost and multi-worker handoff remain unverified."
+  ],
+  "finishedAt": "2026-10-28T09:09:05.481Z",
+  "fixture": {
+    "sha256": {
+      "frames.html": "44a4a42fe6627795b0a4185f964769d5c7965e6411a619a9dd364ebb65ac4fc4",
+      "frames.css": "61d049c07ce58eba976f195880bd68aa65f55e99dbddb3e04de0d60b6ff3b423",
+      "frames.js": "44bdfb48dd3aee47cf314a75fe33868133defa77582d8c1230f22bfb4b45aa89",
+      "fonts/fixture-sans.otf": "c52e024b0e36b06ccf319a934862675adbbdc1aac76e66cb60fb718f05426637"
+    },
+    "fontPolicy": "Pinned fixture webfont and explicit macOS antialiased (A8) CSS, matching the bounded CanvasKit text profile.",
+    "semanticStates": [
+      {
+        "phase": "before",
+        "scrollTop": 0,
+        "removablePresent": true
+      },
+      {
+        "phase": "changed",
+        "scrollTop": 0,
+        "removablePresent": true
+      },
+      {
+        "phase": "scrolled",
+        "scrollTop": 180,
+        "removablePresent": true
+      },
+      {
+        "phase": "removed",
+        "scrollTop": 180,
+        "removablePresent": false
+      }
+    ]
+  },
+  "validation": {
+    "jsTestsPassed": 60,
+    "pythonBuildTestsPassed": 5,
+    "jsSyntaxFilesPassed": 50,
+    "nativeCxxTestsPassed": 11,
+    "localBrowserE2ePassed": 5,
+    "localBrowserE2eSkipped": 0,
+    "capturedFrameBrowserE2e": {
+      "passed": true,
+      "browser": "156.0.8078.73"
+    }
+  },
+  "sourceManifestSha256": "7b8119e8b2fc14ab7e3a3ad7bd0e250347ef55032ccd4dc121f92aa58023feba",
+  "negativeControls": {
+    "defaultFontSmoothing": {
+      "passed": false,
+      "scope": "Initial fixture with browser-default font smoothing; whole image passes but independent header region fails.",
+      "errors": [
+        "Native frame visual or semantic comparison failed: before"
+      ],
+      "whole": {
+        "passed": true,
+        "meanAbsoluteChannelError": 0.518509837962963,
+        "pixelsOver32Fraction": 0.006200810185185185,
+        "limits": {
+          "maxMeanAbsoluteChannelError": 3,
+          "maxPixelsOver32Fraction": 0.02
+        },
+        "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+      },
+      "header": {
+        "selector": "header",
+        "bounds": {
+          "x": 24,
+          "y": 16,
+          "width": 476.21875,
+          "height": 70
+        },
+        "passed": false,
+        "meanAbsoluteChannelError": 5.070420285514625,
+        "pixelsOver32Fraction": 0.059688529499850256,
+        "limits": {
+          "maxMeanAbsoluteChannelError": 3,
+          "maxPixelsOver32Fraction": 0.02
+        },
+        "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+      },
+      "artifactDirectory": "test-results/chromium-frames-lcd-negative-20261028"
+    },
+    "explicitA8BeforeRotation": {
+      "passed": true,
+      "header": {
+        "selector": "header",
+        "bounds": {
+          "x": 24,
+          "y": 16,
+          "width": 476.21875,
+          "height": 70
+        },
+        "passed": true,
+        "meanAbsoluteChannelError": 1.8259958071278826,
+        "pixelsOver32Fraction": 0.01734052111410602,
+        "limits": {
+          "maxMeanAbsoluteChannelError": 3,
+          "maxPixelsOver32Fraction": 0.02
+        },
+        "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+      },
+      "artifactDirectory": "test-results/chromium-frames-20261028"
+    }
+  },
+  "sameBuildLegacyRegression": {
+    "status": "record-only-display-candidate",
+    "recordingsMatch": true,
+    "modes": {
+      "ordinary": {
+        "traceComplete": true,
+        "fixtureReplayPassed": true,
+        "lifecyclePassed": true,
+        "rasterRecords": 315,
+        "pixelDrawRecords": 17,
+        "displaySkippedRecords": 0
+      },
+      "remote-paint": {
+        "traceComplete": true,
+        "fixtureReplayPassed": true,
+        "lifecyclePassed": true,
+        "rasterRecords": 0,
+        "pixelDrawRecords": 15,
+        "displaySkippedRecords": 0
+      },
+      "record-only-display": {
+        "traceComplete": true,
+        "fixtureReplayPassed": true,
+        "lifecyclePassed": true,
+        "rasterRecords": 0,
+        "pixelDrawRecords": 0,
+        "displaySkippedRecords": 16
+      }
+    },
+    "artifactDirectory": "test-results/chromium-engine-frame-regression-20261028"
+  },
+  "resourceReuse": {
+    "fullFrameResourceReferences": 23,
+    "fullFrameReferencedSkpBytes": 529015,
+    "positiveClientDownloadedResources": 9,
+    "positiveClientDownloadedSkpBytes": 207309,
+    "scope": "SKP bytes only, excludes JSON, HTTP, CanvasKit bootstrap, trace and all other runtime costs. Cache budget uses serialized bytes, not decoded WASM memory/RSS."
+  },
+  "artifactDirectories": {
+    "nativeFrames": "test-results/chromium-frames-rotation-20261028",
+    "savedFrameE2e": "test-results/chromium-frames-e2e"
+  }
+}

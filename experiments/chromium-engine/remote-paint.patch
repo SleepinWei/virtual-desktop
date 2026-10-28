@@ -130,10 +130,19 @@ index c25d647967..7652dae023 100644
        LayerTreeImpl* tree_impl) const override;
    void CopyPropertiesTo(LayerImpl* layer) const override;
 diff --git a/cc/layers/picture_layer_impl_unittest.cc b/cc/layers/picture_layer_impl_unittest.cc
-index 4072fcfaf8..eb189ff60a 100644
+index 4072fcfaf8..6ab469f8e7 100644
 --- a/cc/layers/picture_layer_impl_unittest.cc
 +++ b/cc/layers/picture_layer_impl_unittest.cc
-@@ -330,6 +330,53 @@ class PictureLayerImplTest : public TestLayerTreeHostBase {
+@@ -17,6 +17,8 @@
+ #include "base/memory/raw_ptr.h"
+ #include "base/sanitizer_buildflags.h"
+ #include "base/test/scoped_feature_list.h"
++#include "base/trace_event/traced_value.h"
++#include "base/values.h"
+ #include "build/build_config.h"
+ #include "cc/animation/animation_host.h"
+ #include "cc/base/features.h"
+@@ -330,6 +332,98 @@ class PictureLayerImplTest : public TestLayerTreeHostBase {
    void TestQuadsForSolidColor(bool test_for_solid, bool partial_opaque);
  };
  
@@ -184,41 +193,405 @@ index 4072fcfaf8..eb189ff60a 100644
 +  }
 +}
 +
++TEST_F(RemotePaintPictureLayerImplTest, ExportsAuthoritativeMembership) {
++  SetupDefaultTrees(gfx::Size(128, 128));
++  auto* tree = host_impl()->active_tree();
++  UpdateDrawProperties(tree);
++  base::trace_event::TracedValueJSON first;
++  tree->AsRemotePaintValueInto(&first);
++  auto value = first.ToBaseValue();
++  const auto* entries = value->GetDict().FindList("entries");
++  ASSERT_TRUE(entries);
++  ASSERT_EQ(1u, entries->size());
++  EXPECT_EQ(active_layer()->id(), (*entries)[0].GetDict().FindInt("id"));
++  EXPECT_EQ("picture", *(*entries)[0].GetDict().FindString("kind"));
++  EXPECT_TRUE((*entries)[0].GetDict().FindDict("record"));
++  EXPECT_TRUE(value->GetDict().FindList("unsupported")->empty());
++  EXPECT_EQ(true, value->GetDict().FindBool("supported"));
++  EXPECT_EQ(1, value->GetDict().FindInt("entry_count"));
++
++  active_layer()->SetDrawsContent(false);
++  UpdateDrawProperties(tree);
++  base::trace_event::TracedValueJSON second;
++  tree->AsRemotePaintValueInto(&second);
++  value = second.ToBaseValue();
++  EXPECT_TRUE(value->GetDict().FindList("entries")->empty());
++  EXPECT_EQ(0, value->GetDict().FindInt("entry_count"));
++  EXPECT_FALSE(value->GetDict().FindList("surfaces")->empty());
++}
++
++TEST_F(RemotePaintPictureLayerImplTest, RejectsUnknownDrawableLayer) {
++  SetupDefaultTrees(gfx::Size(128, 128));
++  auto* tree = host_impl()->active_tree();
++  auto* unknown = AddLayer<LayerImpl>(tree);
++  CopyProperties(active_layer(), unknown);
++  unknown->SetBounds(gfx::Size(64, 64));
++  unknown->SetDrawsContent(true);
++  UpdateDrawProperties(tree);
++  base::trace_event::TracedValueJSON state;
++  tree->AsRemotePaintValueInto(&state);
++  auto value = state.ToBaseValue();
++  const auto* reasons = value->GetDict().FindList("unsupported");
++  ASSERT_TRUE(reasons);
++  ASSERT_FALSE(reasons->empty());
++  EXPECT_EQ("non-picture-layer", (*reasons)[0].GetString());
++  EXPECT_EQ(false, value->GetDict().FindBool("supported"));
++}
++
  // Legacy PictureLayerImplTest which forces SW rasterization. New tests should
  // default to the more common GPU rasterization path.
  class LegacySWPictureLayerImplTest : public PictureLayerImplTest {
 diff --git a/cc/paint/display_item_list.cc b/cc/paint/display_item_list.cc
-index 6f828b07a4..7e8c35fc94 100644
+index 6f828b07a4..59febf418b 100644
 --- a/cc/paint/display_item_list.cc
 +++ b/cc/paint/display_item_list.cc
-@@ -240,6 +240,11 @@ void DisplayItemList::EmitTraceSnapshot() const {
+@@ -240,6 +240,15 @@ void DisplayItemList::EmitTraceSnapshot() const {
        "snapshot", CreateTracedValue(include_items));
  }
  
 +std::unique_ptr<base::trace_event::TracedValue>
-+DisplayItemList::CreateTracedValueForRemotePaint() const {
-+  return CreateTracedValue(false);
++DisplayItemList::CreateTracedValueForRemotePaint(
++    const ScrollOffsetMap* scroll_offsets,
++    bool preserve_coordinates) const {
++  auto state = std::make_unique<base::trace_event::TracedValue>();
++  AddToValue(state.get(), false, scroll_offsets, preserve_coordinates);
++  return state;
 +}
 +
  std::string DisplayItemList::ToString() const {
    base::trace_event::TracedValueJSON value;
    AddToValue(&value, true);
+@@ -254,14 +263,20 @@ DisplayItemList::CreateTracedValue(bool include_items) const {
+ }
+ 
+ void DisplayItemList::AddToValue(base::trace_event::TracedValue* state,
+-                                 bool include_items) const {
++                                 bool include_items,
++                                 const ScrollOffsetMap* scroll_offsets,
++                                 bool preserve_coordinates) const {
+   state->BeginDictionary("params");
+ 
+-  // DisplayItemList doesn't know the current scroll offsets, so use zero.
++  // Ordinary debug snapshots do not know the current offsets. The active-tree
++  // remote frame supplies the realized, snapped offsets used by tile playback.
+   ScrollOffsetMap zero_scroll_offsets;
+   for (auto [element_id, _] : raster_inducing_scrolls()) {
+     zero_scroll_offsets[element_id] = gfx::PointF();
+   }
++  if (!scroll_offsets) {
++    scroll_offsets = &zero_scroll_offsets;
++  }
+ 
+   // For tracing code, just use the entire positive quadrant if the |rtree_|
+   // has invalid bounds.
+@@ -270,7 +285,7 @@ void DisplayItemList::AddToValue(base::trace_event::TracedValue* state,
+     state->BeginArray("items");
+ 
+     PlaybackParams params(nullptr, SkM44());
+-    params.raster_inducing_scroll_offsets = &zero_scroll_offsets;
++    params.raster_inducing_scroll_offsets = scroll_offsets;
+     std::map<size_t, gfx::Rect> visual_rects = rtree_.GetAllBoundsForTracing();
+     for (const PaintOp& op : paint_op_buffer_) {
+       state->BeginDictionary();
+@@ -303,9 +318,11 @@ void DisplayItemList::AddToValue(base::trace_event::TracedValue* state,
+   {
+     SkPictureRecorder recorder;
+     SkCanvas* canvas = recorder.beginRecording(gfx::RectToSkRect(bounds));
+-    canvas->translate(-bounds.x(), -bounds.y());
++    if (!preserve_coordinates) {
++      canvas->translate(-bounds.x(), -bounds.y());
++    }
+     canvas->clipRect(gfx::RectToSkRect(bounds));
+-    Raster(canvas, /*image_provider=*/nullptr, &zero_scroll_offsets);
++    Raster(canvas, /*image_provider=*/nullptr, scroll_offsets);
+     sk_sp<SkPicture> picture = recorder.finishRecordingAsPicture();
+ 
+     std::string b64_picture;
 diff --git a/cc/paint/display_item_list.h b/cc/paint/display_item_list.h
-index 42ef9d4363..33f531335e 100644
+index 42ef9d4363..646d7e0d21 100644
 --- a/cc/paint/display_item_list.h
 +++ b/cc/paint/display_item_list.h
-@@ -167,6 +167,11 @@ class CC_PAINT_EXPORT DisplayItemList
+@@ -167,6 +167,13 @@ class CC_PAINT_EXPORT DisplayItemList
  
    void EmitTraceSnapshot() const;
  
 +  // A complete recording-only snapshot for experimental remote-paint tracing.
 +  // Omits per-item debug snapshots and never creates a pixel surface.
 +  std::unique_ptr<base::trace_event::TracedValue>
-+  CreateTracedValueForRemotePaint() const;
++  CreateTracedValueForRemotePaint(
++      const ScrollOffsetMap* scroll_offsets = nullptr,
++      bool preserve_coordinates = false) const;
 +
    gfx::Rect VisualRectForTesting(int index) const {
      return visual_rects_[static_cast<size_t>(index)];
    }
+@@ -233,7 +240,10 @@ class CC_PAINT_EXPORT DisplayItemList
+ 
+   std::unique_ptr<base::trace_event::TracedValue> CreateTracedValue(
+       bool include_items) const;
+-  void AddToValue(base::trace_event::TracedValue*, bool include_items) const;
++  void AddToValue(base::trace_event::TracedValue*,
++                  bool include_items,
++                  const ScrollOffsetMap* scroll_offsets = nullptr,
++                  bool preserve_coordinates = false) const;
+ 
+   // If we're currently within a paired display item block, unions the
+   // given visual rect with the begin display item's visual rect.
+diff --git a/cc/paint/display_item_list_unittest.cc b/cc/paint/display_item_list_unittest.cc
+index 846f16fbe0..8851b8221c 100644
+--- a/cc/paint/display_item_list_unittest.cc
++++ b/cc/paint/display_item_list_unittest.cc
+@@ -10,8 +10,10 @@
+ #include <vector>
+ 
+ #include "base/compiler_specific.h"
++#include "base/base64.h"
+ #include "base/containers/span.h"
+ #include "base/logging.h"
++#include "base/json/json_reader.h"
+ #include "base/trace_event/traced_value.h"
+ #include "base/values.h"
+ #include "cc/paint/filter_operation.h"
+@@ -31,6 +33,7 @@
+ #include "third_party/skia/include/core/SkBitmap.h"
+ #include "third_party/skia/include/core/SkColor.h"
+ #include "third_party/skia/include/core/SkFont.h"
++#include "third_party/skia/include/core/SkPicture.h"
+ #include "third_party/skia/include/core/SkSurface.h"
+ #include "third_party/skia/include/core/SkTextBlob.h"
+ #include "ui/gfx/geometry/rect.h"
+@@ -145,6 +148,45 @@ TEST_F(DisplayItemListTest, TraceEmptyVisualRect) {
+   EXPECT_EQ("DrawRectOp", *name);
+ }
+ 
++TEST_F(DisplayItemListTest, RemotePaintPreservesCoordinatesAndScroll) {
++  PaintFlags red;
++  red.setColor(SK_ColorRED);
++  PaintFlags blue;
++  blue.setColor(SK_ColorBLUE);
++  auto contents = base::MakeRefCounted<DisplayItemList>();
++  contents->StartPaint();
++  contents->push<DrawRectOp>(SkRect::MakeXYWH(10, 20, 20, 20), red);
++  contents->push<DrawRectOp>(SkRect::MakeXYWH(10, 40, 20, 20), blue);
++  contents->EndPaintOfUnpaired(gfx::Rect(10, 20, 20, 40));
++  contents->Finalize();
++  auto list = base::MakeRefCounted<DisplayItemList>();
++  ElementId id(123);
++  list->PushDrawScrollingContentsOp(id, contents, gfx::Rect(10, 20, 20, 20));
++  list->Finalize();
++
++  for (int offset : {0, 20}) {
++    ScrollOffsetMap offsets{{id, gfx::PointF(0, offset)}};
++    auto state = list->CreateTracedValueForRemotePaint(&offsets, true);
++    std::string json;
++    state->AppendAsTraceFormat(&json);
++    auto value = base::JSONReader::Read(json, base::JSON_PARSE_RFC);
++    ASSERT_TRUE(value);
++    const auto* encoded = value->GetDict().FindString("skp64");
++    ASSERT_TRUE(encoded);
++    std::string bytes;
++    ASSERT_TRUE(base::Base64Decode(*encoded, &bytes));
++    auto picture = SkPicture::MakeFromData(bytes.data(), bytes.size());
++    ASSERT_TRUE(picture);
++    SkBitmap bitmap;
++    bitmap.allocN32Pixels(64, 64);
++    SkCanvas canvas(bitmap);
++    canvas.clear(SK_ColorTRANSPARENT);
++    canvas.drawPicture(picture);
++    EXPECT_EQ(offset ? SK_ColorBLUE : SK_ColorRED, bitmap.getColor(12, 22));
++    EXPECT_EQ(SK_ColorTRANSPARENT, bitmap.getColor(2, 2));
++  }
++}
++
+ TEST_F(DisplayItemListTest, SingleUnpairedRange) {
+   gfx::Rect layer_rect(100, 100);
+   PaintFlags blue_flags;
+diff --git a/cc/trees/layer_tree_host_impl.cc b/cc/trees/layer_tree_host_impl.cc
+index ba702d1093..7d361ffacc 100644
+--- a/cc/trees/layer_tree_host_impl.cc
++++ b/cc/trees/layer_tree_host_impl.cc
+@@ -1621,6 +1621,14 @@ DrawResult LayerTreeHostImpl::PrepareToDraw(FrameData* frame,
+       /*update_tiles=*/true, /*update_image_animation_controller=*/true);
+   DCHECK(ok) << "UpdateDrawProperties failed during draw";
+ 
++  if (settings_.remote_paint_only) {
++    TRACE_EVENT1("cc", "VirtualDesktop.RemotePaintFrame", "snapshot", [&] {
++      auto value = std::make_unique<base::trace_event::TracedValue>();
++      active_tree_->AsRemotePaintValueInto(value.get());
++      return value;
++    }());
++  }
++
+   if (!settings_.trees_in_viz_in_viz_process) {
+     // This will cause NotifyTileStateChanged() to be called for any tiles that
+     // completed, which will add damage for visible tiles to the frame for them
+diff --git a/cc/trees/layer_tree_impl.cc b/cc/trees/layer_tree_impl.cc
+index aae25d05ab..2340a02f02 100644
+--- a/cc/trees/layer_tree_impl.cc
++++ b/cc/trees/layer_tree_impl.cc
+@@ -44,6 +44,8 @@
+ #include "cc/layers/render_surface_impl.h"
+ #include "cc/layers/scrollbar_layer_impl_base.h"
+ #include "cc/layers/touch_action_region.h"
++#include "cc/paint/display_item_list.h"
++#include "cc/raster/raster_source.h"
+ #include "cc/resources/ui_resource_request.h"
+ #include "cc/trees/clip_node.h"
+ #include "cc/trees/draw_property_utils.h"
+@@ -2306,6 +2308,139 @@ void LayerTreeImpl::AsValueInto(base::trace_event::TracedValue* state) const {
+   state->EndArray();
+ }
+ 
++void LayerTreeImpl::AsRemotePaintValueInto(
++    base::trace_event::TracedValue* state) {
++  state->SetInteger("version", 1);
++  state->SetInteger("tree_id", host_impl_->id());
++  state->SetInteger("source_frame_number", source_frame_number_);
++  MathUtil::AddToTracedValue("viewport", GetDeviceViewport(), state);
++  state->BeginArray("background");
++  for (float component : {background_color_.fR, background_color_.fG,
++                          background_color_.fB, background_color_.fA}) {
++    state->AppendDouble(component);
++  }
++  state->EndArray();
++  const auto* root = RootRenderSurface();
++  state->SetInteger("root", root ? root->EffectTreeIndex() : -1);
++  std::vector<std::string> unsupported;
++  if (!root) {
++    unsupported.push_back("missing-root-surface");
++  }
++
++  state->BeginArray("surfaces");
++  for (int effect_id : GetRenderSurfaceList()) {
++    const auto* surface = GetRenderSurface(effect_id);
++    state->BeginDictionary();
++    state->SetInteger("id", effect_id);
++    MathUtil::AddToTracedValue("content_rect", surface->content_rect(), state);
++    if (!surface->Filters().IsEmpty() ||
++        !surface->BackdropFilters().IsEmpty() ||
++        !surface->mask_filter_info().IsEmpty() ||
++        surface->BlendMode() != SkBlendMode::kSrcOver ||
++        !surface->draw_transform().Is2dTransform() ||
++        surface->HasMaskingContributingSurface() ||
++        surface->has_view_transition_capture_contributions() ||
++        surface->CopyOfOutputRequired() || surface->IsUnbounded()) {
++      unsupported.push_back("surface-effects");
++    }
++    state->EndDictionary();
++  }
++  state->EndArray();
++  state->SetInteger("surface_count", GetRenderSurfaceList().size());
++
++  // This is the same front-to-back traversal used by CalculateRenderPasses,
++  // before remote picture layers reject WillDraw/AppendQuads. Surface entries
++  // preserve group opacity; multiplying opacity into individual children is
++  // incorrect where children overlap.
++  state->BeginArray("entries");
++  int entry_count = 0;
++  for (EffectTreeLayerListIterator it(this);
++       it.state() != EffectTreeLayerListIterator::State::kEnd; ++it) {
++    if (it.state() == EffectTreeLayerListIterator::State::kTargetSurface) {
++      continue;
++    }
++    state->BeginDictionary();
++    ++entry_count;
++    state->SetInteger("target", it.target_effect_tree_index());
++    if (it.state() ==
++        EffectTreeLayerListIterator::State::kContributingSurface) {
++      const auto* surface = it.current_render_surface();
++      state->SetString("kind", "surface");
++      state->SetInteger("id", surface->EffectTreeIndex());
++      MathUtil::AddToTracedValue("transform", surface->draw_transform(), state);
++      state->SetDouble("opacity", surface->draw_opacity());
++      state->SetBoolean("is_clipped", surface->is_clipped());
++      MathUtil::AddToTracedValue("clip", surface->clip_rect(), state);
++    } else {
++      const auto* layer = it.current_layer();
++      state->SetInteger("id", layer->id());
++      MathUtil::AddToTracedValue("bounds", gfx::Rect(layer->bounds()), state);
++      MathUtil::AddToTracedValue("transform", layer->DrawTransform(), state);
++      state->SetDouble("opacity", layer->draw_opacity());
++      state->SetBoolean("is_clipped", layer->is_clipped());
++      MathUtil::AddToTracedValue("clip", layer->clip_rect(), state);
++      const auto& effect = property_trees()->effect_tree().Node(
++          layer->effect_tree_index());
++      if (!layer->DrawTransform().Is2dTransform() || layer->Is3dSorted() ||
++          !layer->draw_properties().mask_filter_info.IsEmpty() ||
++          (!effect.HasRenderSurface() &&
++           effect.blend_mode != SkBlendMode::kSrcOver)) {
++        unsupported.push_back("layer-effects");
++      }
++      if (layer->GetLayerType() == mojom::LayerType::kPicture) {
++        state->SetString("kind", "picture");
++        const auto* picture = static_cast<const PictureLayerImpl*>(layer);
++        const auto* source = picture->GetRasterSource();
++        const auto* list = source ? source->GetDisplayItemList().get() : nullptr;
++        if (list && !list->has_discardable_images()) {
++          const auto offsets = picture->GetRasterInducingScrollOffsets();
++          state->SetValue("record", list->CreateTracedValueForRemotePaint(
++                                        &offsets, true).get());
++        } else {
++          unsupported.push_back("picture-images-or-missing-record");
++        }
++      } else if (layer->GetLayerType() == mojom::LayerType::kSolidColor) {
++        state->SetString("kind", "solid");
++        const auto color = layer->background_color();
++        state->BeginArray("color");
++        for (float component : {color.fR, color.fG, color.fB, color.fA}) {
++          state->AppendDouble(component);
++        }
++        state->EndArray();
++      } else {
++        state->SetString("kind", "unsupported");
++        unsupported.push_back("non-picture-layer");
++      }
++    }
++    state->EndDictionary();
++  }
++  state->EndArray();
++  state->SetInteger("entry_count", entry_count);
++  state->BeginArray("scroll_offsets");
++  int scroll_count = 0;
++  const auto& scroll_tree = property_trees()->scroll_tree();
++  for (const auto& node : scroll_tree.nodes()) {
++    if (!node.element_id) {
++      continue;
++    }
++    state->BeginDictionary();
++    ++scroll_count;
++    state->SetString("id", node.element_id.ToString());
++    MathUtil::AddToTracedValue(
++        "offset", scroll_tree.current_scroll_offset(node.element_id), state);
++    state->EndDictionary();
++  }
++  state->EndArray();
++  state->SetInteger("scroll_count", scroll_count);
++  state->BeginArray("unsupported");
++  for (const auto& reason : unsupported) {
++    state->AppendString(reason);
++  }
++  state->EndArray();
++  state->SetInteger("unsupported_count", unsupported.size());
++  state->SetBoolean("supported", unsupported.empty());
++}
++
+ void LayerTreeImpl::QueueSwapPromise(
+     std::unique_ptr<SwapPromise> swap_promise) {
+   DCHECK(swap_promise);
+diff --git a/cc/trees/layer_tree_impl.h b/cc/trees/layer_tree_impl.h
+index 7ae7de0e4d..dcc099bb7c 100644
+--- a/cc/trees/layer_tree_impl.h
++++ b/cc/trees/layer_tree_impl.h
+@@ -183,6 +183,9 @@ class CC_EXPORT LayerTreeImpl {
+   void GetAllPrioritizedTilesForTracing(
+       std::vector<PrioritizedTile>* prioritized_tiles) const;
+   void AsValueInto(base::trace_event::TracedValue* dict) const;
++  // Experimental authoritative active frame. Must follow UpdateDrawProperties;
++  // includes native surface grouping and records without creating pixel surfaces.
++  void AsRemotePaintValueInto(base::trace_event::TracedValue* dict);
+ 
+   // Other public methods
+   // ---------------------------------------------------------------------------
 diff --git a/cc/trees/layer_tree_settings.h b/cc/trees/layer_tree_settings.h
 index eb3c404d03..66661e6f1c 100644
 --- a/cc/trees/layer_tree_settings.h

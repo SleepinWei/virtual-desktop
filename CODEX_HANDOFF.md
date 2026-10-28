@@ -16,7 +16,9 @@ v0 是 Node.js + LinkeDOM + Yoga 的可信应用协议 PoC。服务端没有 Chr
 
 2026-10-28 已完成原生引擎增量构建、4 项 cc 与 4 项 Viz 测试。新增 `VirtualDesktopRemotePaintNoDisplay`，仅在 headless 且 RemotePaint 同时启用时使用上游 OutputSurfaceUnified/NullRenderer。匹配 Chromium Skia 的 CanvasKit 已在外置盘构建：`/Volumes/Extreme-APFS/Builds/canvaskit/out`，采用明确的 A8 线性覆盖和 CFF 默认 stem darkening，固定页面全部文字区域通过原有阈值。三模式实验已达到 **record-only-display-candidate**；看 [最新验证记录](docs/chromium-engine-2026-10-28.json)。`engineSplitGate` 仍为 `not-passed`，不能称为通用无服务端像素的浏览器。
 
-后续优先实现完整帧、layer/property tree、scroll offsets、资源和移除/ACK 协议，再验证复杂真实页面。当前滚动/刷新检查只证明执行和调度活性，没有证明这些状态的本地画面还原。Canvas/WebGL/video/图片解码、跨节点调度和成本收益仍未覆盖。不要通过放宽视觉阈值、回传截图或把 v0 的性能数据套到 Chromium 来推进关卡。
+2026-10-28 后续已实现 **native-frame-candidate**，见 [CHROMIUM_FRAMES.md](docs/CHROMIUM_FRAMES.md) 和 [完整验收](docs/chromium-frames-2026-10-28.json)。原生补丁现在覆盖 17 个文件；7 项 cc/paint 与 4 项 Viz 通过。`npm run experiment:frames` 验证 6→5 个真实内容层、2 个 surface、7° 旋转/层序/矩形 clip/组 opacity、180px 滚动和删层；四阶段整图与独立区域均通过未放宽的阈值。默认文字平滑反例失败，显式 A8 才通过，不可外推所有字体。客户端有资源哈希复用、2 个未 ACK 帧加 1 个最新合并帧、有界缓存、原子显示及旧帧/损坏资源保护。
+
+最新真实产物在 `test-results/chromium-frames-rotation-20261028/`；旧三模式同构建回归在 `test-results/chromium-engine-frame-regression-20261028/`。60 JS、5 Python、50 JS 语法、11 C++、5 本地 E2E 通过。native frame trace 仍批量捕获，HTTP ACK 实验重放已保存的状态，**尚未接上持续运行的 Chromium、agent/control epoch 或 v0 worker**。下一步优先实现原生持续 producer/资源失败与断线恢复，再扩字体/图片/iframe/IME/DPR 兼容，最后测去除 trace 后的 CPU/RSS/总带宽及多 worker。Canvas/WebGL/video/readback 的像素路径仍未覆盖。不要通过放宽视觉阈值、回传截图或把 v0 的性能数据套到 Chromium 来推进关卡。
 
 ## 立即执行
 

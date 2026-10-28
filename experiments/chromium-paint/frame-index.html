@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Native frame replay lab</title>
+  <link rel="stylesheet" href="/lab.css">
+  <script defer src="/canvaskit.js"></script>
+  <script type="module" src="/frame-replay.js"></script>
+</head>
+<body>
+  <header><span>virtual-desktop / native frames</span><strong id="state">Loading</strong></header>
+  <main>
+    <h1>Replay a complete native frame.</h1>
+    <p>Chromium supplies the layers and drawing records. This client composites the pixels and acknowledges completed frames.</p>
+    <p class="boundary">Experimental 2D picture and solid layers. General website support and the full engine split gate remain unverified.</p>
+    <div class="toolbar"><label>Captured state <select id="stage"></select></label></div>
+    <div class="surface"><canvas id="skp" width="960" height="720" aria-label="Native compositor frame replay"></canvas></div>
+    <pre id="result" role="status"></pre>
+  </main>
+</body>
+</html>

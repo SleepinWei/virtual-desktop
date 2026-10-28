@@ -10,6 +10,7 @@
 - [实测结果与未验证项](docs/VALIDATION.md)
 - [Chromium 原生 SKP 与客户端重放实验](docs/CHROMIUM_PAINT.md)
 - [固定版本 Chromium 引擎构建与 picture-layer 补丁](docs/CHROMIUM_ENGINE.md)
+- [原生完整帧、图层合成与 ACK 实验](docs/CHROMIUM_FRAMES.md)
 
 ## 运行
 
@@ -54,4 +55,4 @@ npm run experiment:paint
 
 实验运行真实 HTML/CSS/JavaScript，导出原生 SKP，用本地 CanvasKit 重放按钮操作前后的状态，保存 trace、来源及逐区域视觉比较。`-- --serve` 保留实验页面。此入口使用普通浏览器，仍执行常规 raster，详情见 [实验说明](docs/CHROMIUM_PAINT.md)。
 
-2026-10-28 的[固定版本引擎实验](docs/CHROMIUM_ENGINE.md)增加 headless NullRenderer 和匹配 Skia 的 CanvasKit 文本覆盖策略，三种模式均通过固定页面严格视觉比较。record-only-display 模式具有正向跳过绘制标记，并保持真实输入、滚动、刷新和会话存储可用。它尚未提供通用多图层/资源协议，也未接入 v0 worker；完整引擎关卡仍未通过。
+2026-10-28 的[固定版本引擎实验](docs/CHROMIUM_ENGINE.md)增加 headless NullRenderer 和匹配 Skia 的 CanvasKit 文本覆盖策略，三种模式均通过固定页面严格视觉比较。后续的[完整帧实验](docs/CHROMIUM_FRAMES.md)达到 `native-frame-candidate`：真实多层画面、7° 旋转、透明度分组、裁剪、滚动和删层均通过，具备资源哈希复用、有界队列、ACK 与过期帧保护。当前通过 trace 批量捕获后重放，尚未接上持续运行的 Chromium 会话或 v0 worker；通用网站及完整引擎关卡仍未通过。

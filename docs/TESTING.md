@@ -58,6 +58,8 @@ BENCH_SESSIONS=8 BENCH_ITERATIONS=20 npm run bench
 
 ## Chromium 原生绘图实验
 
+完整帧入口为 `npm run experiment:frames`，需要已构建并通过原生测试的固定引擎和匹配 CanvasKit；复现命令见 [CHROMIUM_FRAMES.md](CHROMIUM_FRAMES.md)。`CHROMIUM_FRAME_CAPTURE_DIRECTORY` 启用真实多层捕获的额外 E2E，`CHROMIUM_CAPTURE_DIRECTORY` 启用旧单 picture 内存检查；两者都需要对应真实产物。无这些输入的 CI 显式跳过这两项，不跳过普通 viewer E2E 或协议/HTTP 测试。
+
 `npm test` 另外覆盖 trace 原生字节提取、来源和阶段分类、损坏记录拒绝、空数据/错误像素拒绝、实验服务资源白名单及 headless 能力失败报告。这些纯分析测试不启动 Chromium，不能代替实际 SKP 解码与视觉验证。
 
 运行 `npm run experiment:paint` 验证本机浏览器的原生 SKP 捕获和客户端 CanvasKit 重放；`npm run experiment:headless` 配合显式 headless shell 二进制路径检测受控帧能力。版本耦合、输出和失败状态见 [CHROMIUM_PAINT.md](CHROMIUM_PAINT.md)。实验未作为当前 v0 CI 的兼容性保证，实际结果应记录浏览器版本和能力限制。
