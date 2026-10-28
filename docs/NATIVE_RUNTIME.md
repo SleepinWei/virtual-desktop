@@ -4,6 +4,8 @@
 
 后续已提取 684.5 MiB 的独立引擎/CanvasKit 运行包，本地原生生产端通过，手动 viewer 验证被整机压力保护阻止。深度裁剪仅 GN 配置通过、未编译，见 [CHROMIUM_SUBSET.md](CHROMIUM_SUBSET.md) 与 [子集记录](chromium-subset-2026-10-28.json)。8082 空闲服务改用提取包；不等于 RSS 优化或真实网站关卡通过。
 
+2026-10-29 已增加[多会话复用原型](CHROMIUM_POOL.md)：一个 browser、独立 BrowserContext/renderer/JS heap，可信 fixture 的存储、输入、帧路由、context 回收与崩溃测试通过；正式网关仍保留下面的独立 worker/browser 结构。深度 lean 编译前两轮受整机保护停止，后按用户要求改成后台调度恢复、保留内存与换页保护，尚无新引擎，详见[本轮记录](chromium-pool-2026-10-29.json)。
+
 ## 输入与页面兼容
 
 本地不可见 textarea 接收系统文字输入、粘贴和组合事件；只把提交后的文字送到真实 Chromium。画面点击先定位远端焦点，后续键盘按有界队列顺序执行，连续文字合并；输入绑定原会话与 control epoch，控制权改变时取消待发输入。已确认帧保留最多 16 项小型签名历史，避免新 ACK 与键盘请求竞态；坐标输入仍必须对应当前画面。

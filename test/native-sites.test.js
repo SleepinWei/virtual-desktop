@@ -23,3 +23,13 @@ test('load safety stops on new swapping, low memory or the owned RSS budget', ()
   assert.equal(pressureReason({ ...baseline, swapoutBytes: 101 + SAFE_LIMITS.maxSwapoutBytes }, baseline), 'new-swapouts');
   assert.equal(pressureReason({ ...baseline, treeRssBytes: SAFE_LIMITS.maxTreeRssBytes + 1 }, baseline), 'owned-process-rss-limit');
 });
+test('background compilation can ignore aggregate CPU load while memory and swap protection remain enforced', () => {
+  const baseline = { freePercent: 50, swapoutBytes: 100, treeRssBytes: 100, load: 0 };
+  const busy = { ...baseline, load: Number.MAX_SAFE_INTEGER };
+  const background = { enforceSystemLoad: false };
+  assert.equal(pressureReason(busy, baseline), 'system-load');
+  assert.equal(pressureReason(busy, baseline, SAFE_LIMITS, background), null);
+  assert.equal(pressureReason({ ...busy, freePercent: 34 }, baseline, SAFE_LIMITS, background), 'memory-pressure');
+  assert.equal(pressureReason({ ...busy, treeRssBytes: SAFE_LIMITS.maxTreeRssBytes + 1 }, baseline, SAFE_LIMITS, background), 'owned-process-rss-limit');
+  assert.equal(pressureReason({ ...busy, swapoutBytes: 101 + SAFE_LIMITS.maxSwapoutBytes }, baseline, SAFE_LIMITS, background), 'new-swapouts');
+});

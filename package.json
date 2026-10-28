@@ -25,6 +25,8 @@
     "experiment:site": "node experiments/chromium-engine/probe-site.js",
     "package:native": "node experiments/chromium-engine/package-runtime.js",
     "test:native-package": "node experiments/chromium-engine/smoke-runtime.js",
+    "experiment:pool": "node experiments/chromium-engine/probe-pool.js",
+    "build:native-lean": "node experiments/chromium-engine/guarded-lean-build.js",
     "test:engine-build": "python3 -B -m unittest discover -s experiments/chromium-engine -p '*_test.py'"
   },
   "dependencies": {

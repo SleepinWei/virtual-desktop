@@ -7,40 +7,51 @@ import { captureLaunchArgs, findPageProvenance, recordTrace, settlePage } from '
 import { normalizeNativeFrame } from '../chromium-paint/native-frame.js';
 import { visualSignature } from '../../src/native-frames.js';
 import { ensure } from '../../src/errors.js';
+import { randomUUID } from 'node:crypto';
 
 const STARTUP_TRACE = { recordMode: 'recordAsMuchAsPossible', traceBufferSizeInKb: 4096,
   includedCategories: ['disabled-by-default-devtools.timeline'], excludedCategories: ['*'] };
 const delay = milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds));
 
 export class ChromiumSession {
-  constructor({ onFrame, onFault, onBrowser }) {
+  constructor({ onFrame, onFault, onBrowser, sharedHost }) {
     this.onFrame = onFrame; this.onFault = onFault; this.onBrowser = onBrowser;
     this.candidates = new Map(); this.actions = new Map(); this.frames = 0; this.excluded = 0;
     this.latest = null; this.route = null; this.closed = false; this.traceActive = false;
+    this.sharedHost = sharedHost; this.leaseId = randomUUID();
   }
   async start({ root, expectedArtifactsSha256, expectedPatchSha256, url, viewport, saved, allowedPaths, site }) {
-    const verified = await verifiedEngine(root, { requireStream: true });
+    const verified = this.sharedHost?.engine || await verifiedEngine(root, { requireStream: true });
     ensure(verified.artifactsSha256 === expectedArtifactsSha256 && verified.patchSha256 === expectedPatchSha256,
       409, 'ENGINE_CHANGED', 'Native build changed; restart the service before creating sessions');
     ensure(!site || externalSites[site] && allowedSiteRequest(site, url, { navigation: true }), 400, 'INVALID_SITE', 'Unknown external site');
     this.viewport = viewport; this.url = url; this.site = site;
     if (saved) ensure(saved.kind === 'chromium-storage-v1' && saved.storageState && Array.isArray(saved.storageState.cookies) &&
       Array.isArray(saved.storageState.origins), 409, 'INVALID_PROFILE_STATE', 'Expected a Chromium storage profile');
-    this.stream = await createNativeStream(message => this.receive(message));
-    this.server = await chromium.launchServer({ executablePath: verified.binary, headless: true, host: '127.0.0.1', timeout: 15000,
-      // Cross-site process launches serialize tracing shared memory through an
-      // upstream switch capped at 8 MiB. Live frames do not use trace transport.
-      chromiumSandbox: false, args: captureLaunchArgs({ remotePaint: true, noDisplay: true, producerBufferBytes: 8388608 }),
-      env: { ...process.env, ...this.stream.environment } });
-    this.browserPid = this.server.process().pid; this.onBrowser(this.browserPid, this.server.process());
-    let diagnosticBytes = 0;
-    this.server.process().stderr?.on('data', chunk => {
-      if (diagnosticBytes >= 16384) return;
-      const bounded = chunk.subarray(0, 16384 - diagnosticBytes); diagnosticBytes += bounded.length;
-      process.stderr.write(bounded);
-    });
-    this.browser = await chromium.connect(this.server.wsEndpoint());
-    this.browser.on('disconnected', () => { if (!this.closed) this.onFault('Native browser disconnected', true); });
+    if (this.sharedHost) {
+      const shared = this.sharedHost.attach(this, { root, expectedArtifactsSha256, expectedPatchSha256, site, url });
+      this.browser = shared.browser; this.browserPid = shared.browserPid; this.stream = shared.stream;
+      // The startup metadata trace is browser-wide. A per-lease URL prevents
+      // two contexts at the same fixture URL from claiming each other's pid.
+      const unique = new URL(url); unique.searchParams.set('vd_native_lease', this.leaseId);
+      url = unique.href; this.url = url;
+    } else {
+      this.stream = await createNativeStream(message => this.receive(message));
+      this.server = await chromium.launchServer({ executablePath: verified.binary, headless: true, host: '127.0.0.1', timeout: 15000,
+        // Cross-site process launches serialize tracing shared memory through an
+        // upstream switch capped at 8 MiB. Live frames do not use trace transport.
+        chromiumSandbox: false, args: captureLaunchArgs({ remotePaint: true, noDisplay: true, producerBufferBytes: 8388608 }),
+        env: { ...process.env, ...this.stream.environment } });
+      this.browserPid = this.server.process().pid; this.onBrowser(this.browserPid, this.server.process());
+      let diagnosticBytes = 0;
+      this.server.process().stderr?.on('data', chunk => {
+        if (diagnosticBytes >= 16384) return;
+        const bounded = chunk.subarray(0, 16384 - diagnosticBytes); diagnosticBytes += bounded.length;
+        process.stderr.write(bounded);
+      });
+      this.browser = await chromium.connect(this.server.wsEndpoint());
+      this.browser.on('disconnected', () => { if (!this.closed) this.onFault('Native browser disconnected', true); });
+    }
     const origin = new URL(url).origin, paths = new Set(allowedPaths);
     this.context = await this.browser.newContext({ viewport, deviceScaleFactor: 1, acceptDownloads: false, serviceWorkers: 'block',
       ...(saved ? { storageState: saved.storageState } : {}) });
@@ -58,13 +69,14 @@ export class ChromiumSession {
     this.traceActive = true;
     let trace;
     try {
-      trace = await recordTrace(this.cdp, async () => {
+      const capture = () => recordTrace(this.cdp, async () => {
         const response = await this.page.goto(url, { waitUntil: site ? 'domcontentloaded' : 'load', timeout: 15000 });
         this.url = this.page.url();
         ensure(response?.ok() && (site ? allowedSiteRequest(site, this.url, { navigation: true }) : this.url === url),
           502, 'NATIVE_NAVIGATION_FAILED', 'Native page did not load within its configured site policy');
         if (site) await this.page.waitForTimeout(750); else await settlePage(this.page);
       }, { traceConfig: STARTUP_TRACE });
+      trace = await (this.sharedHost ? this.sharedHost.trace(capture) : capture());
     } finally { this.traceActive = false; }
     ensure(trace.dataLossOccurred === false, 502, 'NATIVE_PROVENANCE_INCOMPLETE', 'Startup process metadata was incomplete');
     const provenance = findPageProvenance(trace.events, this.url);
@@ -83,6 +95,7 @@ export class ChromiumSession {
       const current = candidates.at(-1);
       if (current) {
         this.route = { pid: current.pid, treeId: current.snapshot.tree_id };
+        this.sharedHost?.router.bind(this.leaseId, this.route);
         this.accept(current);
       }
       if (!this.latest) await delay(20);
@@ -144,6 +157,7 @@ export class ChromiumSession {
   }
   async dispatch(method, params = {}) {
     if (method === 'diagnostics') {
+      ensure(!this.sharedHost, 409, 'SHARED_TRACE_RESTRICTED', 'Per-session diagnostics cannot start a browser-wide trace on a shared host');
       if (params.type === 'start') {
         ensure(!this.traceActive, 409, 'TRACE_BUSY', 'A diagnostic trace is already active');
         this.traceActive = true;
@@ -176,6 +190,10 @@ export class ChromiumSession {
   }
   async close() {
     this.closed = true;
+    if (this.sharedHost) {
+      this.sharedHost.router.detach(this.leaseId);
+      await this.context?.close().catch(() => {}); this.candidates.clear(); this.latest = null; return;
+    }
     await this.server?.close().catch(() => {});
     await this.stream?.close();
   }

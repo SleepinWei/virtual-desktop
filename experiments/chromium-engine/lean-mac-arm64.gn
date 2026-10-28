@@ -1,4 +1,4 @@
-# Separate candidate: configure/build in out/VirtualDesktopLean, never overwrite
+# Separate candidate: configure/build in out/VirtualDesktopLeanNinja, never overwrite
 # the validated out/VirtualDesktop build. GN validation is not a compiled pass.
 # Generate with --root-target=//headless:headless_shell and
 # --root-pattern=//headless:headless_shell to exclude unrelated Chrome tests.
@@ -8,6 +8,7 @@ is_component_build = false
 symbol_level = 0
 dcheck_always_on = true
 use_remoteexec = false
+use_siso = false
 chrome_pgo_phase = 0
 use_thin_lto = false
 optimize_for_size = true

@@ -1,0 +1,233 @@
+{
+  "version": 1,
+  "date": "2026-10-29",
+  "status": "shared-native-host-candidate",
+  "engineSplitGate": "not-passed",
+  "serverRasterBypassed": false,
+  "build": {
+    "revision": "d0c02bfad08ec92a6ffcf989e53cd995e6381a4c",
+    "artifactsSha256": "11cf44ecf2e7437344a4a23619cc509a4f0e2e5d4029e285ca8af2ea00a09613",
+    "patchSha256": "9a8c986d9bf7a34fb6f296e09eddb78e60f487c76059f51491d98d923b823437"
+  },
+  "sharedHost": {
+    "evidence": {
+      "path": "test-results/native-shared-host-faults-20261028/pool-report.json",
+      "sha256": "2ca7f8fd6d68c49d6d4c4b8f7e4b61f5fb52d0e7d3cfd8625eff8c67ba94f514"
+    },
+    "startedAt": "2026-10-28T15:54:20.196Z",
+    "finishedAt": "2026-10-28T15:54:34.722Z",
+    "maxConcurrentContexts": 2,
+    "identities": [
+      {
+        "name": "A",
+        "browserPid": 67179,
+        "rendererPid": 67210,
+        "contextId": "A1C8F6435689313F495D43C601AE19B4",
+        "frameId": "67210:2:35911952795"
+      },
+      {
+        "name": "B",
+        "browserPid": 67179,
+        "rendererPid": 67284,
+        "contextId": "C1FB993C9987505D362C838FE97B0649",
+        "frameId": "67284:2:35914374761"
+      }
+    ],
+    "passed": [
+      "Two independent BrowserContexts share one browser PID; renderer PIDs, cookies, localStorage, JS markers, input and native frames remain separate",
+      "Closing one context leaves the other live; its capacity is reused by a fresh context with clean state",
+      "Crashing one renderer terminates its lease while the other context still accepts real input and exports frames",
+      "Killing the shared browser invalidates both remaining host leases; browser failure is a shared fault domain"
+    ],
+    "measurements": [
+      {
+        "phase": "one-context",
+        "activeContexts": 1,
+        "summedRssBytes": 882524160,
+        "hostFreePercent": 41
+      },
+      {
+        "phase": "two-contexts",
+        "activeContexts": 2,
+        "summedRssBytes": 1091960832,
+        "hostFreePercent": 41
+      },
+      {
+        "phase": "replaced-context",
+        "activeContexts": 2,
+        "summedRssBytes": 1076838400,
+        "hostFreePercent": 41
+      }
+    ],
+    "secondContextIncrementBytes": 209436672,
+    "browserCrash": {
+      "activeLeases": 2,
+      "fatalLeases": [
+        "B",
+        "D"
+      ]
+    },
+    "safety": {
+      "stop": null,
+      "minHostFreePercent": 40,
+      "peakObservedSummedRssBytes": 1091960832,
+      "newHostSwapoutBytes": 0
+    },
+    "scope": "One shared headless browser, at most two trusted fixture contexts; native records only. No public pool API, viewer/visual pass or hostile-tenant security claim.",
+    "measurementLimits": [
+      "Short trusted-fixture producer test, no viewer or client decoding.",
+      "RSS sums can count shared pages more than once; not unique physical footprint.",
+      "One coordinator instead of one Node worker per session. Not a matched independent-browser memory comparison.",
+      "No production-capacity, long-session, general-site or security-isolation pass."
+    ]
+  },
+  "dedicatedRegression": {
+    "status": "native-runtime-smoke-passed",
+    "evidence": {
+      "path": "test-results/native-dedicated-regression-20261028/smoke-report.json",
+      "sha256": "bf0304767dde645f6cd6fc172d7301fba2cd843d7162259df9c71d70ab0f9bcd"
+    },
+    "steps": [
+      "Verified engine/CanvasKit checksums and started a native session from the configured runtime root",
+      "Real input, click and duplicate fencing passed; complete native frames/resources arrived over the socket"
+    ],
+    "frames": {
+      "revision": 4,
+      "received": 5,
+      "duplicates": 1,
+      "resourceBytes": 72835,
+      "resources": 3,
+      "fault": null,
+      "frameId": "69234:2:36182516542",
+      "connections": []
+    },
+    "safety": {
+      "stop": null,
+      "minHostFreePercent": 45,
+      "peakObservedSummedRssBytes": 898793472,
+      "newHostSwapoutBytes": 0
+    }
+  },
+  "leanBuild": {
+    "profile": "experiments/chromium-engine/lean-mac-arm64.gn",
+    "runner": "experiments/chromium-engine/guarded-lean-build.js",
+    "attempts": [
+      {
+        "builder": "siso",
+        "output": "out/VirtualDesktopLean",
+        "status": "safety-stopped",
+        "startedAt": "2026-10-28T15:59:51.248Z",
+        "finishedAt": "2026-10-28T16:00:00.451Z",
+        "jobs": 1,
+        "safety": {
+          "stop": "memory-pressure",
+          "minHostFreePercent": 34,
+          "peakObservedSummedRssBytes": 1220444160,
+          "newHostSwapoutBytes": 0
+        },
+        "evidence": {
+          "path": "test-results/lean-build-20261028/guard-report.json",
+          "sha256": "ba8f547ead577b2b7a5f3cc52afafa52563199b9636af6b78c8af4047846b789"
+        },
+        "compiled": false,
+        "newCppTestsPassed": false
+      },
+      {
+        "builder": "ninja",
+        "output": "out/VirtualDesktopLeanNinja",
+        "status": "safety-stopped",
+        "startedAt": "2026-10-28T16:02:23.371Z",
+        "finishedAt": "2026-10-28T16:02:35.466Z",
+        "jobs": 1,
+        "safety": {
+          "stop": "system-load",
+          "minHostFreePercent": 39,
+          "peakObservedSummedRssBytes": 491257856,
+          "newHostSwapoutBytes": 0
+        },
+        "evidence": {
+          "path": "test-results/lean-ninja-build-20261029/guard-report.json",
+          "sha256": "1466d90169a533e4a9d34395e4ab2aa0d32cf528c8423b7e58f931a75bc3859b"
+        },
+        "compiled": false,
+        "newCppTestsPassed": false
+      },
+      {
+        "builder": "ninja-background",
+        "output": "out/VirtualDesktopLeanNinja",
+        "status": "running",
+        "startedAt": "2026-10-28T16:10:00.978Z",
+        "finishedAt": null,
+        "observedAt": "2026-10-28T16:12:39.840518+00:00",
+        "source": "test-results/lean-background-build-20261029/guard-report.json",
+        "sourceMayChange": true,
+        "jobs": 1,
+        "cpuPolicy": {
+          "jobs": 1,
+          "nice": 19,
+          "darwinBackground": true,
+          "qosClamp": "background",
+          "systemLoadHardStop": false,
+          "scope": "Compiler subtree only; the coordinator/watchdog run outside its background QoS clamp."
+        },
+        "safety": {
+          "stop": null,
+          "policy": {
+            "minFreePercent": 35,
+            "maxSwapoutBytes": 67108864,
+            "maxTreeRssBytes": 1610612736,
+            "maxHeartbeatMs": 4000,
+            "maxDurationMs": null,
+            "enforceSystemLoad": false,
+            "systemLoadStopAbove": null
+          },
+          "minHostFreePercent": 38,
+          "peakObservedSummedRssBytes": 706330624,
+          "newHostSwapoutBytes": 0
+        },
+        "compiled": false,
+        "newCppTestsPassed": false,
+        "stateStage": "build-running"
+      }
+    ],
+    "currentStatePath": "/Volumes/Extreme-APFS/Builds/chromium/virtual-desktop-lean-ninja-build-state.json",
+    "compiled": false,
+    "runtimeReplaced": false,
+    "automaticRetryScheduled": false,
+    "scope": "Background single-job build snapshot. CPU aggregate load is no longer a build stop; memory, swap, RSS and watchdog protections remain. Working runtime is unchanged. No new C++/native/visual acceptance.",
+    "status": "running",
+    "earlierLaunchFailure": {
+      "path": "test-results/lean-ninja-background-20261029/guard-report.json",
+      "sha256": "a1525e701a73e718262af3ccac2e1a934eec64f2d072aa71df5ab3851be6637a",
+      "error": "An incorrect taskpolicy path prevented spawning any compiler; corrected to /usr/sbin/taskpolicy and verified with true before resuming."
+    },
+    "policyChange": {
+      "userInstruction": "只要保证不卡别的线程就行了",
+      "compileSubtree": {
+        "darwinBackground": true,
+        "qosClamp": "background",
+        "niceObserved": 19,
+        "jobs": 1
+      },
+      "coordinatorNiceObserved": 0,
+      "systemLoadHardStop": false,
+      "browserDefaultsChanged": false,
+      "zeroJankGuaranteed": false
+    }
+  },
+  "checks": {
+    "javascriptTestsPassed": 81,
+    "pythonToolTestsPassed": 8,
+    "javascriptSyntaxFiles": 81,
+    "nativeCppSourceChanged": false,
+    "previousCppResultsNotRerun": true
+  },
+  "integration": {
+    "publicPoolApi": false,
+    "defaultGateway": "Dedicated worker/browser per session",
+    "poolExperiment": "SharedChromiumHost + fresh BrowserContext + NativeLeaseRouter",
+    "original8081Preserved": true,
+    "existing8082RuntimeReplaced": false,
+    "scope": "Trusted local fixtures only; Chromium sandbox remains disabled."
+  }
+}

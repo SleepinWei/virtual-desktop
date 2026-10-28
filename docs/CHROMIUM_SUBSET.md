@@ -1,6 +1,6 @@
 # Chromium 最小运行子集
 
-2026-10-28：已提取并验证一版独立 **native runtime 包**，阶段为 `packaged-native-runtime-candidate`。它复用已通过 C++ 验证的 component 构建，完成运行文件提取；深度裁剪版本仅通过 GN 配置，尚未编译。实际记录见 [chromium-subset-2026-10-28.json](chromium-subset-2026-10-28.json)。
+2026-10-28：已提取并验证一版独立 **native runtime 包**，阶段为 `packaged-native-runtime-candidate`。它复用已通过 C++ 验证的 component 构建，完成运行文件提取，实际记录见 [chromium-subset-2026-10-28.json](chromium-subset-2026-10-28.json)。2026-10-29 的深度裁剪受控构建已启动，尚无新二进制；最新策略与状态见下文及 [chromium-pool-2026-10-29.json](chromium-pool-2026-10-29.json)。
 
 ## 需要保留的边界
 
@@ -59,16 +59,36 @@ DATA_DIR=.data/native-subset nice -n 10 npm run start:native -- \
 
 ## 深度裁剪候选
 
-仓库的 `experiments/chromium-engine/lean-mac-arm64.gn` 使用非 component 构建、按体积优化，关闭 PDF、打印、headless CLI 命令和 Local State prefs。保留 DCHECK，不使用 ThinLTO，以控制后续本机构建成本。候选输出独立放在 `out/VirtualDesktopLean`，没有修改已验证构建的参数。
+仓库的 `experiments/chromium-engine/lean-mac-arm64.gn` 使用非 component 构建、按体积优化，关闭 PDF、打印、headless CLI 命令和 Local State prefs。保留 DCHECK，不使用 ThinLTO，以控制本机构建成本。候选输出为 `out/VirtualDesktopLeanNinja`，没有修改已验证的 `out/VirtualDesktop`。
 
-固定 Chromium 版本的 GN 图已生成：12,186 targets / 2,204 build files，`--fail-on-unused-args` 通过。需要限定 root target 和 root pattern，否则该版本的无关完整 Chrome 测试会因关闭打印而触发断言：
+固定 Chromium 版本的初版 GN 图为 12,186 targets / 2,204 build files，`--fail-on-unused-args` 通过。配置需要限定 root target 和 root pattern，否则该版本的无关完整 Chrome 测试会因关闭打印而触发断言。`lean-build.py` 已自动设置两项参数，并在编译前后检查固定提交和 20 个补丁文件指纹。
+
+第一轮 Siso 在读取图和启动辅助工具时触发整机 free 34% 的内存保护。改用上游 `autoninja.py` 支持的 `use_siso=false`，另建 Ninja 输出，避免混用两种构建工具的数据；旧的 Siso 目录与停止记录保留。第二轮 Ninja 已开始 C++ 编译，最新 RSS 采样约 370 MiB，但整机 load 8.75 触发原有 CPU 总负载门限。两轮都没有生成可用新引擎，原始二进制及 8081/8082 未替换。
+
+用户随后明确以“不影响其他任务”为优先，编译策略改成：
+
+| 保护 | 当前编译策略 |
+| --- | --- |
+| 并发 | 一个 `headless_shell` 目标，`-j 1`，关闭远程执行和 ThinLTO |
+| CPU / I/O | 只对编译子树使用 Darwin background、background QoS clamp、nice 19；子进程继承，实际进程已核实 |
+| 整机 CPU load | 编译专用不再按 load >8 直接停止；CPU 忙时由后台优先级让路。浏览器测试和交互服务的默认 load 保护保留 |
+| 内存 | 整机内存压力 free percentage ≥35%，owned RSS 之和 ≤1.5 GiB |
+| 换页 | 最近 10 秒新增系统 swapout ≤64 MiB |
+| 监控 | 独立 watchdog，心跳 4 秒；监控器在编译的后台 QoS clamp 之外；监控失效也终止编译 |
+
+这依赖系统调度和秒级采样，并非硬 CPU/内存隔离，也不能保证其他应用绝对零卡顿。后台调度可显著降低编译优先级；全局 load 是可运行/等待任务的平均值，不能直接当成前台响应时间。仅编译模式允许忽略总 load，其他资源保护和默认浏览器策略没有放宽。新单元测试覆盖了该例外及其内存/换页保护。
+
+第三轮已按此策略恢复 Ninja 缓存。交付时状态快照与前两轮报告写在本轮 JSON，持续状态以外置盘的 `chromium/virtual-desktop-lean-ninja-build-state.json`、`logs/chromium-lean-build.log` 及本机 `test-results/lean-background-build-20261029/guard-report.json` 为准。没有定时自动重试；一旦保护停止，不会自行无限重启。
 
 ```bash
-# 在 Chromium src 下，把仓库的 lean-mac-arm64.gn 复制为该新目录的 args.gn 后运行。
-gn gen out/VirtualDesktopLean --root-target=//headless:headless_shell \
-  --root-pattern=//headless:headless_shell --fail-on-unused-args
+# 先检查记录的 PID/状态，避免启动第二份编译。
+python3 -B experiments/chromium-engine/lean-build.py status --root /Volumes/Extreme-APFS/Builds
+
+# 启动器自动对编译子树设置后台调度；不要并行跑浏览器压测。
+npm run build:native-lean -- --root /Volumes/Extreme-APFS/Builds \
+  --output test-results/lean-background-build
 ```
 
-这里只完成配置，没有新二进制、C++ 验收或体积/内存结果。后续需在受控资源下构建单一 `headless_shell` 目标；为 monolithic 工件增加独立验证布局，并用同配置重建/执行相关 C++ 测试、原生输入/帧和本地视觉回归，再决定替换当前引擎。
+当前没有新二进制、C++ 验收或轻量引擎的体积/内存结果。构建完成后仍需为 monolithic 工件增加独立验证布局，并用同配置重建/执行相关 C++ 测试、原生输入/帧和本地视觉回归，再决定替换当前引擎。
 
 缩小程序文件与降低网页内存是两条工作线。RSS 后续还需按实际物理占用、进程角色、V8/图片/字体及 SKP 序列化临时副本拆分；移走编译器和开发资源不会自动减少页面的 JS heap、解码缓存或帧副本。
