@@ -472,6 +472,64 @@
     "example": {
       "status": "not-validated",
       "interactiveUiAttempt": "Stopped at the owned-process RSS budget; no successful external replay claim."
+    },
+    "bilibili": {
+      "url": "https://www.bilibili.com/",
+      "build": {
+        "revision": "d0c02bfad08ec92a6ffcf989e53cd995e6381a4c",
+        "patchSha256": "9a8c986d9bf7a34fb6f296e09eddb78e60f487c76059f51491d98d923b823437",
+        "artifactsSha256": "883c6169437857120e035772217e5cf85bf5c4f8b1cbf928c612d066eb0a9ab8"
+      },
+      "ordinary": {
+        "status": "ordinary-page-only",
+        "startedAt": "2026-10-28T14:04:07.242Z",
+        "finishedAt": "2026-10-28T14:04:13.581Z",
+        "safety": {
+          "stopped": null,
+          "peakSummedRssBytes": 1343832064,
+          "minHostFreePercent": 39,
+          "newHostSwapoutBytes": 0
+        },
+        "rawReport": "test-results/chromium-bilibili-ordinary-20261028/report.json",
+        "httpStatus": 200,
+        "url": "https://www.bilibili.com/",
+        "title": "哔哩哔哩 (゜-゜)つロ 干杯~-bilibili",
+        "images": {
+          "total": 55,
+          "loaded": 55
+        },
+        "blockedHosts": {
+          "s1.hdslb.com": 2
+        },
+        "screenshot": "test-results/chromium-bilibili-ordinary-20261028/ordinary-public-page.png"
+      },
+      "native": {
+        "status": "safety-stopped",
+        "startedAt": "2026-10-28T14:04:33.529Z",
+        "finishedAt": "2026-10-28T14:04:40.628Z",
+        "safety": {
+          "stopped": "owned-process-rss-limit",
+          "peakSummedRssBytes": 1693990912,
+          "minHostFreePercent": 38,
+          "newHostSwapoutBytes": 0
+        },
+        "rawReport": "test-results/chromium-bilibili-native-20261028/report.json",
+        "httpStatus": 503,
+        "error": {
+          "code": "WORKER_UNAVAILABLE",
+          "message": "Execution process is unavailable; observe before retrying"
+        },
+        "acceptedNativeFrames": 0
+      },
+      "interactiveEnabled": false,
+      "scope": "Separate sequential fresh unauthenticated homepage probes. No login, video playback, native replay or input pass. Two s1.hdslb.com requests were blocked by the shared policy; full cross-domain iframe behavior was not verified. Short startup samples are not a steady-state performance comparison.",
+      "ownedTestProcessesCleanedUp": true,
+      "followupChecks": {
+        "javascriptTestsPassed": 74,
+        "pythonToolTestsPassed": 5,
+        "javascriptSyntaxFiles": 74,
+        "engineRebuilt": false
+      }
     }
   },
   "verification": {
@@ -501,7 +559,9 @@
     "test-results/chromium-bounded-final-20261028/report.json",
     "test-results/chromium-xiaohongshu-8m-20261028/report.json",
     "test-results/chromium-direct-input-20261028/live-report.json",
-    "test-results/chromium-direct-input-fixed-20261028/live-report.json"
+    "test-results/chromium-direct-input-fixed-20261028/live-report.json",
+    "test-results/chromium-bilibili-ordinary-20261028/report.json",
+    "test-results/chromium-bilibili-native-20261028/report.json"
   ],
   "interactiveResourceObservation": {
     "nativeResourceStop": "owned-process-rss-limit",

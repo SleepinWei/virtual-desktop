@@ -12,6 +12,8 @@
 
 小红书未通过：普通无头对照到 IP 风险页 300012；原生首帧前超预算，交互选项禁用。持续 producer tracing buffer 从 32 MiB 改为 8 MiB，修复跨站启动触及上游共享内存 switch 的 8 MiB CHECK；画面仍走 socket。缺字会把整套系统字体嵌入 SKP，超过记录上限，不要放大内存上限绕过。后续优先字体/图片资源协议、最小 runtime 与长会话内存，再扩大真实网站/iframe/IME/DPR 和分布式调度。此前三模式及完整帧、双会话冷恢复记录保留为历史，不能当作本轮新构建全覆盖结果。
 
+后续改测哔哩哔哩：普通 Chromium 首页 HTTP 200，55/55 图片加载、截图确认内容正常，未登录或播放视频；相同白名单另阻止两个 s1.hdslb.com 请求，完整跨域 iframe 未验收。原生探针以 RSS 1,615.5 MiB 触发 1.5 GiB 安全停止，含初始化和清理共约 7.1 秒，尚无可接受首帧，不能声称本地重放或交互通过。两轮新增 swapout 均为 0，受控测试进程已清理；原生网站选项保持禁用。`experiment:site` 新增 `--mode ordinary|native|both`，便于分别诊断，默认仍为 both；不要提升阈值反复冲击本机。记录在 `test-results/chromium-bilibili-{ordinary,native}-20261028/report.json` 及上述 runtime JSON。74 JS 和 5 Python 回归、74 JS 语法检查通过；本次没有变更或重编引擎。
+
 v0 是 Node.js + LinkeDOM + Yoga 的可信应用协议 PoC。服务端没有 Chromium 和像素后端；本地 Canvas 绘制 JSON 指令。提供每 session 子进程、语义操作、控制 epoch、有界队列、增量帧、profile 保存恢复。任意网站/完整 CSS/网站 JS/CDP 兼容均未实现。详见框架与验证记录。
 
 仓库已补齐早期下载源码包中的代码、测试、协议和验证记录。下载包保留用于溯源；后续开发以当前 Git 历史为准。

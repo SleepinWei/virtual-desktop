@@ -12,6 +12,10 @@
 
 真实站点使用显式 HTTPS 白名单，拒绝其他域、端口、凭据 URL 与文件协议；默认仍只开放固定 fixture。`--external-sites` 仅供预览实验，不构成任意网站支持。小红书的普通无头对照进入 IP 风险页（300012）；原生探针在首帧就绪前超过进程 RSS 预算，被安全停止。XHS 的交互选择因此禁用。轻量 HTTPS 页面预览也触及本机预算，没有宣称通过外部网页视觉验收。
 
+随后按用户要求改测哔哩哔哩公开首页，普通与原生分别运行，未登录、未点击视频。普通 Chromium 返回 HTTP 200，保持首页 URL，标题和内容正常，55/55 张图片已加载；截图为 `test-results/chromium-bilibili-ordinary-20261028/ordinary-public-page.png`。测试采用与原生相同的域名策略，另有两个 `s1.hdslb.com` 请求被拒绝；完整跨域 iframe 行为没有验收。普通访问没有遇到此前的小红书 IP 风险页。
+
+哔哩哔哩原生探针因超过预算而停止，采样进程树 RSS 之和为 1,615.5 MiB；含初始化和清理共约 7.1 秒。watchdog 清理了测试进程，此时尚未收到可接受的完整原生帧。本地重放、输入与视频播放均未验证，交互入口保持禁用，没有扩大阈值或用截图代替原生画面。普通对照采样 RSS 峰值为 1,281.6 MiB；两轮内存压力命令的最低 free percentage 分别为 39%/38%，观测到的新增 swapout 均为 0。这是不同初始化路径的短测试，不能据此得出稳定态内存或性能结论。
+
 ## 当前后端
 
 ```mermaid
@@ -87,6 +91,13 @@ nice -n 10 npm run bench:native -- --root /Volumes/Extreme-APFS/Builds \
 # 站点诊断默认串行执行原生导出和普通参考，不同时开额外 viewer。
 nice -n 10 npm run experiment:site -- --root /Volumes/Extreme-APFS/Builds \
   --canvaskit /Volumes/Extreme-APFS/Builds/canvaskit/out --site xiaohongshu
+
+# 可先测普通公开页，再独立测原生导出；顺序运行，不要并行。
+nice -n 10 npm run experiment:site -- --root /Volumes/Extreme-APFS/Builds \
+  --site bilibili --mode ordinary --output test-results/bilibili-ordinary
+nice -n 10 npm run experiment:site -- --root /Volumes/Extreme-APFS/Builds \
+  --canvaskit /Volumes/Extreme-APFS/Builds/canvaskit/out \
+  --site bilibili --mode native --output test-results/bilibili-native
 ```
 
 后续优先做字体/图片资源切分与实际客户端带宽、最小 runtime 包及长会话内存测试，再在具备硬隔离和更大资源预算的构建/测试机验证真实网站、多个 renderer/iframe、IME/DPR，以及大规模独立活跃会话。当前无 Chromium sandbox 的本地实验不可直接当作公网多租户服务。

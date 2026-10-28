@@ -3,6 +3,8 @@ export const externalSites = {
     navigationDomains: ['example.com'], resourceDomains: ['example.com'] },
   xiaohongshu: { label: 'Xiaohongshu · probe only', interactive: false, url: 'https://www.xiaohongshu.com/explore',
     navigationDomains: ['xiaohongshu.com'], resourceDomains: ['xiaohongshu.com', 'xhscdn.com'] },
+  bilibili: { label: 'Bilibili · probe only', interactive: false, url: 'https://www.bilibili.com/',
+    navigationDomains: ['bilibili.com'], resourceDomains: ['bilibili.com', 'hdslb.com', 'bilivideo.com'] },
 };
 const matches = (host, domains) => domains.some(domain => host === domain || host.endsWith('.' + domain));
 export function allowedSiteRequest(site, address, { navigation = false, method = 'GET' } = {}) {
