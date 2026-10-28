@@ -61,7 +61,7 @@ npm run experiment:paint
 
 2026-10-28 的[固定版本引擎实验](docs/CHROMIUM_ENGINE.md)增加 headless NullRenderer 和匹配 Skia 的 CanvasKit 文本覆盖策略，三种模式均通过固定页面严格视觉比较。[完整帧实验](docs/CHROMIUM_FRAMES.md)验证了真实多层画面、7° 旋转、透明度分组、裁剪、滚动和删层。
 
-[最小运行子集](docs/CHROMIUM_SUBSET.md)已提取 684.5 MiB 引擎/CanvasKit 包，本地原生生产端验收通过；手动 viewer 验证受整机内存保护阻止。2026-10-29 的深度裁剪构建先触发两次整机保护，随后按用户要求改用单任务、Darwin background QoS 与 nice 19 恢复；保留内存/换页保护，尚无新二进制或 RSS 收益结论。
+[最小运行子集](docs/CHROMIUM_SUBSET.md)已提取 684.5 MiB 引擎/CanvasKit 包，本地原生生产端验收通过；手动 viewer 验证受整机内存保护阻止。2026-10-29 的深度裁剪构建已按用户最新要求改用最多八任务、utility QoS、nice 10 和 I/O throttle，编译 RSS 上限 6 GiB，并保留整机内存/换页保护；完成缓存继续复用，尚无新二进制或 RSS 收益结论。
 
 [多会话复用原型](docs/CHROMIUM_POOL.md)已实测同一 browser 下两个独立 BrowserContext 的状态、输入和原生帧隔离，并验证 renderer 与 browser 的故障影响范围。第二个 context 的阶段采样 RSS 增量约 200 MiB，未测唯一物理内存；正式网关仍为每会话独立 browser。
 

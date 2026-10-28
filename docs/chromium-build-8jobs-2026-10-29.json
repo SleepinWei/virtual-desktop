@@ -1,0 +1,150 @@
+{
+  "version": 1,
+  "date": "2026-10-29",
+  "observedAt": "2026-10-28T16:53:38.084176+00:00",
+  "status": "running",
+  "guardReport": "test-results/lean-eight-jobs-20261029/guard-report.json",
+  "guardReportMayChange": true,
+  "startedAt": "2026-10-28T16:43:58.437Z",
+  "jobs": 8,
+  "cpuPolicy": {
+    "jobs": 8,
+    "nice": 10,
+    "darwinBackground": false,
+    "qosClamp": "utility",
+    "diskPolicy": "throttle",
+    "systemLoadHardStop": false,
+    "scope": "At most eight build commands; OS schedules cores. Compiler subtree has lower CPU/I/O priority than foreground apps."
+  },
+  "safetyPolicy": {
+    "minFreePercent": 35,
+    "maxSwapoutBytes": 67108864,
+    "maxTreeRssBytes": 6442450944,
+    "maxHeartbeatMs": 4000,
+    "maxDurationMs": null,
+    "enforceSystemLoad": false,
+    "systemLoadStopAbove": null
+  },
+  "latestSample": {
+    "time": 1793206414551,
+    "freePercent": 47,
+    "load": 11.06103515625,
+    "treeRssBytes": 2017411072
+  },
+  "observedSafety": {
+    "stop": null,
+    "minHostFreePercent": 38,
+    "peakSummedRssBytes": 3643506688,
+    "newSwapoutBytes": 0,
+    "scope": "Extrema from bounded retained samples at the documented snapshots, not a complete lifetime history; new swapout uses the cumulative counter since build start."
+  },
+  "processSample": {
+    "compilerCount": 7,
+    "compilers": [
+      {
+        "pid": 4787,
+        "ppid": 97336,
+        "nice": 10,
+        "rssBytes": 358891520,
+        "cpuPercent": 89.5,
+        "command": "../../third_party/llvm-build/Release+Asserts/bin/clang++"
+      },
+      {
+        "pid": 4804,
+        "ppid": 97336,
+        "nice": 10,
+        "rssBytes": 325533696,
+        "cpuPercent": 89.3,
+        "command": "../../third_party/llvm-build/Release+Asserts/bin/clang++"
+      },
+      {
+        "pid": 4845,
+        "ppid": 97336,
+        "nice": 10,
+        "rssBytes": 152420352,
+        "cpuPercent": 65.4,
+        "command": "../../third_party/llvm-build/Release+Asserts/bin/clang++"
+      },
+      {
+        "pid": 4846,
+        "ppid": 97336,
+        "nice": 10,
+        "rssBytes": 124977152,
+        "cpuPercent": 52.6,
+        "command": "../../third_party/llvm-build/Release+Asserts/bin/clang++"
+      },
+      {
+        "pid": 4849,
+        "ppid": 97336,
+        "nice": 10,
+        "rssBytes": 105840640,
+        "cpuPercent": 42.3,
+        "command": "../../third_party/llvm-build/Release+Asserts/bin/clang++"
+      },
+      {
+        "pid": 4850,
+        "ppid": 97336,
+        "nice": 10,
+        "rssBytes": 96763904,
+        "cpuPercent": 27.8,
+        "command": "../../third_party/llvm-build/Release+Asserts/bin/clang++"
+      },
+      {
+        "pid": 4851,
+        "ppid": 97336,
+        "nice": 10,
+        "rssBytes": 38453248,
+        "cpuPercent": 2,
+        "command": "../../third_party/llvm-build/Release+Asserts/bin/clang++"
+      }
+    ]
+  },
+  "progressLine": "[8184/36241] CXX obj/third_party/swiftshader/third_party/llvm-10.0/swiftshader_llvm_transforms_scalar/LICM.o",
+  "cleanup": {
+    "previousSingleJobBuildStopped": true,
+    "oldCapturedPidsVerifiedExited": true,
+    "idleApp": "Epic Games Launcher + UnrealEditorServices",
+    "normalQuitLeftProcessesRunning": true,
+    "sigtermSentTo": [
+      10486,
+      10500
+    ],
+    "launcherPidsStillAlive": [],
+    "original8081Preserved": true,
+    "current8082Preserved": true,
+    "foregroundAppsPreserved": true
+  },
+  "checks": {
+    "javascriptTestsPassed": 83,
+    "pythonToolTestsPassed": 10,
+    "javascriptSyntaxFiles": 81,
+    "nativeCppSourceChanged": false
+  },
+  "engineSplitGate": "not-passed",
+  "compiled": false,
+  "workingRuntimeReplaced": false,
+  "scope": "Resume existing candidate objects at up to eight Ninja commands, no core affinity or zero-jank guarantee. Memory pressure and swap guards stay active. No new binary/C++/native/visual acceptance.",
+  "responsivenessCheck": {
+    "report": "test-results/eight-jobs-health-20261029.json",
+    "startedAt": "2026-10-28T16:48:58.902Z",
+    "finishedAt": "2026-10-28T16:49:05.207Z",
+    "maxObservedCompilerCount": 8,
+    "health": [
+      {
+        "port": 8081,
+        "requests": 12,
+        "allHealthy": true,
+        "p95Ms": 19.376125,
+        "maxMs": 19.376125
+      },
+      {
+        "port": 8082,
+        "requests": 12,
+        "allHealthy": true,
+        "p95Ms": 2.5887499999999974,
+        "maxMs": 2.5887499999999974
+      }
+    ],
+    "scope": "Local HTTP health responsiveness and compiler process samples only; not proof that every foreground app has zero jank."
+  }
+}

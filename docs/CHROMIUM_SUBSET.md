@@ -65,28 +65,32 @@ DATA_DIR=.data/native-subset nice -n 10 npm run start:native -- \
 
 第一轮 Siso 在读取图和启动辅助工具时触发整机 free 34% 的内存保护。改用上游 `autoninja.py` 支持的 `use_siso=false`，另建 Ninja 输出，避免混用两种构建工具的数据；旧的 Siso 目录与停止记录保留。第二轮 Ninja 已开始 C++ 编译，最新 RSS 采样约 370 MiB，但整机 load 8.75 触发原有 CPU 总负载门限。两轮都没有生成可用新引擎，原始二进制及 8081/8082 未替换。
 
-用户随后明确以“不影响其他任务”为优先，编译策略改成：
+用户先要求优先避免影响其他任务，采用单任务后台构建；随后明确要求尽量使用 8 核，并允许关闭无用任务。当前按这个最新要求设置：
 
 | 保护 | 当前编译策略 |
 | --- | --- |
-| 并发 | 一个 `headless_shell` 目标，`-j 1`，关闭远程执行和 ThinLTO |
-| CPU / I/O | 只对编译子树使用 Darwin background、background QoS clamp、nice 19；子进程继承，实际进程已核实 |
-| 整机 CPU load | 编译专用不再按 load >8 直接停止；CPU 忙时由后台优先级让路。浏览器测试和交互服务的默认 load 保护保留 |
-| 内存 | 整机内存压力 free percentage ≥35%，owned RSS 之和 ≤1.5 GiB |
+| 并发 | 一个 `headless_shell` 目标，`-j 8`；最多八条构建命令，由 macOS 分配核心，不是固定 CPU affinity；关闭远程执行和 ThinLTO |
+| CPU / I/O | 只对编译子树使用 utility QoS clamp、nice 10 和磁盘 I/O throttle，子进程继承；监控器保持正常优先级 |
+| 整机 CPU load | 编译专用不按 load >8 直接停止；通过优先级给前台让路。浏览器测试和交互服务的默认 load 保护保留 |
+| 内存 | 整机内存压力 free percentage ≥35%，编译 owned RSS 之和 ≤6 GiB；浏览器默认仍为 1.5 GiB |
 | 换页 | 最近 10 秒新增系统 swapout ≤64 MiB |
-| 监控 | 独立 watchdog，心跳 4 秒；监控器在编译的后台 QoS clamp 之外；监控失效也终止编译 |
+| 监控 | 独立 watchdog，心跳 4 秒；监控器在编译的 QoS clamp 之外；监控失效也终止编译 |
 
-这依赖系统调度和秒级采样，并非硬 CPU/内存隔离，也不能保证其他应用绝对零卡顿。后台调度可显著降低编译优先级；全局 load 是可运行/等待任务的平均值，不能直接当成前台响应时间。仅编译模式允许忽略总 load，其他资源保护和默认浏览器策略没有放宽。新单元测试覆盖了该例外及其内存/换页保护。
+这依赖系统调度和秒级采样，并非硬 CPU/内存隔离，也不能保证其他应用绝对零卡顿。全局 load 不能直接当成前台响应时间。最新改动只提高编译并发和编译 RSS 预算；整机 free、换页、心跳及默认浏览器策略保留。`guardLimits` 将编译 RSS 覆盖限制在独立配置，不修改公共 `SAFE_LIMITS`，回归测试确认这些边界。
 
-第三轮已按此策略恢复 Ninja 缓存。交付时状态快照与前两轮报告写在本轮 JSON，持续状态以外置盘的 `chromium/virtual-desktop-lean-ninja-build-state.json`、`logs/chromium-lean-build.log` 及本机 `test-results/lean-background-build-20261029/guard-report.json` 为准。没有定时自动重试；一旦保护停止，不会自行无限重启。
+先用 SIGINT 中断旧单任务 Ninja，并验证采集到的旧编译进程全部退出，再以八任务恢复相同输出目录；没有 clean 或改变 GN 参数，完成的对象继续复用。旧单任务报告中的 `build-failed` 是这次主动中断，不代表源码编译报错。Ninja 的编译子进程可处于独立进程组，停止逻辑因此按 PPID 捕获整个归属树，先结束后代再结束根进程，避免只停止主进程组而遗留编译器。
+
+最新采样和闲置任务清理见 [chromium-build-8jobs-2026-10-29.json](chromium-build-8jobs-2026-10-29.json)，此前记录见 [chromium-pool-2026-10-29.json](chromium-pool-2026-10-29.json)。持续状态以外置盘的 `chromium/virtual-desktop-lean-ninja-build-state.json`、`logs/chromium-lean-build.log` 及本机 `test-results/lean-eight-jobs-20261029/guard-report.json` 为准。没有定时自动重试；保护停止后不会无限重启。
+
+按用户授权检查并退出了闲置的 Epic Games Launcher 与 UnrealEditorServices：正常 Quit 请求仍留后台，核对路径后发送 SIGTERM，确认两个进程均退出。没有关闭当前 Codex、Chrome、ToDesk 或 8081/8082 的原生会话。83 项 JS、10 项 Python 和 81 个 JS 语法检查通过；本轮没有修改 Chromium C++ 源码或取得新的二进制验收。
 
 ```bash
 # 先检查记录的 PID/状态，避免启动第二份编译。
 python3 -B experiments/chromium-engine/lean-build.py status --root /Volumes/Extreme-APFS/Builds
 
-# 启动器自动对编译子树设置后台调度；不要并行跑浏览器压测。
+# 启动器自动对编译子树降低 CPU/I/O 优先级；不要并行跑浏览器压测。
 npm run build:native-lean -- --root /Volumes/Extreme-APFS/Builds \
-  --output test-results/lean-background-build
+  --jobs 8 --max-rss-mib 6144 --output test-results/lean-eight-jobs
 ```
 
 当前没有新二进制、C++ 验收或轻量引擎的体积/内存结果。构建完成后仍需为 monolithic 工件增加独立验证布局，并用同配置重建/执行相关 C++ 测试、原生输入/帧和本地视觉回归，再决定替换当前引擎。

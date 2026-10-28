@@ -57,6 +57,27 @@ class LeanBuildPreservationTest(unittest.TestCase):
                 runner.compile()
             command.assert_not_called()
 
+    def test_eight_jobs_reuses_the_candidate_directory_without_cleaning(self):
+        runner = lean.LeanBuild(self.root)
+        with patch.object(runner, 'run'):
+            runner.configure()
+        commands = []
+        with patch.object(runner, 'run', side_effect=lambda phase, command: commands.append((phase, command))):
+            with self.assertRaisesRegex(RuntimeError, 'without an executable'):
+                runner.compile(8)
+        self.assertEqual(commands[0][1][-2:], ['-j', '8'])
+        self.assertEqual(commands[0][1][2], lean.OUT)
+        self.assertEqual(runner.state['jobs'], 8)
+        self.assertFalse(runner.state['compiled'])
+
+    def test_jobs_outside_the_eight_command_budget_are_rejected(self):
+        runner = lean.LeanBuild(self.root)
+        for jobs in [0, 9, -1]:
+            with patch.object(runner, 'run') as command:
+                with self.assertRaisesRegex(ValueError, 'between 1 and 8'):
+                    runner.compile(jobs)
+                command.assert_not_called()
+
 
 if __name__ == '__main__':
     unittest.main()

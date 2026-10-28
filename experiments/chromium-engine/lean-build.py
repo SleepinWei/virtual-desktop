@@ -19,6 +19,13 @@ def effective_args(text):
     return ''.join(line.split('#', 1)[0].strip() for line in text.splitlines())
 
 
+def build_jobs(value):
+    jobs = int(value)
+    if not 1 <= jobs <= 8:
+        raise ValueError('Build jobs must be between 1 and 8')
+    return jobs
+
+
 class LeanBuild:
     def __init__(self, root):
         self.root = root
@@ -70,14 +77,15 @@ class LeanBuild:
         self.run('configure', [self.root / 'depot_tools/gn', 'gen', OUT,
                  '--root-target=//headless:headless_shell', '--root-pattern=//headless:headless_shell', '--fail-on-unused-args'])
 
-    def compile(self):
+    def compile(self, jobs=1):
+        jobs = build_jobs(jobs)
         self.validate()
         if effective_args((self.output / 'args.gn').read_text()) != effective_args((HERE / 'lean-mac-arm64.gn').read_text()):
             raise ValueError('Lean configuration changed before compilation')
-        self.save(compiled=False, ccTestsPassed=False, vizTestsPassed=False)
-        # A single local task limits compiler concurrency; the external watchdog
-        # separately enforces RSS, host pressure, swapping and parent heartbeat.
-        self.run('build', [self.root / 'depot_tools/autoninja', '-C', OUT, 'headless_shell', '-j', '1'])
+        self.save(compiled=False, ccTestsPassed=False, vizTestsPassed=False, jobs=jobs)
+        # The coordinator bounds local concurrency and its independent watchdog
+        # enforces RSS, host pressure, swapping and parent heartbeat.
+        self.run('build', [self.root / 'depot_tools/autoninja', '-C', OUT, 'headless_shell', '-j', str(jobs)])
         self.validate()
         binary = self.output / 'headless_shell'
         if not binary.is_file() or not os.access(binary, os.X_OK):
@@ -92,6 +100,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('phase', choices=['configure', 'build', 'status'])
     parser.add_argument('--root', default=os.environ.get('CHROMIUM_BUILD_ROOT'))
+    parser.add_argument('--jobs', type=build_jobs, default=1)
     values = parser.parse_args()
     root = build.build_root(values.root)
     preflight = build.preflight(root, 80 if values.phase == 'build' else 0)
@@ -113,7 +122,7 @@ def main():
         runner.save(volumeUUID=preflight['volumeUUID'])
         runner.configure()
         if values.phase == 'build':
-            runner.compile()
+            runner.compile(values.jobs)
 
 
 if __name__ == '__main__':
