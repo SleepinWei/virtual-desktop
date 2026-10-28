@@ -35,8 +35,10 @@ export async function loadReplayRuntime(directory) {
 
 export async function verifyRuntimeBuild(runtime, directory, root, source) {
   const state = JSON.parse(await readFile(join(resolve(root), 'canvaskit/build-state.json'), 'utf8'));
+  const expectedOutput = state.distributionFormat === 'native-runtime-v1' && state.output === 'canvaskit/out'
+    ? join(resolve(root), state.output) : state.output;
   if (!state.compiled || state.stage !== 'build-complete' || state.exitCode !== 0 ||
-      state.output !== resolve(directory) || state.skiaRevision !== source.skiaRevision ||
+      expectedOutput !== resolve(directory) || state.skiaRevision !== source.skiaRevision ||
       assetNames.some(name => state.assets?.[name] !== runtime.metadata.assets[name])) {
     throw new Error('A successful matching CanvasKit build state is required');
   }

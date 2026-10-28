@@ -6,6 +6,10 @@
 
 ## 当前实现
 
+最新子集工作见 [CHROMIUM_SUBSET.md](docs/CHROMIUM_SUBSET.md) 和 [子集验收](docs/chromium-subset-2026-10-28.json)：提取包位于 `/Volumes/Extreme-APFS/Runtimes/virtual-desktop-native-156-20261028`，引擎 680.3 MiB + CanvasKit/配置约 4.2 MiB，总 payload 684.5 MiB，较 GN 依赖排除 91.3 MiB 开发辅助内容。仍是同一 component 构建，未降低页面内存。包内 464 个 Mach-O 依赖已核查，路径/指纹支持固定相对布局；`package:native` 和 `test:native-package` 可复现。本地真实输入、点击、去重、5 帧/3 资源通过，76 JS / 5 Python / 77 JS 语法通过。本轮未修改 C++。首次复制后有 dyld 冷启动超时及 rAF 停滞失败，后续生产端通过；启动超时现为 15 秒，先于 worker 的 30 秒上限，两个早期测试遗留进程已清理。额外 IAB viewer 验证因整机 free 34% 在新浏览器创建前被保护阻止，不能声明视觉通过。8082 改用该包并恢复空闲、保持原阈值，8081 用户会话保留。
+
+`lean-mac-arm64.gn` 深度候选仅配置成功：独立 `out/VirtualDesktopLean`，关闭 component/PDF/printing/headless CLI commands/Local State prefs，按体积优化，保留 DCHECK，未编译。固定版本需要 `gn gen ... --root-target=//headless:headless_shell --root-pattern=//headless:headless_shell --fail-on-unused-args`，否则无关 Chrome 测试会触发打印断言。后续 monolithic 工件布局不符合当前 component 指纹要求，必须增加独立验证及同配置 C++/原生/视觉验收，不能直接把现有通过标记套上去。不要贸然启动完整 monolithic/LTO 构建或提高资源阈值。打包和内存优化分别处理，后续优先实际物理内存/进程角色与图片、字体、SKP 临时副本归因。
+
 最新接续先读 [NATIVE_RUNTIME.md](docs/NATIVE_RUNTIME.md) 和 [2026-10-28 runtime 记录](docs/chromium-runtime-2026-10-28.json)：直接输入已替代独立文字栏；74 JS、5 Python、74 JS 语法、21 C++、3 普通 viewer E2E 通过。有界 96 请求为 64 成功/32 限流。原生 presentation 成功回调在失败反馈后累积到 61 的崩溃已修复，20 个源码文件与 manifest 匹配；没有关闭 DCHECK 或伪造服务端呈现。
 
 本机资源预算优先：原生 CLI 默认一个活跃会话/一个启动任务、带独立长期 watchdog。测试低优先级，1.5 GiB 进程树 RSS 上限；两个测试浏览器、另开独立参考浏览器和真实 HTTPS 预览均实际触发安全停止，不能声称新构建严格视觉复测通过。直接输入有现有本机浏览器的实际画面证据。当前新入口用 8082，旧用户 8081 会话保留；两个服务的 profile 目录分开。

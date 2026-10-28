@@ -1,0 +1,21 @@
+# Separate candidate: configure/build in out/VirtualDesktopLean, never overwrite
+# the validated out/VirtualDesktop build. GN validation is not a compiled pass.
+# Generate with --root-target=//headless:headless_shell and
+# --root-pattern=//headless:headless_shell to exclude unrelated Chrome tests.
+target_cpu = "arm64"
+is_debug = false
+is_component_build = false
+symbol_level = 0
+dcheck_always_on = true
+use_remoteexec = false
+chrome_pgo_phase = 0
+use_thin_lto = false
+optimize_for_size = true
+
+# Keep CDP, Blink/V8, accessibility, input, storage, network and media plumbing.
+# CLI screenshot/PDF/DOM commands and Local State prefs are outside this profile.
+headless_enable_commands = false
+headless_use_prefs = false
+enable_pdf = false
+enable_printing = false
+enable_print_preview = false

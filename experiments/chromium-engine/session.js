@@ -27,7 +27,7 @@ export class ChromiumSession {
     if (saved) ensure(saved.kind === 'chromium-storage-v1' && saved.storageState && Array.isArray(saved.storageState.cookies) &&
       Array.isArray(saved.storageState.origins), 409, 'INVALID_PROFILE_STATE', 'Expected a Chromium storage profile');
     this.stream = await createNativeStream(message => this.receive(message));
-    this.server = await chromium.launchServer({ executablePath: verified.binary, headless: true, host: '127.0.0.1',
+    this.server = await chromium.launchServer({ executablePath: verified.binary, headless: true, host: '127.0.0.1', timeout: 15000,
       // Cross-site process launches serialize tracing shared memory through an
       // upstream switch capped at 8 MiB. Live frames do not use trace transport.
       chromiumSandbox: false, args: captureLaunchArgs({ remotePaint: true, noDisplay: true, producerBufferBytes: 8388608 }),

@@ -10,7 +10,9 @@ export async function sha256(path) {
 
 export async function verifyArtifacts(state, root) {
   const binary = join(resolve(root), 'chromium/src/out/VirtualDesktop/headless_shell');
-  if (state.binary !== binary) throw new Error('Executable is outside the pinned build output');
+  const packaged = state.distributionFormat === 'native-runtime-v1' &&
+    state.binary === 'chromium/src/out/VirtualDesktop/headless_shell';
+  if (!packaged && state.binary !== binary) throw new Error('Executable is outside the pinned build output');
   const artifacts = state.artifacts;
   for (const required of ['headless_shell', 'libcc.dylib', 'libcc_base.dylib', 'libcc_paint.dylib', 'libblink_platform.dylib', 'libcomponents_viz_service.dylib']) {
     if (!artifacts || !Object.hasOwn(artifacts, required)) throw new Error('Missing component fingerprint: ' + required);

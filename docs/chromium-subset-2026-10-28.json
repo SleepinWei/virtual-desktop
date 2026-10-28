@@ -1,0 +1,202 @@
+{
+  "version": 1,
+  "date": "2026-10-28",
+  "status": "packaged-native-runtime-candidate",
+  "engineSplitGate": "not-passed",
+  "serverRasterBypassed": false,
+  "package": {
+    "path": "/Volumes/Extreme-APFS/Runtimes/virtual-desktop-native-156-20261028",
+    "manifest": "runtime-package.json",
+    "payloadBytes": 717707376,
+    "engineBytes": 713347608,
+    "clientBytes": 4358232,
+    "payloadFiles": 475,
+    "selection": {
+      "method": "Pinned GN runtime closure; omit generated DevTools frontend, Python helpers and ANGLE validation metadata",
+      "originalDependencyFiles": 5015,
+      "engineFiles": 470,
+      "excludedFiles": 4545,
+      "excludedBytes": 95709016
+    },
+    "nativeDependencyAudit": {
+      "checkedBinaries": 464,
+      "internalLibraries": 463,
+      "systemLibraries": 60,
+      "scope": "All declared Mach-O load commands resolve within the package or macOS system paths. Dynamic plugin/data lookup still needs runtime tests."
+    },
+    "engineRevision": "d0c02bfad08ec92a6ffcf989e53cd995e6381a4c",
+    "patchSha256": "9a8c986d9bf7a34fb6f296e09eddb78e60f487c76059f51491d98d923b823437",
+    "scope": "Local CDP/native-records runtime. OS frameworks, system fonts, Node.js and this app are external. No source, compiler, test executables or build logs. No claim of minimal Chromium features, lower RSS, general web or video compatibility."
+  },
+  "nativeSmoke": {
+    "status": "native-runtime-smoke-passed",
+    "report": "test-results/native-runtime-package-ready-20261028/smoke-report.json",
+    "startedAt": "2026-10-28T15:14:28.050Z",
+    "finishedAt": "2026-10-28T15:14:33.765Z",
+    "errors": [],
+    "frames": {
+      "revision": 4,
+      "received": 5,
+      "duplicates": 1,
+      "resourceBytes": 72835,
+      "resources": 3,
+      "fault": null,
+      "frameId": "52130:2:33519837549",
+      "connections": []
+    },
+    "build": {
+      "revision": "d0c02bfad08ec92a6ffcf989e53cd995e6381a4c",
+      "patchSha256": "9a8c986d9bf7a34fb6f296e09eddb78e60f487c76059f51491d98d923b823437",
+      "artifactsSha256": "11cf44ecf2e7437344a4a23619cc509a4f0e2e5d4029e285ca8af2ea00a09613",
+      "distributionFormat": "native-runtime-v1"
+    },
+    "safety": {
+      "stopped": null,
+      "peakSummedRssBytes": 857899008,
+      "minHostFreePercent": 38,
+      "newHostSwapoutBytes": 0
+    }
+  },
+  "originalControl": {
+    "status": "native-runtime-smoke-passed",
+    "report": "test-results/native-runtime-original-control-20261028/smoke-report.json",
+    "startedAt": "2026-10-28T15:13:25.576Z",
+    "finishedAt": "2026-10-28T15:13:44.103Z",
+    "errors": [],
+    "frames": {
+      "revision": 4,
+      "received": 5,
+      "duplicates": 1,
+      "resourceBytes": 72835,
+      "resources": 3,
+      "fault": null,
+      "frameId": "51629:2:33470174304",
+      "connections": []
+    },
+    "build": {
+      "revision": "d0c02bfad08ec92a6ffcf989e53cd995e6381a4c",
+      "patchSha256": "9a8c986d9bf7a34fb6f296e09eddb78e60f487c76059f51491d98d923b823437",
+      "artifactsSha256": "883c6169437857120e035772217e5cf85bf5c4f8b1cbf928c612d066eb0a9ab8"
+    },
+    "safety": {
+      "stopped": null,
+      "peakSummedRssBytes": 848297984,
+      "minHostFreePercent": 40,
+      "newHostSwapoutBytes": 0
+    }
+  },
+  "earlierAttempts": [
+    {
+      "status": "smoke-failed",
+      "report": "test-results/native-runtime-package-20261028/smoke-report.json",
+      "startedAt": "2026-10-28T15:05:29.230Z",
+      "finishedAt": "2026-10-28T15:06:00.780Z",
+      "errors": [
+        "Native init failed: {\"error\":{\"code\":\"WORKER_TIMEOUT\",\"message\":\"Operation result is unknown; observe before retrying\"}}"
+      ],
+      "frames": null,
+      "build": {
+        "revision": "d0c02bfad08ec92a6ffcf989e53cd995e6381a4c",
+        "patchSha256": "9a8c986d9bf7a34fb6f296e09eddb78e60f487c76059f51491d98d923b823437",
+        "artifactsSha256": "11cf44ecf2e7437344a4a23619cc509a4f0e2e5d4029e285ca8af2ea00a09613",
+        "distributionFormat": "native-runtime-v1"
+      },
+      "safety": {
+        "stopped": null,
+        "peakSummedRssBytes": 414449664,
+        "minHostFreePercent": 37,
+        "newHostSwapoutBytes": 0
+      }
+    },
+    {
+      "status": "smoke-failed",
+      "report": "test-results/native-runtime-package-warm-20261028/smoke-report.json",
+      "startedAt": "2026-10-28T15:11:13.795Z",
+      "finishedAt": "2026-10-28T15:11:34.289Z",
+      "errors": [
+        "Native init failed: {\"error\":{\"code\":\"NATIVE_WORKER_ERROR\",\"message\":\"Native execution failed; inspect the local build and supported fixture\"}}"
+      ],
+      "frames": null,
+      "build": {
+        "revision": "d0c02bfad08ec92a6ffcf989e53cd995e6381a4c",
+        "patchSha256": "9a8c986d9bf7a34fb6f296e09eddb78e60f487c76059f51491d98d923b823437",
+        "artifactsSha256": "11cf44ecf2e7437344a4a23619cc509a4f0e2e5d4029e285ca8af2ea00a09613",
+        "distributionFormat": "native-runtime-v1"
+      },
+      "safety": {
+        "stopped": null,
+        "peakSummedRssBytes": 811024384,
+        "minHostFreePercent": 40,
+        "newHostSwapoutBytes": 0
+      }
+    }
+  ],
+  "coldStartup": {
+    "observed": "Initial launch timed out before the BrowserServer connection; sampled version-only process was in dyld loadDependents/mapSegments/fcntl. Executable codesign verification passed. A later version probe completed in 1363 ms, then the native producer smoke passed.",
+    "sample": "/private/tmp/vd-runtime-startup-sample.txt",
+    "securityProtectionsChanged": false,
+    "nativeLaunchTimeoutMs": 15000,
+    "workerInitTimeoutMs": 30000
+  },
+  "manualViewer": {
+    "status": "blocked-before-native-start",
+    "reason": "memory-pressure",
+    "hostFreePercent": 34,
+    "serviceTreeRssBytes": 158466048,
+    "screenshot": "test-results/native-runtime-viewer-resource-stop.png",
+    "scope": "Host protection was already latched before creating a native browser. No visual replay or manual input pass from this package is claimed."
+  },
+  "leanCandidate": {
+    "profile": "experiments/chromium-engine/lean-mac-arm64.gn",
+    "output": "/Volumes/Extreme-APFS/Builds/chromium/src/out/VirtualDesktopLean",
+    "configuration": "passed",
+    "targets": 12186,
+    "buildFiles": 2204,
+    "rootTarget": "//headless:headless_shell",
+    "rootPattern": "//headless:headless_shell",
+    "compiled": false,
+    "newCppTestsPassed": false,
+    "executableAvailable": false,
+    "changes": {
+      "is_component_build": false,
+      "optimize_for_size": true,
+      "symbol_level": 0,
+      "dcheck_always_on": true,
+      "use_thin_lto": false,
+      "headless_enable_commands": false,
+      "headless_use_prefs": false,
+      "enable_pdf": false,
+      "enable_printing": false,
+      "enable_print_preview": false
+    },
+    "limitations": [
+      "Configuration alone is not compilation or a runnable feature-stripped browser.",
+      "The current component-artifact verifier and packager need explicit support and C++/native/visual revalidation for a future monolithic build.",
+      "Keep media and WebRTC dependencies for now; removing them affects real-site behavior."
+    ]
+  },
+  "checks": {
+    "javascriptTestsPassed": 76,
+    "pythonToolTestsPassed": 5,
+    "javascriptSyntaxFiles": 77,
+    "nativeCppSourceChanged": false,
+    "previousCppResultsNotRerun": true
+  },
+  "delivery": {
+    "url": "http://127.0.0.1:8082/native",
+    "engineRoot": "/Volumes/Extreme-APFS/Runtimes/virtual-desktop-native-156-20261028",
+    "maxActive": 1,
+    "original8081Preserved": true,
+    "externalSitesEnabled": false,
+    "idle": true,
+    "resourceStop": null,
+    "hostFreePercentAtCheck": 44,
+    "serviceTreeRssBytesAtCheck": 158433280,
+    "idleScreenshot": "test-results/native-runtime-viewer-idle.png"
+  },
+  "conclusions": [
+    "This step removes runtime-extraneous deployment files; the executed engine bytes remain the tested component build.",
+    "Short local fixture smoke peaks were 818.2 MiB packaged and 809.0 MiB original. No lower-RSS or startup-speed claim.",
+    "Real sites, full font/image resource support, native video/WebGL/readback and the general engine split gate remain unvalidated."
+  ]
+}

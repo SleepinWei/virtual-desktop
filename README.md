@@ -59,6 +59,8 @@ npm run experiment:paint
 
 2026-10-28 的[固定版本引擎实验](docs/CHROMIUM_ENGINE.md)增加 headless NullRenderer 和匹配 Skia 的 CanvasKit 文本覆盖策略，三种模式均通过固定页面严格视觉比较。[完整帧实验](docs/CHROMIUM_FRAMES.md)验证了真实多层画面、7° 旋转、透明度分组、裁剪、滚动和删层。
 
+[最小运行子集](docs/CHROMIUM_SUBSET.md)已提取 684.5 MiB 引擎/CanvasKit 包，本地原生生产端验收通过；手动 viewer 验证受整机内存保护阻止。深度裁剪配置已生成 GN 图，尚未编译或证明 RSS 收益。
+
 目前已接入[持续 Chromium 会话](docs/CHROMIUM_LIVE.md)：原生 socket 实时输出完整帧、本地 CanvasKit 绘制、agent/人工共用页面，具备 ACK、资源复用、恢复与接管后直接键盘输入。独立文字栏已移除。显式启动命令如下；默认 `npm start` 保持 v0。原生 CLI 默认一个活跃会话并有资源 watchdog；通用网站及完整引擎关卡仍未通过。
 
 ```bash

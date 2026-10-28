@@ -16,5 +16,5 @@ export async function verifiedEngine(root, { requireStream = false } = {}) {
   }
   const artifacts = await verifyArtifacts(state, root);
   const artifactsSha256 = createHash('sha256').update(JSON.stringify(Object.entries(artifacts).sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0))).digest('hex');
-  return { root, source, state, binary: state.binary, patchSha256, artifactsSha256 };
+  return { root, source, state, binary: join(root, 'chromium/src/out/VirtualDesktop/headless_shell'), patchSha256, artifactsSha256 };
 }

@@ -42,6 +42,11 @@ test('runtime acceptance rejects stale build success and changed compiler config
   await writeFile(statePath, JSON.stringify({ ...state, compiled: false }));
   await assert.rejects(verifyRuntimeBuild({ metadata }, directory, root, metadata), /successful matching/);
   await writeFile(statePath, JSON.stringify(state));
+  await writeFile(statePath, JSON.stringify({ ...state, distributionFormat: 'native-runtime-v1', output: 'canvaskit/out' }));
+  await verifyRuntimeBuild({ metadata }, directory, root, metadata);
+  await writeFile(statePath, JSON.stringify({ ...state, distributionFormat: 'native-runtime-v1', output: '../canvaskit/out' }));
+  await assert.rejects(verifyRuntimeBuild({ metadata }, directory, root, metadata), /successful matching/);
+  await writeFile(statePath, JSON.stringify(state));
   await writeFile(join(directory, 'args.gn'), 'changed GN arguments');
   await assert.rejects(verifyRuntimeBuild({ metadata }, directory, root, metadata), /configuration or patch/);
 });
