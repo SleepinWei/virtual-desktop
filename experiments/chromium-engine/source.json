@@ -10,11 +10,11 @@
   "files": {
     "cc/base/features.h": {
       "upstreamSha256": "149eafbbe558862ae0d32184d5a1261d11a132f2d49b2521915bd1da428104b7",
-      "patchedSha256": "1724f787e19fbea19c95f6f65c9895bf9d329b3ed11b27cffd83865e5ba17aeb"
+      "patchedSha256": "6afab330d3198a4004eb533387f242b6940c6136956d68e08d277fa12fc5f935"
     },
     "cc/base/features.cc": {
       "upstreamSha256": "16f3fcda57535af7c92a4309e33a64037ce959d3592d50d4d24d60157e6afa90",
-      "patchedSha256": "4fc9c7c48a9b45b21c6fe34de0efa6fb58a4dd3995b2c9055bc7bcb8e6ce30e3"
+      "patchedSha256": "94feaf91468ed87c9cabcf381aac909e2c08a17de106ad2e1ca42961b6111471"
     },
     "cc/trees/layer_tree_settings.h": {
       "upstreamSha256": "42582cb158e3ed2e91a59e0f6daa276452a7fcd4c6eec49f0cc74e7eaa876566",
@@ -43,6 +43,24 @@
     "cc/paint/display_item_list.cc": {
       "upstreamSha256": "e88babbfb156dfd3d2e0cce4734ee08ac6431daaa6b1a428c77e120a184cb181",
       "patchedSha256": "7b2cd610936bffea1fda57fdcb94ce8874b14439682852a1a2cbb4312cf0eacd"
+    },
+    "components/viz/service/BUILD.gn": {
+      "upstreamSha256": "15c828cd6a1bf5552b480b5574827359f8a3377ae4e9e8f7f1860511f827f875",
+      "patchedSha256": "75d3c9c181ca0f4463d33ec7e743a4b097039d0b4eaf8ec096f15a14c1a22ec0"
+    },
+    "components/viz/service/display/display.cc": {
+      "upstreamSha256": "4212a829989dc32da99d3addf2833fb1711d368bd0889c0fefad7af2f8e1495c",
+      "patchedSha256": "bbd07d1156fbcd730bd02b3c02bad92fa84bbfd5277f25ad98bbcea017d3578a"
+    },
+    "components/viz/service/display/display_unittest.cc": {
+      "upstreamSha256": "3fdd31cbe96f511f005d9b69d3fe3707fc205d0f4136c63fa20da945bc1c1549",
+      "patchedSha256": "a6af9e441919f7c1ddb497a461a040159f239fa5bbc219b2f4539cbd45fe8f76"
+    },
+    "components/viz/service/display_embedder/output_surface_provider_impl.cc": {
+      "upstreamSha256": "c9f9d5264b177991ee347970972ab8219f4e9cb41d07cb2111d7841c9a4d171e",
+      "patchedSha256": "a4f378b30d48f67c432bab03598ce18a42d606bb6ec2658b0f35c58cd34f5888"
     }
-  }
+  },
+  "skiaRevision": "886e42fda11610a56dd1b22e8697e27f9d1e34f2",
+  "displayFeature": "VirtualDesktopRemotePaintNoDisplay"
 }

@@ -20,6 +20,26 @@ test('engine and producer flags share one enable-features argument', () => {
     '--enable-features=kPerfettoBackendParams:shared_memory_size_bytes/33554432,VirtualDesktopRemotePaint']);
   assert.deepEqual(captureLaunchArgs(), ['--enable-automation']);
   assert.throws(() => captureLaunchArgs({ remotePaint: '--arbitrary-flag' }), /boolean/);
+  assert.deepEqual(captureLaunchArgs({ remotePaint: true, noDisplay: true }),
+    ['--enable-automation', '--enable-features=VirtualDesktopRemotePaint,VirtualDesktopRemotePaintNoDisplay']);
+  assert.throws(() => captureLaunchArgs({ noDisplay: true }), /requires remotePaint/);
+});
+
+test('a null display needs progressing native skip markers and no renderer draw entry', () => {
+  const pictures = [record(1), noTiles(1), record(2), noTiles(2)];
+  const skipped = ts => ({ name: 'VirtualDesktop.RemotePaintDisplaySkipped', cat: 'viz', pid: 99, ts,
+    args: { surface_id: 'synthetic test surface', render_pass_count: 1 } });
+  const scheduled = { name: 'Display::DrawAndSwap', ph: 'X', pid: 99, ts: 30 };
+  const events = [...pictures, skipped(15), skipped(25), scheduled];
+  assert.equal(analyzeEngineEvidence(events, options).recordOnlyDisplayCandidate, true);
+  assert.equal(analyzeEngineEvidence(events, options).pixelDraw.eventCount, 0);
+  for (const skips of [[], [skipped(15)], [skipped(15), skipped(15)], [skipped(1), skipped(2)],
+    [skipped(15), { ...skipped(25), cat: 'blink.user_timing' }]]) {
+    assert.equal(analyzeEngineEvidence([...pictures, ...skips], options).recordOnlyDisplayCandidate, false);
+  }
+  assert.equal(analyzeEngineEvidence([...events, { name: 'DirectRenderer::DrawFrame', ph: 'X', pid: 99, ts: 30 }],
+    options).recordOnlyDisplayCandidate, false);
+  assert.equal(analyzeEngineEvidence(events, { ...options, traceComplete: false }).recordOnlyDisplayCandidate, false);
 });
 
 test('engine mode requires an explicit binary before launching anything', async () => {
@@ -73,7 +93,7 @@ test('a matching shell executable cannot hide an altered engine component', asyn
   const output = join(root, 'chromium/src/out/VirtualDesktop');
   await mkdir(output, { recursive: true });
   const artifacts = {};
-  for (const name of ['headless_shell', 'libcc.dylib', 'libcc_base.dylib', 'libcc_paint.dylib', 'libblink_platform.dylib']) {
+  for (const name of ['headless_shell', 'libcc.dylib', 'libcc_base.dylib', 'libcc_paint.dylib', 'libblink_platform.dylib', 'libcomponents_viz_service.dylib']) {
     await writeFile(join(output, name), `test fixture only: ${name}`);
     artifacts[name] = await sha256(join(output, name));
   }

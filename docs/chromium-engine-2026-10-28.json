@@ -1,0 +1,1492 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-10-28T07:58:37.596383+00:00",
+  "environment": {
+    "os": "macOS arm64",
+    "machine": "Apple M4 / 16 GiB",
+    "buildVolume": "external APFS",
+    "node": "24.21.0"
+  },
+  "status": "record-only-display-candidate",
+  "engineSplitGate": "not-passed",
+  "serverRasterBypassed": false,
+  "build": {
+    "chromiumVersion": "156.0.8078.48",
+    "revision": "d0c02bfad08ec92a6ffcf989e53cd995e6381a4c",
+    "patchSha256": "8ce7cd738ad721870ed9350ce4dc03d2895714a2d420bd8a5efc6db98e5ad017",
+    "binarySha256": "f5c4f1a743604aebf5c98aa11192cae1298d1ca3e6dad8b8d711681bd57cda6b",
+    "ccTestsPassed": true,
+    "vizTestsPassed": true,
+    "ccTestsExecuted": 4,
+    "vizTestsExecuted": 4,
+    "testScope": "Filtered picture-layer and display lifecycle/control tests; not the complete Chromium test suites"
+  },
+  "replayRuntime": {
+    "schemaVersion": 1,
+    "id": "chromium-skia-886e42fda116-mac-unhinted-cff",
+    "skiaRevision": "886e42fda11610a56dd1b22e8697e27f9d1e34f2",
+    "emsdkVersion": "4.0.7",
+    "profilingFunctions": true,
+    "gnArgsSha256": "a14179642173741b39db678279eb5ecf315dc9d429845ae49b093bac6d2da959",
+    "backend": "software",
+    "text": {
+      "gammaAppliesToA8": true,
+      "gamma": 1,
+      "contrast": 0,
+      "cffStemDarkening": true,
+      "darkeningCurve": "FreeType default"
+    },
+    "patchSha256": "d551def97ca46dda40220105492b7857e08fd5c3b176c35a049b79ca10fd0624",
+    "assets": {
+      "canvaskit.js": "4da0cf6c3cef74e7f79633a8db65e471366c324296a29be667115fbf6494d2fb",
+      "canvaskit.wasm": "04bd2e589d1ca7892247238baa71e8ea5c80a5c64e87bab09ac00d9519c5cf69"
+    },
+    "scope": "Experimental CPU SKP replay; no WebGL or paragraph shaping"
+  },
+  "replayAssetBytes": {
+    "canvaskit.js": 123157,
+    "canvaskit.wasm": 4232613
+  },
+  "verification": {
+    "jsTestsPassed": 47,
+    "pythonBuildGuardTestsPassed": 5,
+    "jsFilesSyntaxChecked": 37,
+    "e2eTestsPassed": 4,
+    "e2eSkipped": 0,
+    "recordingsMatch": true
+  },
+  "modes": {
+    "ordinary": {
+      "traceComplete": true,
+      "nativePicturesCaptured": true,
+      "clientReplayRendered": true,
+      "fixtureReplayPassed": true,
+      "lifecycle": {
+        "passed": true,
+        "steps": [
+          {
+            "action": "pointer",
+            "expected": 2,
+            "actual": "2",
+            "passed": true
+          },
+          {
+            "action": "pointer",
+            "expected": 3,
+            "actual": "3",
+            "passed": true
+          },
+          {
+            "action": "pointer",
+            "expected": 4,
+            "actual": "4",
+            "passed": true
+          },
+          {
+            "action": "keyboard",
+            "expected": 5,
+            "actual": "5",
+            "passed": true
+          },
+          {
+            "action": "scroll",
+            "scrollY": 160,
+            "passed": true
+          },
+          {
+            "action": "reload",
+            "expected": 0,
+            "actual": "0",
+            "passed": true
+          },
+          {
+            "action": "session-storage-after-reload",
+            "passed": true
+          },
+          {
+            "action": "pointer-after-reload",
+            "expected": 1,
+            "actual": "1",
+            "passed": true
+          }
+        ],
+        "scope": "Real input, scroll, reload and session liveness only; scrolled/multi-layer visual replay is not validated"
+      },
+      "stages": [
+        {
+          "name": "before",
+          "records": 3,
+          "pictures": 1,
+          "pictureHashes": [
+            "682b63778250d4667c06a2352dfad3b02e1d841e666ead526474b92de98af8f5"
+          ]
+        },
+        {
+          "name": "after",
+          "records": 1,
+          "pictures": 1,
+          "pictureHashes": [
+            "4dfed0c7b5e91521c01881714f6037e3872be2dac2a18310b5d10a45912aa17e"
+          ]
+        }
+      ],
+      "engine": {
+        "status": "missing-engine-evidence",
+        "engineSplitGate": "not-passed",
+        "serverRasterBypassed": false,
+        "pictureLayerCandidate": false,
+        "recordOnlyDisplayCandidate": false,
+        "positiveEvidence": {
+          "recordCount": 0,
+          "pairedRecordCount": 0,
+          "noTileMarkerCount": 0,
+          "frameNumbers": [],
+          "framesByRenderer": {
+            "31876": []
+          },
+          "rendererPids": [
+            31876
+          ]
+        },
+        "displayEvidence": {
+          "skippedFrameCount": 0,
+          "pids": [],
+          "surfaceIds": []
+        },
+        "raster": {
+          "eventCount": 285,
+          "byName": {
+            "RasterizerTaskImpl::RunOnWorkerThread": 95,
+            "RasterTask": 95,
+            "ZeroCopyRasterBuffer::Playback": 95
+          },
+          "byPhase": {
+            "X": 285
+          }
+        },
+        "draw": {
+          "eventCount": 46,
+          "byName": {
+            "Display::DrawAndSwap": 16,
+            "DirectRenderer::DrawFrame": 15,
+            "DirectRenderer::DrawFrame ProcessForOverlays": 15
+          },
+          "byPhase": {
+            "X": 46
+          }
+        },
+        "pixelDraw": {
+          "eventCount": 15,
+          "byName": {
+            "DirectRenderer::DrawFrame": 15
+          },
+          "byPhase": {
+            "X": 15
+          }
+        },
+        "limitations": [
+          "No trace events is not proof that a pixel path did not run.",
+          "The optional headless NullRenderer bypasses Viz pixel drawing; Canvas, WebGL, video and image decoding are outside its scope.",
+          "Consecutive source frame numbers show new recordings, not a complete acknowledgement or frame/property-tree protocol.",
+          "Client replay, visual equality, CPU/RSS/thread measurements and ordinary-mode controls are separate acceptance conditions."
+        ]
+      },
+      "visualStages": [
+        {
+          "name": "before",
+          "passed": true,
+          "sourceMatched": true,
+          "visual": {
+            "passed": true,
+            "meanAbsoluteChannelError": 0.2450168788580247,
+            "pixelsOver32Fraction": 0.0015711805555555555,
+            "limits": {
+              "maxMeanAbsoluteChannelError": 3,
+              "maxPixelsOver32Fraction": 0.02
+            },
+            "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+          },
+          "regions": [
+            {
+              "selector": "h1",
+              "bounds": {
+                "x": 48,
+                "y": 75,
+                "width": 864,
+                "height": 55
+              },
+              "passed": true,
+              "meanAbsoluteChannelError": 0.08360690235690235,
+              "pixelsOver32Fraction": 0.0002525252525252525,
+              "limits": {
+                "maxMeanAbsoluteChannelError": 3,
+                "maxPixelsOver32Fraction": 0.02
+              },
+              "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+            },
+            {
+              "selector": "#description",
+              "bounds": {
+                "x": 48,
+                "y": 148,
+                "width": 864,
+                "height": 26
+              },
+              "passed": true,
+              "meanAbsoluteChannelError": 2.4963793922127255,
+              "pixelsOver32Fraction": 0.010550213675213676,
+              "limits": {
+                "maxMeanAbsoluteChannelError": 3,
+                "maxPixelsOver32Fraction": 0.02
+              },
+              "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+            },
+            {
+              "selector": "#count",
+              "bounds": {
+                "x": 84,
+                "y": 276.203125,
+                "width": 552,
+                "height": 105.59375
+              },
+              "passed": true,
+              "meanAbsoluteChannelError": 0.010066311184030625,
+              "pixelsOver32Fraction": 0.00013672409078479628,
+              "limits": {
+                "maxMeanAbsoluteChannelError": 3,
+                "maxPixelsOver32Fraction": 0.02
+              },
+              "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+            },
+            {
+              "selector": "#status",
+              "bounds": {
+                "x": 48,
+                "y": 534,
+                "width": 864,
+                "height": 26
+              },
+              "passed": true,
+              "meanAbsoluteChannelError": 0.7520180436847104,
+              "pixelsOver32Fraction": 0.002448361823361823,
+              "limits": {
+                "maxMeanAbsoluteChannelError": 3,
+                "maxPixelsOver32Fraction": 0.02
+              },
+              "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+            },
+            {
+              "selector": "#increment",
+              "bounds": {
+                "x": 48,
+                "y": 458,
+                "width": 241.921875,
+                "height": 56
+              },
+              "passed": true,
+              "meanAbsoluteChannelError": 1.6031582054309328,
+              "pixelsOver32Fraction": 0.012396694214876033,
+              "limits": {
+                "maxMeanAbsoluteChannelError": 3,
+                "maxPixelsOver32Fraction": 0.02
+              },
+              "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+            }
+          ],
+          "referenceState": {
+            "count": "0",
+            "expectedCount": "0",
+            "passed": true
+          }
+        },
+        {
+          "name": "after",
+          "passed": true,
+          "sourceMatched": true,
+          "visual": {
+            "passed": true,
+            "meanAbsoluteChannelError": 0.2667939814814815,
+            "pixelsOver32Fraction": 0.0017983217592592593,
+            "limits": {
+              "maxMeanAbsoluteChannelError": 3,
+              "maxPixelsOver32Fraction": 0.02
+            },
+            "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+          },
+          "regions": [
+            {
+              "selector": "h1",
+              "bounds": {
+                "x": 48,
+                "y": 75,
+                "width": 864,
+                "height": 55
+              },
+              "passed": true,
+              "meanAbsoluteChannelError": 0.08360690235690235,
+              "pixelsOver32Fraction": 0.0002525252525252525,
+              "limits": {
+                "maxMeanAbsoluteChannelError": 3,
+                "maxPixelsOver32Fraction": 0.02
+              },
+              "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+            },
+            {
+              "selector": "#description",
+              "bounds": {
+                "x": 48,
+                "y": 148,
+                "width": 864,
+                "height": 26
+              },
+              "passed": true,
+              "meanAbsoluteChannelError": 2.4963793922127255,
+              "pixelsOver32Fraction": 0.010550213675213676,
+              "limits": {
+                "maxMeanAbsoluteChannelError": 3,
+                "maxPixelsOver32Fraction": 0.02
+              },
+              "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+            },
+            {
+              "selector": "#count",
+              "bounds": {
+                "x": 84,
+                "y": 276.203125,
+                "width": 552,
+                "height": 105.59375
+              },
+              "passed": true,
+              "meanAbsoluteChannelError": 0.009063667851608786,
+              "pixelsOver32Fraction": 0.00011963357943669674,
+              "limits": {
+                "maxMeanAbsoluteChannelError": 3,
+                "maxPixelsOver32Fraction": 0.02
+              },
+              "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+            },
+            {
+              "selector": "#status",
+              "bounds": {
+                "x": 48,
+                "y": 534,
+                "width": 864,
+                "height": 26
+              },
+              "passed": true,
+              "meanAbsoluteChannelError": 1.331656576448243,
+              "pixelsOver32Fraction": 0.006054131054131054,
+              "limits": {
+                "maxMeanAbsoluteChannelError": 3,
+                "maxPixelsOver32Fraction": 0.02
+              },
+              "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+            },
+            {
+              "selector": "#increment",
+              "bounds": {
+                "x": 48,
+                "y": 458,
+                "width": 241.921875,
+                "height": 56
+              },
+              "passed": true,
+              "meanAbsoluteChannelError": 1.6031582054309328,
+              "pixelsOver32Fraction": 0.012396694214876033,
+              "limits": {
+                "maxMeanAbsoluteChannelError": 3,
+                "maxPixelsOver32Fraction": 0.02
+              },
+              "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+            }
+          ],
+          "referenceState": {
+            "count": "1",
+            "expectedCount": "1",
+            "passed": true
+          }
+        }
+      ]
+    },
+    "remote-paint": {
+      "traceComplete": true,
+      "nativePicturesCaptured": true,
+      "clientReplayRendered": true,
+      "fixtureReplayPassed": true,
+      "lifecycle": {
+        "passed": true,
+        "steps": [
+          {
+            "action": "pointer",
+            "expected": 2,
+            "actual": "2",
+            "passed": true
+          },
+          {
+            "action": "pointer",
+            "expected": 3,
+            "actual": "3",
+            "passed": true
+          },
+          {
+            "action": "pointer",
+            "expected": 4,
+            "actual": "4",
+            "passed": true
+          },
+          {
+            "action": "keyboard",
+            "expected": 5,
+            "actual": "5",
+            "passed": true
+          },
+          {
+            "action": "scroll",
+            "scrollY": 160,
+            "passed": true
+          },
+          {
+            "action": "reload",
+            "expected": 0,
+            "actual": "0",
+            "passed": true
+          },
+          {
+            "action": "session-storage-after-reload",
+            "passed": true
+          },
+          {
+            "action": "pointer-after-reload",
+            "expected": 1,
+            "actual": "1",
+            "passed": true
+          }
+        ],
+        "scope": "Real input, scroll, reload and session liveness only; scrolled/multi-layer visual replay is not validated"
+      },
+      "stages": [
+        {
+          "name": "before",
+          "records": 5,
+          "pictures": 1,
+          "pictureHashes": [
+            "682b63778250d4667c06a2352dfad3b02e1d841e666ead526474b92de98af8f5"
+          ]
+        },
+        {
+          "name": "after",
+          "records": 2,
+          "pictures": 1,
+          "pictureHashes": [
+            "4dfed0c7b5e91521c01881714f6037e3872be2dac2a18310b5d10a45912aa17e"
+          ]
+        }
+      ],
+      "engine": {
+        "status": "picture-layer-candidate",
+        "engineSplitGate": "not-passed",
+        "serverRasterBypassed": false,
+        "pictureLayerCandidate": true,
+        "recordOnlyDisplayCandidate": false,
+        "positiveEvidence": {
+          "recordCount": 11,
+          "pairedRecordCount": 11,
+          "noTileMarkerCount": 31,
+          "frameNumbers": [
+            0,
+            1,
+            4,
+            6,
+            7,
+            11,
+            15,
+            19,
+            23,
+            25,
+            27
+          ],
+          "framesByRenderer": {
+            "32081": [
+              0,
+              1,
+              4,
+              6,
+              7,
+              11,
+              15,
+              19,
+              23,
+              25,
+              27
+            ]
+          },
+          "rendererPids": [
+            32081
+          ]
+        },
+        "displayEvidence": {
+          "skippedFrameCount": 0,
+          "pids": [],
+          "surfaceIds": []
+        },
+        "raster": {
+          "eventCount": 0,
+          "byName": {},
+          "byPhase": {}
+        },
+        "draw": {
+          "eventCount": 46,
+          "byName": {
+            "Display::DrawAndSwap": 16,
+            "DirectRenderer::DrawFrame": 15,
+            "DirectRenderer::DrawFrame ProcessForOverlays": 15
+          },
+          "byPhase": {
+            "X": 46
+          }
+        },
+        "pixelDraw": {
+          "eventCount": 15,
+          "byName": {
+            "DirectRenderer::DrawFrame": 15
+          },
+          "byPhase": {
+            "X": 15
+          }
+        },
+        "limitations": [
+          "No trace events is not proof that a pixel path did not run.",
+          "The optional headless NullRenderer bypasses Viz pixel drawing; Canvas, WebGL, video and image decoding are outside its scope.",
+          "Consecutive source frame numbers show new recordings, not a complete acknowledgement or frame/property-tree protocol.",
+          "Client replay, visual equality, CPU/RSS/thread measurements and ordinary-mode controls are separate acceptance conditions."
+        ]
+      },
+      "visualStages": [
+        {
+          "name": "before",
+          "passed": true,
+          "sourceMatched": true,
+          "visual": {
+            "passed": true,
+            "meanAbsoluteChannelError": 0.2450168788580247,
+            "pixelsOver32Fraction": 0.0015711805555555555,
+            "limits": {
+              "maxMeanAbsoluteChannelError": 3,
+              "maxPixelsOver32Fraction": 0.02
+            },
+            "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+          },
+          "regions": [
+            {
+              "selector": "h1",
+              "bounds": {
+                "x": 48,
+                "y": 75,
+                "width": 864,
+                "height": 55
+              },
+              "passed": true,
+              "meanAbsoluteChannelError": 0.08360690235690235,
+              "pixelsOver32Fraction": 0.0002525252525252525,
+              "limits": {
+                "maxMeanAbsoluteChannelError": 3,
+                "maxPixelsOver32Fraction": 0.02
+              },
+              "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+            },
+            {
+              "selector": "#description",
+              "bounds": {
+                "x": 48,
+                "y": 148,
+                "width": 864,
+                "height": 26
+              },
+              "passed": true,
+              "meanAbsoluteChannelError": 2.4963793922127255,
+              "pixelsOver32Fraction": 0.010550213675213676,
+              "limits": {
+                "maxMeanAbsoluteChannelError": 3,
+                "maxPixelsOver32Fraction": 0.02
+              },
+              "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+            },
+            {
+              "selector": "#count",
+              "bounds": {
+                "x": 84,
+                "y": 276.203125,
+                "width": 552,
+                "height": 105.59375
+              },
+              "passed": true,
+              "meanAbsoluteChannelError": 0.010066311184030625,
+              "pixelsOver32Fraction": 0.00013672409078479628,
+              "limits": {
+                "maxMeanAbsoluteChannelError": 3,
+                "maxPixelsOver32Fraction": 0.02
+              },
+              "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+            },
+            {
+              "selector": "#status",
+              "bounds": {
+                "x": 48,
+                "y": 534,
+                "width": 864,
+                "height": 26
+              },
+              "passed": true,
+              "meanAbsoluteChannelError": 0.7520180436847104,
+              "pixelsOver32Fraction": 0.002448361823361823,
+              "limits": {
+                "maxMeanAbsoluteChannelError": 3,
+                "maxPixelsOver32Fraction": 0.02
+              },
+              "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+            },
+            {
+              "selector": "#increment",
+              "bounds": {
+                "x": 48,
+                "y": 458,
+                "width": 241.921875,
+                "height": 56
+              },
+              "passed": true,
+              "meanAbsoluteChannelError": 1.6031582054309328,
+              "pixelsOver32Fraction": 0.012396694214876033,
+              "limits": {
+                "maxMeanAbsoluteChannelError": 3,
+                "maxPixelsOver32Fraction": 0.02
+              },
+              "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+            }
+          ],
+          "referenceState": {
+            "count": "0",
+            "expectedCount": "0",
+            "passed": true
+          }
+        },
+        {
+          "name": "after",
+          "passed": true,
+          "sourceMatched": true,
+          "visual": {
+            "passed": true,
+            "meanAbsoluteChannelError": 0.2667939814814815,
+            "pixelsOver32Fraction": 0.0017983217592592593,
+            "limits": {
+              "maxMeanAbsoluteChannelError": 3,
+              "maxPixelsOver32Fraction": 0.02
+            },
+            "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+          },
+          "regions": [
+            {
+              "selector": "h1",
+              "bounds": {
+                "x": 48,
+                "y": 75,
+                "width": 864,
+                "height": 55
+              },
+              "passed": true,
+              "meanAbsoluteChannelError": 0.08360690235690235,
+              "pixelsOver32Fraction": 0.0002525252525252525,
+              "limits": {
+                "maxMeanAbsoluteChannelError": 3,
+                "maxPixelsOver32Fraction": 0.02
+              },
+              "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+            },
+            {
+              "selector": "#description",
+              "bounds": {
+                "x": 48,
+                "y": 148,
+                "width": 864,
+                "height": 26
+              },
+              "passed": true,
+              "meanAbsoluteChannelError": 2.4963793922127255,
+              "pixelsOver32Fraction": 0.010550213675213676,
+              "limits": {
+                "maxMeanAbsoluteChannelError": 3,
+                "maxPixelsOver32Fraction": 0.02
+              },
+              "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+            },
+            {
+              "selector": "#count",
+              "bounds": {
+                "x": 84,
+                "y": 276.203125,
+                "width": 552,
+                "height": 105.59375
+              },
+              "passed": true,
+              "meanAbsoluteChannelError": 0.009063667851608786,
+              "pixelsOver32Fraction": 0.00011963357943669674,
+              "limits": {
+                "maxMeanAbsoluteChannelError": 3,
+                "maxPixelsOver32Fraction": 0.02
+              },
+              "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+            },
+            {
+              "selector": "#status",
+              "bounds": {
+                "x": 48,
+                "y": 534,
+                "width": 864,
+                "height": 26
+              },
+              "passed": true,
+              "meanAbsoluteChannelError": 1.331656576448243,
+              "pixelsOver32Fraction": 0.006054131054131054,
+              "limits": {
+                "maxMeanAbsoluteChannelError": 3,
+                "maxPixelsOver32Fraction": 0.02
+              },
+              "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+            },
+            {
+              "selector": "#increment",
+              "bounds": {
+                "x": 48,
+                "y": 458,
+                "width": 241.921875,
+                "height": 56
+              },
+              "passed": true,
+              "meanAbsoluteChannelError": 1.6031582054309328,
+              "pixelsOver32Fraction": 0.012396694214876033,
+              "limits": {
+                "maxMeanAbsoluteChannelError": 3,
+                "maxPixelsOver32Fraction": 0.02
+              },
+              "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+            }
+          ],
+          "referenceState": {
+            "count": "1",
+            "expectedCount": "1",
+            "passed": true
+          }
+        }
+      ]
+    },
+    "record-only-display": {
+      "traceComplete": true,
+      "nativePicturesCaptured": true,
+      "clientReplayRendered": true,
+      "fixtureReplayPassed": true,
+      "lifecycle": {
+        "passed": true,
+        "steps": [
+          {
+            "action": "pointer",
+            "expected": 2,
+            "actual": "2",
+            "passed": true
+          },
+          {
+            "action": "pointer",
+            "expected": 3,
+            "actual": "3",
+            "passed": true
+          },
+          {
+            "action": "pointer",
+            "expected": 4,
+            "actual": "4",
+            "passed": true
+          },
+          {
+            "action": "keyboard",
+            "expected": 5,
+            "actual": "5",
+            "passed": true
+          },
+          {
+            "action": "scroll",
+            "scrollY": 160,
+            "passed": true
+          },
+          {
+            "action": "reload",
+            "expected": 0,
+            "actual": "0",
+            "passed": true
+          },
+          {
+            "action": "session-storage-after-reload",
+            "passed": true
+          },
+          {
+            "action": "pointer-after-reload",
+            "expected": 1,
+            "actual": "1",
+            "passed": true
+          }
+        ],
+        "scope": "Real input, scroll, reload and session liveness only; scrolled/multi-layer visual replay is not validated"
+      },
+      "stages": [
+        {
+          "name": "before",
+          "records": 5,
+          "pictures": 1,
+          "pictureHashes": [
+            "682b63778250d4667c06a2352dfad3b02e1d841e666ead526474b92de98af8f5"
+          ]
+        },
+        {
+          "name": "after",
+          "records": 2,
+          "pictures": 1,
+          "pictureHashes": [
+            "4dfed0c7b5e91521c01881714f6037e3872be2dac2a18310b5d10a45912aa17e"
+          ]
+        }
+      ],
+      "engine": {
+        "status": "picture-layer-candidate",
+        "engineSplitGate": "not-passed",
+        "serverRasterBypassed": false,
+        "pictureLayerCandidate": true,
+        "recordOnlyDisplayCandidate": true,
+        "positiveEvidence": {
+          "recordCount": 11,
+          "pairedRecordCount": 11,
+          "noTileMarkerCount": 31,
+          "frameNumbers": [
+            0,
+            1,
+            4,
+            6,
+            7,
+            11,
+            16,
+            20,
+            24,
+            26,
+            28
+          ],
+          "framesByRenderer": {
+            "32126": [
+              0,
+              1,
+              4,
+              6,
+              7,
+              11,
+              16,
+              20,
+              24,
+              26,
+              28
+            ]
+          },
+          "rendererPids": [
+            32126
+          ]
+        },
+        "displayEvidence": {
+          "skippedFrameCount": 17,
+          "pids": [
+            32124
+          ],
+          "surfaceIds": [
+            "SurfaceId(FrameSinkId(0, 2), LocalSurfaceId(2, 1, CEF1...))",
+            "SurfaceId(FrameSinkId(0, 2), LocalSurfaceId(3, 1, CEF1...))",
+            "SurfaceId(FrameSinkId(0, 2), LocalSurfaceId(4, 1, CEF1...))",
+            "SurfaceId(FrameSinkId(0, 2), LocalSurfaceId(5, 1, CEF1...))",
+            "SurfaceId(FrameSinkId(0, 3), LocalSurfaceId(1, 1, 69E6...))"
+          ]
+        },
+        "raster": {
+          "eventCount": 0,
+          "byName": {},
+          "byPhase": {}
+        },
+        "draw": {
+          "eventCount": 17,
+          "byName": {
+            "Display::DrawAndSwap": 17
+          },
+          "byPhase": {
+            "X": 17
+          }
+        },
+        "pixelDraw": {
+          "eventCount": 0,
+          "byName": {},
+          "byPhase": {}
+        },
+        "limitations": [
+          "No trace events is not proof that a pixel path did not run.",
+          "The optional headless NullRenderer bypasses Viz pixel drawing; Canvas, WebGL, video and image decoding are outside its scope.",
+          "Consecutive source frame numbers show new recordings, not a complete acknowledgement or frame/property-tree protocol.",
+          "Client replay, visual equality, CPU/RSS/thread measurements and ordinary-mode controls are separate acceptance conditions."
+        ]
+      },
+      "visualStages": [
+        {
+          "name": "before",
+          "passed": true,
+          "sourceMatched": true,
+          "visual": {
+            "passed": true,
+            "meanAbsoluteChannelError": 0.2450168788580247,
+            "pixelsOver32Fraction": 0.0015711805555555555,
+            "limits": {
+              "maxMeanAbsoluteChannelError": 3,
+              "maxPixelsOver32Fraction": 0.02
+            },
+            "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+          },
+          "regions": [
+            {
+              "selector": "h1",
+              "bounds": {
+                "x": 48,
+                "y": 75,
+                "width": 864,
+                "height": 55
+              },
+              "passed": true,
+              "meanAbsoluteChannelError": 0.08360690235690235,
+              "pixelsOver32Fraction": 0.0002525252525252525,
+              "limits": {
+                "maxMeanAbsoluteChannelError": 3,
+                "maxPixelsOver32Fraction": 0.02
+              },
+              "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+            },
+            {
+              "selector": "#description",
+              "bounds": {
+                "x": 48,
+                "y": 148,
+                "width": 864,
+                "height": 26
+              },
+              "passed": true,
+              "meanAbsoluteChannelError": 2.4963793922127255,
+              "pixelsOver32Fraction": 0.010550213675213676,
+              "limits": {
+                "maxMeanAbsoluteChannelError": 3,
+                "maxPixelsOver32Fraction": 0.02
+              },
+              "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+            },
+            {
+              "selector": "#count",
+              "bounds": {
+                "x": 84,
+                "y": 276.203125,
+                "width": 552,
+                "height": 105.59375
+              },
+              "passed": true,
+              "meanAbsoluteChannelError": 0.010066311184030625,
+              "pixelsOver32Fraction": 0.00013672409078479628,
+              "limits": {
+                "maxMeanAbsoluteChannelError": 3,
+                "maxPixelsOver32Fraction": 0.02
+              },
+              "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+            },
+            {
+              "selector": "#status",
+              "bounds": {
+                "x": 48,
+                "y": 534,
+                "width": 864,
+                "height": 26
+              },
+              "passed": true,
+              "meanAbsoluteChannelError": 0.7520180436847104,
+              "pixelsOver32Fraction": 0.002448361823361823,
+              "limits": {
+                "maxMeanAbsoluteChannelError": 3,
+                "maxPixelsOver32Fraction": 0.02
+              },
+              "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+            },
+            {
+              "selector": "#increment",
+              "bounds": {
+                "x": 48,
+                "y": 458,
+                "width": 241.921875,
+                "height": 56
+              },
+              "passed": true,
+              "meanAbsoluteChannelError": 1.6031582054309328,
+              "pixelsOver32Fraction": 0.012396694214876033,
+              "limits": {
+                "maxMeanAbsoluteChannelError": 3,
+                "maxPixelsOver32Fraction": 0.02
+              },
+              "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+            }
+          ],
+          "referenceState": {
+            "count": "0",
+            "expectedCount": "0",
+            "passed": true
+          }
+        },
+        {
+          "name": "after",
+          "passed": true,
+          "sourceMatched": true,
+          "visual": {
+            "passed": true,
+            "meanAbsoluteChannelError": 0.2667939814814815,
+            "pixelsOver32Fraction": 0.0017983217592592593,
+            "limits": {
+              "maxMeanAbsoluteChannelError": 3,
+              "maxPixelsOver32Fraction": 0.02
+            },
+            "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+          },
+          "regions": [
+            {
+              "selector": "h1",
+              "bounds": {
+                "x": 48,
+                "y": 75,
+                "width": 864,
+                "height": 55
+              },
+              "passed": true,
+              "meanAbsoluteChannelError": 0.08360690235690235,
+              "pixelsOver32Fraction": 0.0002525252525252525,
+              "limits": {
+                "maxMeanAbsoluteChannelError": 3,
+                "maxPixelsOver32Fraction": 0.02
+              },
+              "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+            },
+            {
+              "selector": "#description",
+              "bounds": {
+                "x": 48,
+                "y": 148,
+                "width": 864,
+                "height": 26
+              },
+              "passed": true,
+              "meanAbsoluteChannelError": 2.4963793922127255,
+              "pixelsOver32Fraction": 0.010550213675213676,
+              "limits": {
+                "maxMeanAbsoluteChannelError": 3,
+                "maxPixelsOver32Fraction": 0.02
+              },
+              "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+            },
+            {
+              "selector": "#count",
+              "bounds": {
+                "x": 84,
+                "y": 276.203125,
+                "width": 552,
+                "height": 105.59375
+              },
+              "passed": true,
+              "meanAbsoluteChannelError": 0.009063667851608786,
+              "pixelsOver32Fraction": 0.00011963357943669674,
+              "limits": {
+                "maxMeanAbsoluteChannelError": 3,
+                "maxPixelsOver32Fraction": 0.02
+              },
+              "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+            },
+            {
+              "selector": "#status",
+              "bounds": {
+                "x": 48,
+                "y": 534,
+                "width": 864,
+                "height": 26
+              },
+              "passed": true,
+              "meanAbsoluteChannelError": 1.331656576448243,
+              "pixelsOver32Fraction": 0.006054131054131054,
+              "limits": {
+                "maxMeanAbsoluteChannelError": 3,
+                "maxPixelsOver32Fraction": 0.02
+              },
+              "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+            },
+            {
+              "selector": "#increment",
+              "bounds": {
+                "x": 48,
+                "y": 458,
+                "width": 241.921875,
+                "height": 56
+              },
+              "passed": true,
+              "meanAbsoluteChannelError": 1.6031582054309328,
+              "pixelsOver32Fraction": 0.012396694214876033,
+              "limits": {
+                "maxMeanAbsoluteChannelError": 3,
+                "maxPixelsOver32Fraction": 0.02
+              },
+              "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+            }
+          ],
+          "referenceState": {
+            "count": "1",
+            "expectedCount": "1",
+            "passed": true
+          }
+        }
+      ]
+    }
+  },
+  "textControlsOnIdenticalSavedSkp": {
+    "npm-0.42.0": {
+      "fixtureReplayPassed": false,
+      "stages": [
+        {
+          "name": "before",
+          "passed": false,
+          "regions": [
+            {
+              "selector": "h1",
+              "passed": false,
+              "meanAbsoluteChannelError": 1.3915824915824915,
+              "pixelsOver32Fraction": 0.021443602693602695
+            },
+            {
+              "selector": "#description",
+              "passed": false,
+              "meanAbsoluteChannelError": 3.0907822886989553,
+              "pixelsOver32Fraction": 0.05025819088319088
+            },
+            {
+              "selector": "#count",
+              "passed": true,
+              "meanAbsoluteChannelError": 0.11835748792270531,
+              "pixelsOver32Fraction": 0.0032642876674870112
+            },
+            {
+              "selector": "#status",
+              "passed": true,
+              "meanAbsoluteChannelError": 1.0365325261158596,
+              "pixelsOver32Fraction": 0.018117877492877493
+            },
+            {
+              "selector": "#increment",
+              "passed": false,
+              "meanAbsoluteChannelError": 1.8043831168831168,
+              "pixelsOver32Fraction": 0.0333530106257379
+            }
+          ]
+        },
+        {
+          "name": "after",
+          "passed": false,
+          "regions": [
+            {
+              "selector": "h1",
+              "passed": false,
+              "meanAbsoluteChannelError": 1.3915824915824915,
+              "pixelsOver32Fraction": 0.021443602693602695
+            },
+            {
+              "selector": "#description",
+              "passed": false,
+              "meanAbsoluteChannelError": 3.0907822886989553,
+              "pixelsOver32Fraction": 0.05025819088319088
+            },
+            {
+              "selector": "#count",
+              "passed": true,
+              "meanAbsoluteChannelError": 0.13426875398778598,
+              "pixelsOver32Fraction": 0.0032301066447908123
+            },
+            {
+              "selector": "#status",
+              "passed": false,
+              "meanAbsoluteChannelError": 1.6951566951566952,
+              "pixelsOver32Fraction": 0.026976495726495728
+            },
+            {
+              "selector": "#increment",
+              "passed": false,
+              "meanAbsoluteChannelError": 1.8043831168831168,
+              "pixelsOver32Fraction": 0.0333530106257379
+            }
+          ]
+        }
+      ]
+    },
+    "matched-a8-srgb": {
+      "fixtureReplayPassed": false,
+      "stages": [
+        {
+          "name": "before",
+          "passed": false,
+          "regions": [
+            {
+              "selector": "h1",
+              "passed": false,
+              "meanAbsoluteChannelError": 2.197439674523008,
+              "pixelsOver32Fraction": 0.03876262626262626
+            },
+            {
+              "selector": "#description",
+              "passed": false,
+              "meanAbsoluteChannelError": 4.8656962250712255,
+              "pixelsOver32Fraction": 0.08302172364672365
+            },
+            {
+              "selector": "#count",
+              "passed": true,
+              "meanAbsoluteChannelError": 0.11835748792270531,
+              "pixelsOver32Fraction": 0.0032642876674870112
+            },
+            {
+              "selector": "#status",
+              "passed": false,
+              "meanAbsoluteChannelError": 1.6118678774928774,
+              "pixelsOver32Fraction": 0.027065527065527065
+            },
+            {
+              "selector": "#increment",
+              "passed": false,
+              "meanAbsoluteChannelError": 2.8256837859110586,
+              "pixelsOver32Fraction": 0.04707792207792208
+            }
+          ]
+        },
+        {
+          "name": "after",
+          "passed": false,
+          "regions": [
+            {
+              "selector": "h1",
+              "passed": false,
+              "meanAbsoluteChannelError": 2.197439674523008,
+              "pixelsOver32Fraction": 0.03876262626262626
+            },
+            {
+              "selector": "#description",
+              "passed": false,
+              "meanAbsoluteChannelError": 4.8656962250712255,
+              "pixelsOver32Fraction": 0.08302172364672365
+            },
+            {
+              "selector": "#count",
+              "passed": true,
+              "meanAbsoluteChannelError": 0.13426875398778598,
+              "pixelsOver32Fraction": 0.0032301066447908123
+            },
+            {
+              "selector": "#status",
+              "passed": false,
+              "meanAbsoluteChannelError": 2.646070750237417,
+              "pixelsOver32Fraction": 0.04447115384615385
+            },
+            {
+              "selector": "#increment",
+              "passed": false,
+              "meanAbsoluteChannelError": 2.8256837859110586,
+              "pixelsOver32Fraction": 0.04707792207792208
+            }
+          ]
+        }
+      ]
+    },
+    "matched-a8-srgb-cff": {
+      "fixtureReplayPassed": false,
+      "stages": [
+        {
+          "name": "before",
+          "passed": false,
+          "regions": [
+            {
+              "selector": "h1",
+              "passed": false,
+              "meanAbsoluteChannelError": 2.197439674523008,
+              "pixelsOver32Fraction": 0.03876262626262626
+            },
+            {
+              "selector": "#description",
+              "passed": false,
+              "meanAbsoluteChannelError": 2.797320156695157,
+              "pixelsOver32Fraction": 0.03120548433048433
+            },
+            {
+              "selector": "#count",
+              "passed": true,
+              "meanAbsoluteChannelError": 0.11835748792270531,
+              "pixelsOver32Fraction": 0.0032642876674870112
+            },
+            {
+              "selector": "#status",
+              "passed": true,
+              "meanAbsoluteChannelError": 0.8910108024691358,
+              "pixelsOver32Fraction": 0.01103988603988604
+            },
+            {
+              "selector": "#increment",
+              "passed": false,
+              "meanAbsoluteChannelError": 1.5892611176702085,
+              "pixelsOver32Fraction": 0.02346517119244392
+            }
+          ]
+        },
+        {
+          "name": "after",
+          "passed": false,
+          "regions": [
+            {
+              "selector": "h1",
+              "passed": false,
+              "meanAbsoluteChannelError": 2.197439674523008,
+              "pixelsOver32Fraction": 0.03876262626262626
+            },
+            {
+              "selector": "#description",
+              "passed": false,
+              "meanAbsoluteChannelError": 2.797320156695157,
+              "pixelsOver32Fraction": 0.03120548433048433
+            },
+            {
+              "selector": "#count",
+              "passed": true,
+              "meanAbsoluteChannelError": 0.13426875398778598,
+              "pixelsOver32Fraction": 0.0032301066447908123
+            },
+            {
+              "selector": "#status",
+              "passed": true,
+              "meanAbsoluteChannelError": 1.5232520180436848,
+              "pixelsOver32Fraction": 0.017984330484330485
+            },
+            {
+              "selector": "#increment",
+              "passed": false,
+              "meanAbsoluteChannelError": 1.5892611176702085,
+              "pixelsOver32Fraction": 0.02346517119244392
+            }
+          ]
+        }
+      ]
+    },
+    "matched-mac-unhinted-cff": {
+      "fixtureReplayPassed": true,
+      "stages": [
+        {
+          "name": "before",
+          "passed": true,
+          "regions": [
+            {
+              "selector": "h1",
+              "passed": true,
+              "meanAbsoluteChannelError": 0.08360690235690235,
+              "pixelsOver32Fraction": 0.0002525252525252525
+            },
+            {
+              "selector": "#description",
+              "passed": true,
+              "meanAbsoluteChannelError": 2.4963793922127255,
+              "pixelsOver32Fraction": 0.010550213675213676
+            },
+            {
+              "selector": "#count",
+              "passed": true,
+              "meanAbsoluteChannelError": 0.010066311184030625,
+              "pixelsOver32Fraction": 0.00013672409078479628
+            },
+            {
+              "selector": "#status",
+              "passed": true,
+              "meanAbsoluteChannelError": 0.7520180436847104,
+              "pixelsOver32Fraction": 0.002448361823361823
+            },
+            {
+              "selector": "#increment",
+              "passed": true,
+              "meanAbsoluteChannelError": 1.6031582054309328,
+              "pixelsOver32Fraction": 0.012396694214876033
+            }
+          ]
+        },
+        {
+          "name": "after",
+          "passed": true,
+          "regions": [
+            {
+              "selector": "h1",
+              "passed": true,
+              "meanAbsoluteChannelError": 0.08360690235690235,
+              "pixelsOver32Fraction": 0.0002525252525252525
+            },
+            {
+              "selector": "#description",
+              "passed": true,
+              "meanAbsoluteChannelError": 2.4963793922127255,
+              "pixelsOver32Fraction": 0.010550213675213676
+            },
+            {
+              "selector": "#count",
+              "passed": true,
+              "meanAbsoluteChannelError": 0.009063667851608786,
+              "pixelsOver32Fraction": 0.00011963357943669674
+            },
+            {
+              "selector": "#status",
+              "passed": true,
+              "meanAbsoluteChannelError": 1.331656576448243,
+              "pixelsOver32Fraction": 0.006054131054131054
+            },
+            {
+              "selector": "#increment",
+              "passed": true,
+              "meanAbsoluteChannelError": 1.6031582054309328,
+              "pixelsOver32Fraction": 0.012396694214876033
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "replayMemory": {
+    "scope": "CanvasKit WASM heap growth only; excludes browser/JS/GPU memory and does not measure total RSS",
+    "results": [
+      {
+        "leakingControl": false,
+        "cycles": 64,
+        "baselineBytes": 134217728,
+        "peakBytes": 134217728,
+        "growthBytes": 0
+      },
+      {
+        "leakingControl": true,
+        "cycles": 64,
+        "baselineBytes": 134217728,
+        "peakBytes": 231997440,
+        "growthBytes": 97779712
+      }
+    ]
+  },
+  "artifactsDirectory": "test-results/chromium-engine-20261028",
+  "limitations": [
+    "Fixed trusted CFF-font fixture only; arbitrary pages and font formats are not validated.",
+    "Canvas, WebGL, video, image decoding, screenshot/copy-output and other pixel paths are not covered.",
+    "Scroll/reload checks verify liveness and session state, not scrolled or multi-layer replay fidelity.",
+    "No authoritative frame/property-tree/resource-removal/ACK protocol or production worker integration.",
+    "Trace records are not execution counts or CPU savings. WASM heap is not total browser RSS.",
+    "CanvasKit profiling build keeps function names; its asset sizes are not production bundle measurements."
+  ]
+}

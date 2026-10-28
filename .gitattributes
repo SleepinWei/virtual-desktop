@@ -1,1 +1,2 @@
 experiments/chromium-engine/remote-paint.patch -whitespace
+experiments/chromium-engine/canvaskit-cff.patch -whitespace

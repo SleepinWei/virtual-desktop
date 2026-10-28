@@ -55,6 +55,18 @@ CLI 为 trace 使用 128 MiB central buffer，并请求 32 MiB producer shared m
 
 严格视觉关卡仍有字形平滑差异。fixture 显式指定灰度字体平滑后，整图误差较小，但部分文字区域仍超过固定容差；保留失败状态和原始指标，不放宽门槛。现成 CanvasKit FreeType A8 路径与 macOS CoreText 的平滑不同，公开 JS API 没有可直接覆盖已记录 TextBlob 的 gamma/contrast 选项。[CanvasKit 绑定](https://raw.githubusercontent.com/google/skia/canvaskit/0.42.0/modules/canvaskit/canvaskit_bindings.cpp)、[FreeType 字形路径](https://raw.githubusercontent.com/google/skia/canvaskit/0.42.0/src/ports/SkFontHost_FreeType.cpp)。后续应以定制 CanvasKit 构建和同一区域比较验证，不能以更换后台或颜色空间声称已修复。
 
+2026-10-28 已用与 Chromium 完全相同的 Skia revision 构建定制 CanvasKit。单独开启 A8 sRGB 预混合仍失败；按 macOS 未 hint 字形的 A8 线性覆盖策略，配合 FreeType 默认 CFF stem darkening 后，同一批未修改 SKP 的前后阶段、整图和全部文字区域均通过既有阈值。该结果限定于仓库的 CFF 字体 fixture，不代表任意系统字体或其他平台已兼容。构建、反例与完整三模式验证见 [引擎实验](CHROMIUM_ENGINE.md)。
+
+可以复用既有原生捕获，独立验证其他客户端构建，不重新采集网页：
+
+```bash
+npm run experiment:replay -- --input test-results/chromium-engine-20261028/record-only-display \
+  --canvaskit /Volumes/Extreme-APFS/Builds/canvaskit/out \
+  --output test-results/saved-replay
+```
+
+自定义目录必须包含 `runtime.json`、`canvaskit.js` 和 `canvaskit.wasm`。实验服务校验两个资源的 SHA-256 并保留所验证的字节，防止构建期间新文件替换旧指纹对应的内容。客户端报告实际运行时身份和指纹；软件 surface 切换时释放 WASM 像素分配。
+
 ## headless 帧控制探针
 
 另一个候选是 headless shell 的 `enableBeginFrameControl` 与 `HeadlessExperimental.beginFrame({noDisplayUpdates:true})`。统一 Chrome headless 与 headless shell 具有不同能力，探针要求明确提供后者的二进制路径：

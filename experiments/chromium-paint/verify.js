@@ -47,7 +47,7 @@ function crop(image, bounds) {
 export async function verifyReplay({ baseUrl, outputDir, executablePath, manifest }) {
   await mkdir(outputDir, { recursive: true });
   const stages = [], errors = [];
-  let browser, browserVersion = null;
+  let browser, browserVersion = null, replayRuntime = null;
   try {
     if (manifest?.version !== 1 || manifest.viewport?.width !== 960 || manifest.viewport?.height !== 720 ||
         !Array.isArray(manifest.stages) || manifest.stages.length !== 2 ||
@@ -72,6 +72,7 @@ export async function verifyReplay({ baseUrl, outputDir, executablePath, manifes
       const state = await client.locator('html').getAttribute('data-status');
       const details = JSON.parse(await client.locator('#result').textContent());
       if (state !== 'ready') { stages.push({ name: stage.name, passed: false, status: state, details }); break; }
+      replayRuntime = details.runtime;
       const sourceMatched = stage.pictures.some(picture => picture.path === details.picture && picture.sha256 === details.sha256 && picture.bytes === details.bytes);
       if (!sourceMatched || details.stage !== stage.name) throw new Error(`Replay source does not match captured stage ${stage.name}`);
       const png = await client.locator('#skp').evaluate(canvas => canvas.toDataURL('image/png'));
@@ -99,7 +100,7 @@ export async function verifyReplay({ baseUrl, outputDir, executablePath, manifes
   } catch (error) { errors.push(error.message); }
   finally { if (browser) await browser.close().catch(error => errors.push(`Browser cleanup: ${error.message}`)); }
   const report = { version: 1, recordedAt: new Date().toISOString(), localValidationBrowser: browserVersion,
-    canvasKit: '0.42.0/full', stages, errors,
+    canvasKit: replayRuntime?.id ?? null, replayRuntime, stages, errors,
     clientReplayRendered: stages.length === 2 && stages.every(stage => stage.sourceMatched) && errors.length === 0,
     fixtureReplayPassed: stages.length === 2 && stages.every(stage => stage.passed) && errors.length === 0,
     serverRasterBypassed: false,

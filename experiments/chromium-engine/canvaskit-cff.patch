@@ -1,0 +1,22 @@
+diff --git a/src/ports/SkFontHost_FreeType.cpp b/src/ports/SkFontHost_FreeType.cpp
+index 1534ed3..0ea4b4a 100644
+--- a/src/ports/SkFontHost_FreeType.cpp
++++ b/src/ports/SkFontHost_FreeType.cpp
+@@ -179,6 +179,17 @@ public:
+         FT_Add_Default_Modules(fLibrary);
+         FT_Set_Default_Properties(fLibrary);
+ 
++#ifdef SK_GAMMA_APPLY_TO_A8
++        // CoreText and Adobe pair gamma-corrected CFF coverage with stem
++        // darkening at small sizes. Use FreeType's standard darkening curve,
++        // without changing glyph positions, outlines, or comparison limits.
++        FT_Bool no_stem_darkening = false;
++        if (FT_Property_Set(fLibrary, "cff", "no-stem-darkening",
++                            &no_stem_darkening)) {
++            SK_ABORT("CFF stem darkening is required by this replay profile");
++        }
++#endif
++
+         // Subpixel anti-aliasing may be unfiltered until the LCD filter is set.
+         // Newer versions may still need this, so this test with side effects must come first.
+         // The default has changed over time, so this doesn't mean the same thing to all users.

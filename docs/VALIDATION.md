@@ -1,5 +1,24 @@
 # 验证记录
 
+## Chromium 引擎验收进展：2026-10-28
+
+macOS arm64 / Apple M4 / 16 GiB，外置 APFS 构建 Chromium 156.0.8078.48 固定提交。原生 `headless_shell`、`cc_unittests` 和 `viz_unittests` 构建成功；4 项 picture-layer 与 4 项 Viz 生命周期/普通绘制对照测试全部通过。匹配 Skia 的 CanvasKit CPU 构建完成，沿用原有逐区域阈值，三种模式的 before/after 画面和全部文字区域均通过。完整指纹、反例和指标见 [chromium-engine-2026-10-28.json](chromium-engine-2026-10-28.json)，复现及后续任务见 [CHROMIUM_ENGINE.md](CHROMIUM_ENGINE.md)。
+
+| 同一工作负载 | ordinary | remote-paint | record-only-display |
+| --- | ---: | ---: | ---: |
+| 观测到的 raster 记录 | 285 | 0 | 0 |
+| renderer DrawFrame 记录 | 15 | 15 | 0 |
+| 原生 display skipped 标记 | 0 | 0 | 17 |
+| trace 显式未丢数 | 通过 | 通过 | 通过 |
+| 两阶段严格视觉比较 | 通过 | 通过 | 通过 |
+| 点击、键盘、滚动、刷新与 sessionStorage 活性 | 通过 | 通过 | 通过 |
+
+三模式的两个可视阶段 SKP 哈希一致。`Display::DrawAndSwap` 还包围 aggregation，不能把该函数出现直接当成像素绘制。记录条数也不能当作 raster 执行次数或 CPU 节省。
+
+项目回归：47 项 JS 测试、5 项 Python 构建保护、37 个 JS 文件语法检查及 4 项本地浏览器端到端测试通过。最后一项端到端测试使用真实捕获，在 64 次前后帧切换后，正常 replay 的 WASM heap 保持 128 MiB；故意遗漏像素分配释放的对照增长 97,779,712 bytes，证实该检查能发现泄漏。此数值不等于浏览器 RSS 或每 session 运行内存。
+
+目前仅达到 **record-only-display-candidate**，`engineSplitGate: not-passed`、`serverRasterBypassed: false` 保留。没有验证完整图层/滚动/资源协议、Canvas/WebGL/video/图片解码或通用网站，也没有把此实验接入 v0 worker。以下 2026-10-27 与云端记录保留为历史，不代表最新引擎状态。
+
 ## 当前本地验收
 
 2026-10-27，macOS arm64 / Apple M4，Node.js v24.21.0，Chrome 156.0.8078.48，Playwright 1.64.1。

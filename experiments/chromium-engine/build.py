@@ -127,7 +127,8 @@ class Build:
                               'log': str(log_path)}), flush=True)
             process = subprocess.Popen([str(a) for a in args], cwd=cwd or self.src,
                                        env=self.env, stdout=log, stderr=subprocess.STDOUT)
-            self.save(stage=name + '-running', pid=process.pid, log=str(log_path))
+            self.save(stage=name + '-running', pid=process.pid, log=str(log_path),
+                      exitCode=None, startedUnix=datetime.datetime.now().timestamp(), finishedUnix=None)
             try:
                 code = process.wait()
             except KeyboardInterrupt:
@@ -136,7 +137,7 @@ class Build:
                 self.save(stage=name + '-interrupted')
                 raise
         self.save(stage=name + ('-complete' if code == 0 else '-failed'),
-                  pid=None, exitCode=code)
+                  pid=None, exitCode=code, finishedUnix=datetime.datetime.now().timestamp())
         if code:
             raise RuntimeError('%s failed (%s); inspect %s' % (name, code, log_path))
 
@@ -183,11 +184,13 @@ class Build:
             raise ValueError('Patch manifest has no reviewed source files')
         hashes = {name: digest(self.src / name) for name in changes}
         if all(hashes[name] == values['patchedSha256'] for name, values in changes.items()):
+            if self.state.get('patchSha256') != digest(patch):
+                self.save(compiled=False, ccTestsPassed=False, vizTestsPassed=False)
             self.save(stage='patch-complete', patchSha256=digest(patch))
             return
         if not all(hashes[name] == values['upstreamSha256'] for name, values in changes.items()):
             raise ValueError('Patch inputs have changed; refusing to overwrite engine work')
-        self.save(compiled=False, ccTestsPassed=False)
+        self.save(compiled=False, ccTestsPassed=False, vizTestsPassed=False)
         self.run('patch-check', ['git', 'apply', '--check', str(patch)])
         self.run('patch', ['git', 'apply', str(patch)])
         for name, values in changes.items():
@@ -210,20 +213,23 @@ class Build:
         for name, values in CONFIG['files'].items():
             if digest(self.src / name) != values['patchedSha256']:
                 raise ValueError('Apply the pinned engine patch before building: ' + name)
-        self.save(compiled=False, ccTestsPassed=False)
+        self.save(compiled=False, ccTestsPassed=False, vizTestsPassed=False)
         self.run('build', [self.root / 'depot_tools/autoninja', '-C', OUT,
-                           'headless_shell', 'cc_unittests', '-j', str(jobs)])
+                           'headless_shell', 'cc_unittests', 'viz_unittests', '-j', str(jobs)])
+        for name, values in CONFIG['files'].items():
+            if digest(self.src / name) != values['patchedSha256']:
+                raise ValueError('Engine source changed during compilation: ' + name)
         binary = self.src / OUT / 'headless_shell'
         if not binary.is_file() or not os.access(binary, os.X_OK):
             raise RuntimeError('Build returned success without an executable headless_shell')
         artifacts = {p.name: digest(p) for p in sorted((self.src / OUT).iterdir())
                      if p.is_file() and (p.suffix in ['.dylib', '.pak', '.dat', '.bin'] or
-                                         p.name in ['headless_shell', 'cc_unittests'])}
-        for required in ['headless_shell', 'libcc.dylib', 'libcc_base.dylib', 'libcc_paint.dylib', 'libblink_platform.dylib']:
+                                         p.name in ['headless_shell', 'cc_unittests', 'viz_unittests'])}
+        for required in ['headless_shell', 'libcc.dylib', 'libcc_base.dylib', 'libcc_paint.dylib', 'libblink_platform.dylib', 'libcomponents_viz_service.dylib']:
             if required not in artifacts:
                 raise RuntimeError('Component build output missing: ' + required)
         self.save(binary=str(binary), binarySha256=artifacts['headless_shell'],
-                  artifacts=artifacts, compiled=True)
+                  artifacts=artifacts, compiled=True, patchSha256=digest(HERE / CONFIG['patch']))
 
     def objects(self, jobs):
         self.head()
@@ -235,6 +241,10 @@ class Build:
                    'obj/cc/paint/paint/display_item_list.o',
                    'obj/cc/cc/picture_layer_impl.o',
                    'obj/cc/cc_unittests/picture_layer_impl_unittest.o',
+                   'obj/components/viz/service/service/display.o',
+                   'obj/components/viz/service/service/output_surface_provider_impl.o',
+                   'obj/components/viz/service/service/output_surface_unified.o',
+                   'obj/components/viz/service/unit_tests/display_unittest.o',
                    'obj/third_party/blink/renderer/platform/platform/layer_tree_settings.o']
         self.run('objects', [self.root / 'depot_tools/autoninja', '-C', OUT,
                              '-j', str(jobs)] + targets)
@@ -247,6 +257,10 @@ class Build:
                  'LegacySWPictureLayerImplTest.UpdateTilesCreatesTilings',
                  '--test-launcher-jobs=1'])
         self.save(ccTestsPassed=True)
+        self.run('viz-tests', [self.src / OUT / 'viz_unittests',
+                 '--gtest_filter=DisplayTest.RemotePaint*:DisplayTest.DisplayDamaged',
+                 '--test-launcher-jobs=1'])
+        self.save(vizTestsPassed=True, stage='engine-tests-complete')
 
 
 def main():

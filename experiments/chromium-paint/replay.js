@@ -1,5 +1,5 @@
 const $ = selector => document.querySelector(selector);
-let kit, manifest, surface, sequence = 0;
+let kit, manifest, runtime, surface, sequence = 0;
 const maxPictureBytes = 32 * 1024 * 1024;
 
 function report(status, details) {
@@ -29,7 +29,7 @@ async function render() {
     const bounds = Array.from(picture.cullRect());
     if (!bounds.every(Number.isFinite) || bounds[2] <= bounds[0] || bounds[3] <= bounds[1]) throw new Error('Invalid picture bounds');
     const canvas = $('#skp');
-    surface?.delete();
+    surface?.dispose();
     canvas.width = manifest.viewport.width; canvas.height = manifest.viewport.height;
     surface = kit.MakeSWCanvasSurface(canvas);
     if (!surface) throw new Error('Could not create a local CanvasKit surface');
@@ -42,7 +42,7 @@ async function render() {
     report('ready', {
       stage: stage.name, picture: record.path, bytes: data.length, sha256: digest,
       bounds, browser: { product: manifest.browser.product, version: manifest.browser.version, revision: manifest.browser.revision },
-      client: 'canvaskit-wasm@0.42.0 / full / local software surface',
+      client: runtime.id, runtime,
       scope: 'One recorded picture; no DOM reconstruction or automatic multi-layer compositing',
       serverRasterBypassed: false,
     });
@@ -67,6 +67,9 @@ try {
   const response = await fetch('/capture.json');
   if (!response.ok) throw new Error('Run the Chromium capture experiment before opening the lab');
   manifest = await response.json();
+  const runtimeResponse = await fetch('/runtime.json');
+  if (!runtimeResponse.ok) throw new Error('Replay runtime metadata is unavailable');
+  runtime = await runtimeResponse.json();
   if (manifest.version !== 1 || !Array.isArray(manifest.stages) || !manifest.stages.length) throw new Error('Unsupported capture manifest');
   if (!Number.isInteger(manifest.viewport?.width) || !Number.isInteger(manifest.viewport?.height) || manifest.viewport.width < 1 || manifest.viewport.height < 1 || manifest.viewport.width > 4096 || manifest.viewport.height > 4096) throw new Error('Unsupported viewport');
   kit = await window.CanvasKitInit({ locateFile: file => '/' + file });

@@ -19,6 +19,9 @@ const PRODUCER_BUFFER_SOURCE = 'https://chromium.googlesource.com/chromium/src/+
 const SKP_MAGIC = Buffer.from('skiapict');
 const RASTER_EVENT = /(?:^RasterTask$|Raster(?:izer)?TaskImpl::RunOnWorkerThread|(?:RasterBuffer(?:Impl|Provider)?|RasterSource)::Playback|RasterDecoderImpl::(?:Do)?Raster|RasterCHROMIUM)/i;
 const DRAW_EVENT = /(?:^DrawFrame$|(?:Display|SkiaRenderer|GLRenderer|DirectRenderer|LayerTreeHostImpl|ProxyImpl)::(?:DrawAndSwap|DrawLayers|DrawFrame|Draw$))/i;
+// A Display::DrawAndSwap slice also surrounds aggregation-only frames. Count
+// the renderer entry separately so a NullRenderer is not reported as drawing.
+const PIXEL_DRAW_EVENT = /^(?:DirectRenderer|SkiaRenderer|SoftwareRenderer|GLRenderer)::DrawFrame$/;
 
 function eventsOf(trace) {
   const events = Array.isArray(trace) ? trace : trace?.traceEvents;
@@ -38,11 +41,13 @@ export function producerLaunchArgs(producerBufferBytes) {
   return [`--enable-features=kPerfettoBackendParams:shared_memory_size_bytes/${producerBufferBytes}`];
 }
 
-export function captureLaunchArgs({ producerBufferBytes, remotePaint = false } = {}) {
+export function captureLaunchArgs({ producerBufferBytes, remotePaint = false, noDisplay = false } = {}) {
   if (typeof remotePaint !== 'boolean') throw new TypeError('remotePaint must be boolean');
+  if (typeof noDisplay !== 'boolean' || noDisplay && !remotePaint) throw new TypeError('noDisplay requires remotePaint');
   const producer = producerLaunchArgs(producerBufferBytes);
   const features = producer.map(argument => argument.slice('--enable-features='.length));
   if (remotePaint) features.push('VirtualDesktopRemotePaint');
+  if (noDisplay) features.push('VirtualDesktopRemotePaintNoDisplay');
   return ['--enable-automation', ...(features.length ? [`--enable-features=${features.join(',')}`] : [])];
 }
 
@@ -120,7 +125,7 @@ export function analyzeTrace(trace) {
   }
   return {
     eventCount: events.length,
-    raster: count(RASTER_EVENT), draw: count(DRAW_EVENT),
+    raster: count(RASTER_EVENT), draw: count(DRAW_EVENT), pixelDraw: count(PIXEL_DRAW_EVENT),
     interpretation: 'Counts matching trace event records; begin/end records and nested slices may describe the same work. Unobserved events do not prove raster or draw work was bypassed.',
   };
 }
@@ -182,8 +187,48 @@ function loopbackUrl(input) {
 async function settlePage(page) {
   await page.evaluate(async () => {
     await document.fonts.ready;
-    await new Promise(resolveFrame => requestAnimationFrame(() => requestAnimationFrame(resolveFrame)));
+    await new Promise((resolveFrame, rejectFrame) => {
+      const timer = setTimeout(() => rejectFrame(new Error('Animation frames stalled')), 5000);
+      requestAnimationFrame(() => requestAnimationFrame(() => { clearTimeout(timer); resolveFrame(); }));
+    });
   });
+}
+
+async function probeLifecycle(page, viewport, runId) {
+  const steps = [];
+  async function counter(expected, action) {
+    const actual = await page.locator('#count').textContent();
+    if (actual !== String(expected)) throw new Error(`Lifecycle ${action}: expected ${expected}, got ${actual}`);
+    steps.push({ action, expected, actual, passed: true });
+  }
+  for (let index = 2; index <= 4; index++) {
+    await page.locator('#increment').click();
+    await settlePage(page);
+    await counter(index, 'pointer');
+  }
+  await page.locator('#increment').focus();
+  await page.keyboard.press('Enter');
+  await settlePage(page);
+  await counter(5, 'keyboard');
+  await page.setViewportSize({ width: viewport.width, height: 480 });
+  await page.mouse.move(400, 300);
+  await page.mouse.wheel(0, 160);
+  await page.waitForFunction(() => window.scrollY > 0, undefined, { timeout: 5000 });
+  steps.push({ action: 'scroll', scrollY: await page.evaluate(() => window.scrollY), passed: true });
+  await page.setViewportSize(viewport);
+  await page.evaluate(id => sessionStorage.setItem('virtual-desktop-lifecycle', id), runId);
+  await page.reload({ waitUntil: 'load', timeout: 30000 });
+  await settlePage(page);
+  await counter(0, 'reload');
+  if (await page.evaluate(() => sessionStorage.getItem('virtual-desktop-lifecycle')) !== runId) {
+    throw new Error('Lifecycle session storage did not survive reload');
+  }
+  steps.push({ action: 'session-storage-after-reload', passed: true });
+  await page.locator('#increment').click();
+  await settlePage(page);
+  await counter(1, 'pointer-after-reload');
+  return { passed: true, steps,
+    scope: 'Real input, scroll, reload and session liveness only; scrolled/multi-layer visual replay is not validated' };
 }
 
 async function recordTrace(cdp, action) {
@@ -234,12 +279,13 @@ async function recordTrace(cdp, action) {
  * Capture before/after a real fixture button click using stock Chromium tracing.
  * No screenshot API, DOM reconstruction, or server-raster bypass is performed.
  */
-export async function capturePaint({ url, executablePath, outputDir, viewport = { width: 960, height: 720 }, producerBufferBytes, remotePaint = false }) {
+export async function capturePaint({ url, executablePath, outputDir, viewport = { width: 960, height: 720 }, producerBufferBytes, remotePaint = false, noDisplay = false, lifecycle = false }) {
   const fixtureUrl = loopbackUrl(url);
   const producerArgs = producerLaunchArgs(producerBufferBytes);
   // CDP Browser.getBrowserCommandLine requires this explicit instrumentation
   // flag. Both default and enlarged-buffer runs use it for a comparable control.
-  const launchArgs = captureLaunchArgs({ producerBufferBytes, remotePaint });
+  const launchArgs = captureLaunchArgs({ producerBufferBytes, remotePaint, noDisplay });
+  if (typeof lifecycle !== 'boolean') throw new TypeError('lifecycle must be boolean');
   if (remotePaint && !executablePath) throw new TypeError('remotePaint requires an explicit patched executablePath');
   if (typeof outputDir !== 'string' || !outputDir) throw new TypeError('outputDir is required');
   if (!Number.isInteger(viewport.width) || !Number.isInteger(viewport.height) || viewport.width < 1 || viewport.height < 1) {
@@ -265,6 +311,7 @@ export async function capturePaint({ url, executablePath, outputDir, viewport = 
       launchArgs, commandLine };
     const runId = randomUUID();
     const markers = { beforeStart: `${runId}:before-start`, boundary: `${runId}:after-start`, afterEnd: `${runId}:after-end` };
+    let lifecycleResult = null;
     const traceResult = await recordTrace(cdp, async () => {
       await page.evaluate(name => { performance.mark(name); }, markers.beforeStart);
       // A genuine viewport invalidation records the already-loaded page after
@@ -277,6 +324,9 @@ export async function capturePaint({ url, executablePath, outputDir, viewport = 
       await page.locator('#increment').click();
       await settlePage(page);
       await page.evaluate(name => { performance.mark(name); }, markers.afterEnd);
+      // Keep these observations in the trace, outside the two visual stages.
+      // Test DOM reads never become replay content or replace a native SKP.
+      if (lifecycle) lifecycleResult = await probeLifecycle(page, viewport, runId);
     });
     const traceEvents = traceResult.events;
     // Preserve diagnostics even if a browser omits a required clock marker.
@@ -318,7 +368,7 @@ export async function capturePaint({ url, executablePath, outputDir, viewport = 
     const producerFeature = producerArgs[0]?.slice('--enable-features='.length);
     const manifest = {
       version: 1, capturedAt: new Date().toISOString(), url: fixtureUrl, browser: browserInfo, viewport,
-      stages, provenance, remotePaintRequested: remotePaint,
+      stages, provenance, remotePaintRequested: remotePaint, noDisplayRequested: noDisplay, lifecycle: lifecycleResult,
       captureStrategy: 'One continuous trace after fixture navigation; viewport width pulse forces baseline repaint; a real #increment click creates the after state. Native User Timing marks assign stages by renderer timestamps.',
       trace: { path: 'trace.json', categories: TRACE_CATEGORIES, config: TRACE_CONFIG,
         producerBuffer: { requestedBytes: producerBufferBytes ?? null, source: PRODUCER_BUFFER_SOURCE,

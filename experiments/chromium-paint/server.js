@@ -1,6 +1,7 @@
 import http from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { resolve, join } from 'node:path';
+import { loadReplayRuntime } from './runtime.js';
 
 const assets = new Map([
   ['/', ['index.html', 'text/html; charset=utf-8']],
@@ -11,12 +12,12 @@ const assets = new Map([
   ['/fixture.js', ['fixture.js', 'text/javascript; charset=utf-8']],
   ['/fonts/fixture-sans.otf', ['fonts/fixture-sans.otf', 'font/otf']],
 ]);
-const kit = new URL('../../node_modules/canvaskit-wasm/bin/full/', import.meta.url);
 
 // Separate from the v0 gateway: this lab serves a trusted fixture and captured SKPs.
 // It does not execute CanvasKit, decode pictures or generate pixels on the server.
-export function createPaintLab({ outputDir }) {
+export function createPaintLab({ outputDir, canvasKitDirectory }) {
   const root = resolve(outputDir);
+  let runtime;
   const server = http.createServer(async (request, response) => {
     response.setHeader('Cache-Control', 'no-store');
     response.setHeader('X-Content-Type-Options', 'nosniff');
@@ -26,13 +27,18 @@ export function createPaintLab({ outputDir }) {
         response.writeHead(403); response.end('Local GET requests only'); return;
       }
       const path = new URL(request.url, 'http://localhost').pathname;
+      if (path === '/runtime.json') {
+        response.writeHead(200, { 'Content-Type': 'application/json' });
+        response.end(JSON.stringify(runtime.metadata)); return;
+      }
+      if (path === '/canvaskit.js' || path === '/canvaskit.wasm') {
+        response.writeHead(200, { 'Content-Type': path.endsWith('.wasm') ? 'application/wasm' : 'text/javascript; charset=utf-8' });
+        response.end(runtime.assets.get(path.slice(1))); return;
+      }
       let file, type;
       if (assets.has(path)) {
         const asset = assets.get(path);
         file = new URL(asset[0], import.meta.url); type = asset[1];
-      } else if (path === '/canvaskit.js' || path === '/canvaskit.wasm') {
-        file = new URL(path.slice(1), kit);
-        type = path.endsWith('.wasm') ? 'application/wasm' : 'text/javascript; charset=utf-8';
       } else if (path === '/capture.json') {
         file = join(root, 'capture.json'); type = 'application/json';
       } else if (path.startsWith('/pictures/')) {
@@ -55,9 +61,13 @@ export function createPaintLab({ outputDir }) {
   });
   return {
     async listen(port = 0) {
+      runtime = await loadReplayRuntime(canvasKitDirectory);
       await new Promise((resolve, reject) => { server.once('error', reject); server.listen(port, '127.0.0.1', resolve); });
       return `http://127.0.0.1:${server.address().port}`;
     },
-    async close() { server.closeAllConnections(); await new Promise(resolve => server.close(resolve)); },
+    async close() {
+      if (!server.listening) return;
+      server.closeAllConnections(); await new Promise(resolve => server.close(resolve));
+    },
   };
 }

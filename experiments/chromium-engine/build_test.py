@@ -57,6 +57,15 @@ class BuildPreservationTest(unittest.TestCase):
             build.Build(self.root).apply()
         self.assertEqual(self.file.read_text(), 'my existing engine modification\n')
 
+    def test_new_patch_fingerprint_cannot_reuse_previous_build_success(self):
+        runner = build.Build(self.root)
+        self.file.write_text('patched\n')
+        runner.save(compiled=True, ccTestsPassed=True, vizTestsPassed=True, patchSha256='older patch')
+        runner.apply()
+        self.assertFalse(runner.state['compiled'])
+        self.assertFalse(runner.state['ccTestsPassed'])
+        self.assertFalse(runner.state['vizTestsPassed'])
+
     def test_custom_build_arguments_are_preserved(self):
         output = self.src / build.OUT
         output.mkdir(parents=True)

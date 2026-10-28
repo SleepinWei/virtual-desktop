@@ -1,0 +1,10 @@
+{
+  "skiaRevision": "886e42fda11610a56dd1b22e8697e27f9d1e34f2",
+  "patch": "canvaskit-cff.patch",
+  "files": {
+    "src/ports/SkFontHost_FreeType.cpp": {
+      "upstreamSha256": "574c9f2664fcc212fc43773ab730fa881367a45e8855033c026b67d1374dd428",
+      "patchedSha256": "f7648de34cc9f685822e42ae589f8c3ad6399f400e7d91fd7d931cf6236a7aee"
+    }
+  }
+}
