@@ -848,6 +848,96 @@ index eb3c404d03..66661e6f1c 100644
    bool gpu_rasterization_disabled = false;
    int gpu_rasterization_msaa_sample_count = -1;
    float gpu_rasterization_skewport_target_time_in_seconds = 0.2f;
+diff --git a/cc/trees/presentation_time_callback_buffer.cc b/cc/trees/presentation_time_callback_buffer.cc
+index c3957ea519..15ca706fce 100644
+--- a/cc/trees/presentation_time_callback_buffer.cc
++++ b/cc/trees/presentation_time_callback_buffer.cc
+@@ -7,6 +7,8 @@
+ #include <utility>
+ #include <vector>
+ 
++#include "base/feature_list.h"
++#include "cc/base/features.h"
+ #include "components/viz/common/quads/compositor_frame_metadata.h"
+ 
+ namespace cc {
+@@ -104,6 +106,18 @@ PresentationTimeCallbackBuffer::PopPendingCallbacks(uint32_t frame_token,
+                       std::back_inserter(result.main_callbacks));
+     info->main_callbacks.clear();
+ 
++    // This headless experiment never presents on the server. Cancel callbacks
++    // which require success when their frame receives failure feedback; keeping
++    // them for a future physical presentation would grow the queue forever.
++    // Do not fabricate a successful presentation or alter ordinary-mode retry.
++    if (presentation_failed &&
++        base::FeatureList::IsEnabled(::features::kVirtualDesktopRemotePaint) &&
++        base::FeatureList::IsEnabled(
++            ::features::kVirtualDesktopRemotePaintNoDisplay)) {
++      info->main_successful_callbacks.clear();
++      info->compositor_successful_callbacks.clear();
++    }
++
+     const bool should_keep_info =
+         presentation_failed && (!info->main_successful_callbacks.empty() ||
+                                 !info->compositor_successful_callbacks.empty());
+diff --git a/cc/trees/presentation_time_callback_buffer_unittest.cc b/cc/trees/presentation_time_callback_buffer_unittest.cc
+index 38c0224a0e..e67230ce3e 100644
+--- a/cc/trees/presentation_time_callback_buffer_unittest.cc
++++ b/cc/trees/presentation_time_callback_buffer_unittest.cc
+@@ -4,6 +4,9 @@
+ 
+ #include "cc/trees/presentation_time_callback_buffer.h"
+ 
++#include "base/feature_list.h"
++#include "base/test/scoped_feature_list.h"
++#include "cc/base/features.h"
+ #include "base/functional/bind.h"
+ #include "base/functional/callback.h"
+ #include "testing/gtest/include/gtest/gtest.h"
+@@ -340,4 +343,43 @@ TEST(PresentationTimeCallbackBufferTest, TestCallbackBatching) {
+   }
+ }
+ 
++
++TEST(PresentationTimeCallbackBufferTest,
++     RemotePaintFailedPresentationsDoNotAccumulate) {
++  base::test::ScopedFeatureList features;
++  features.InitWithFeatures(
++      {::features::kVirtualDesktopRemotePaint,
++       ::features::kVirtualDesktopRemotePaintNoDisplay}, {});
++  PresentationTimeCallbackBuffer buffer;
++  for (uint32_t token = 1; token <= 120; ++token) {
++    buffer.RegisterMainThreadCallbacks(token, GenerateCallbacks(1));
++    buffer.RegisterMainThreadSuccessfulCallbacks(
++        token, GenerateSuccessfulCallbackWithDetails(1));
++    buffer.RegisterCompositorThreadSuccessfulCallbacks(
++        token, GenerateSuccessfulCallbacks(1));
++    auto failed = buffer.PopPendingCallbacks(token, true);
++    EXPECT_EQ(1u, failed.main_callbacks.size());
++    EXPECT_TRUE(failed.main_successful_callbacks.empty());
++    EXPECT_TRUE(failed.compositor_successful_callbacks.empty());
++  }
++  auto later = buffer.PopPendingCallbacks(121, false);
++  EXPECT_TRUE(later.main_callbacks.empty());
++  EXPECT_TRUE(later.main_successful_callbacks.empty());
++  EXPECT_TRUE(later.compositor_successful_callbacks.empty());
++}
++
++TEST(PresentationTimeCallbackBufferTest,
++     RemotePaintFailureCancellationRequiresBothFeatures) {
++  base::test::ScopedFeatureList features;
++  features.InitWithFeatures({::features::kVirtualDesktopRemotePaintNoDisplay},
++                            {::features::kVirtualDesktopRemotePaint});
++  PresentationTimeCallbackBuffer buffer;
++  buffer.RegisterMainThreadSuccessfulCallbacks(
++      1, GenerateSuccessfulCallbackWithDetails(1));
++  auto failed = buffer.PopPendingCallbacks(1, true);
++  EXPECT_TRUE(failed.main_successful_callbacks.empty());
++  auto success = buffer.PopPendingCallbacks(2, false);
++  EXPECT_EQ(1u, success.main_successful_callbacks.size());
++}
++
+ }  // namespace cc
 diff --git a/components/viz/service/BUILD.gn b/components/viz/service/BUILD.gn
 index 42fc3926fd..8d9de9681e 100644
 --- a/components/viz/service/BUILD.gn
@@ -1066,3 +1156,39 @@ index 1d963f8d97..af734375f5 100644
  
    Platform* platform = Platform::Current();
  
+diff --git a/third_party/blink/renderer/platform/widget/compositing/layer_tree_view.cc b/third_party/blink/renderer/platform/widget/compositing/layer_tree_view.cc
+index 260a705e2c..014ed986f5 100644
+--- a/third_party/blink/renderer/platform/widget/compositing/layer_tree_view.cc
++++ b/third_party/blink/renderer/platform/widget/compositing/layer_tree_view.cc
+@@ -23,6 +23,7 @@
+ #include "base/values.h"
+ #include "cc/animation/animation_host.h"
+ #include "cc/animation/animation_timeline.h"
++#include "cc/base/features.h"
+ #include "cc/base/region.h"
+ #include "cc/benchmarks/micro_benchmark.h"
+ #include "cc/debug/layer_tree_debug_state.h"
+@@ -420,6 +421,23 @@ void LayerTreeView::DidPresentCompositorFrame(
+              ->RunsTasksInCurrentSequence());
+   // Only run callbacks on successful presentations.
+   if (frame_timing_details.presentation_feedback.failed()) {
++    if (base::FeatureList::IsEnabled(::features::kVirtualDesktopRemotePaint) &&
++        base::FeatureList::IsEnabled(
++            ::features::kVirtualDesktopRemotePaintNoDisplay)) {
++      // No server display can ever satisfy these success-only callbacks. Retire
++      // failed frame groups without invoking them or reporting a fake present.
++      // The local viewer ACK is a separate protocol, not presentation timing.
++      while (!presentation_callbacks_.empty() &&
++             presentation_callbacks_.front().first <= frame_token) {
++        presentation_callbacks_.pop_front();
++      }
++#if BUILDFLAG(IS_APPLE)
++      while (!core_animation_error_code_callbacks_.empty() &&
++             core_animation_error_code_callbacks_.front().first <= frame_token) {
++        core_animation_error_code_callbacks_.pop_front();
++      }
++#endif
++    }
+     return;
+   }
+   while (!presentation_callbacks_.empty()) {

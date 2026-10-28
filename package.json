@@ -21,6 +21,8 @@
     "experiment:engine": "node experiments/chromium-engine/run.js",
     "experiment:frames": "node experiments/chromium-engine/run-frames.js",
     "experiment:live": "node experiments/chromium-engine/run-live.js",
+    "bench:native": "node experiments/chromium-engine/benchmark.js",
+    "experiment:site": "node experiments/chromium-engine/probe-site.js",
     "test:engine-build": "python3 -B -m unittest discover -s experiments/chromium-engine -p '*_test.py'"
   },
   "dependencies": {

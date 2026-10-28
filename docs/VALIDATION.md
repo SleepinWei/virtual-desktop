@@ -1,5 +1,15 @@
 # 验证记录
 
+## 直接输入与安全并发：2026-10-28 后续
+
+已移除独立文字栏，在现有本机浏览器中确认真实坐标聚焦、英文和固定字形中文直接输入、全选以及 Esc 返回工具栏。原生补丁扩至 20 个文件；17 项 cc/paint/callback 与 4 项 Viz 通过。新构建 96 请求突发为 64 成功、32 个 429，最终计数正确；另 16 个超容量 session 申请全部拒绝。修复前约 60 次操作触发 Blink presentation callback 队列断言，修复后该突发不再崩溃。
+
+同构建、单浏览器、各 20 次操作，原生 / 每动作 JPEG 的 p95 为 67.1 / 84.5 ms，进程树 CPU 时间增量 0.37 / 0.77 s，RSS 峰值之和 945.9 / 916.0 MiB。原生 SKP / JPEG 生产产物每动作 72,870 / 45,585 bytes，不是实际网络带宽，未包含客户端成本或优化视频基线。完整限制见 [NATIVE_RUNTIME.md](NATIVE_RUNTIME.md)，实际指纹与结果见 [chromium-runtime-2026-10-28.json](chromium-runtime-2026-10-28.json)。
+
+74 JS、5 Python、74 JS 文件语法、21 过滤 C++、3 个普通 viewer E2E 通过；该普通 E2E 命令显式不启用三个原生输入相关测试。直接输入完整自动化在 presentation 修复前通过；新构建另有真实本机 UI 证据和有界生产端/API 测试。带独立参考浏览器的新严格图像复测触发 1.5 GiB 预算停止，**没有新构建严格图像通过结论**。双测试浏览器、HTTPS 预览和小红书也触发保护，均保留停止结果，没有提高阈值。
+
+小红书普通对照遇到 IP 风险页；原生首帧前超预算，因此不开放可用 XHS 交互。缺字系统回退字体也实测超过 8 MiB 记录上限。通用网站、默认字体、物理 IME 候选窗及长期内存仍未通过。以下为此前里程碑。
+
 ## 持续 Chromium 会话验收：2026-10-28
 
 原生后端已达到 **live-native-session-candidate**，复现见 [CHROMIUM_LIVE.md](CHROMIUM_LIVE.md)，完整构建/fixture/runtime 指纹和实际结果见 [chromium-live-2026-10-28.json](chromium-live-2026-10-28.json)。原生 C++ 源码 17 个文件与 manifest 一致；增量构建和 7 项 cc/paint、4 项 Viz 测试通过。

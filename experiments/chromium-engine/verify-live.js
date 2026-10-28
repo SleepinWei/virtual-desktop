@@ -22,20 +22,21 @@ const digest = bytes => createHash('sha256').update(bytes).digest('hex');
 
 // All PNG generation is in the independent LOCAL viewer/reference browser.
 // The execution worker delivers native records through its authenticated socket.
-export async function verifyLive({ root, canvasKitDirectory, outputDir, executablePath }) {
+export async function verifyLive({ root, canvasKitDirectory, outputDir, executablePath, maxNativeSessions = 2, onOwnedProcess }) {
   await mkdir(outputDir, { recursive: true });
   const dataDir = await mkdtemp(join(tmpdir(), 'vd-live-verify-'));
   const report = { version: 1, startedAt: new Date().toISOString(), status: 'initializing', steps: [],
     visuals: [], errors: [], engineSplitGate: 'not-passed', serverRasterBypassed: false };
   const save = () => writeFile(join(outputDir, 'live-report.json'), JSON.stringify(report, null, 2));
   await save();
-  let service, browser;
+  let service, browser, browserServer;
   try {
     const engine = await verifiedEngine(root, { requireStream: true });
     report.build = { revision: engine.source.revision, skiaRevision: engine.source.skiaRevision,
       patchSha256: engine.patchSha256, artifactsSha256: engine.artifactsSha256, artifacts: engine.state.artifacts };
-    service = createService({ dataDir, adminToken: 'test-admin', maxActive: 2,
-      chromium: { root, canvasKitDirectory, maxSessions: 2 } });
+    service = createService({ dataDir, adminToken: 'test-admin', maxActive: maxNativeSessions,
+      onWorker: worker => onOwnedProcess?.(worker.child.pid),
+      chromium: { root, canvasKitDirectory, maxSessions: maxNativeSessions } });
     const base = await service.listen(0);
     report.replayRuntime = await (await fetch(base + '/native-runtime/runtime.json')).json();
     report.fixtureSha256 = {};
@@ -69,7 +70,9 @@ export async function verifyLive({ root, canvasKitDirectory, outputDir, executab
     check(report.withoutViewer.metrics.traceActive === false && report.withoutViewer.metrics.frames.connections.length === 0, 'Frame delivery depends on an attached viewer or active trace');
     report.steps.push('Agent executes in a persistent Chromium page before any viewer connects');
 
-    browser = await chromium.launch({ executablePath: executablePath || engine.binary, headless: true });
+    browserServer = await chromium.launchServer({ executablePath: executablePath || engine.binary, headless: true });
+    onOwnedProcess?.(browserServer.process().pid);
+    browser = await chromium.connect(browserServer.wsEndpoint());
     report.localValidationBrowser = browser.version();
     const context = await browser.newContext({ viewport: { width: 1180, height: 1100 }, deviceScaleFactor: 1 });
     await context.addInitScript(value => sessionStorage.setItem('vd-native-viewer', JSON.stringify(value)), session);
@@ -116,7 +119,7 @@ export async function verifyLive({ root, canvasKitDirectory, outputDir, executab
     check(stale.data.error?.code === 'STALE_FRAME', 'Stale displayed frame accepted coordinate input');
     report.steps.push('Human takeover rejects the old agent, read-only mutation and stale displayed coordinates');
     await point(520, 250); await delay(120); await ready();
-    await page.locator('#text').fill(' + human'); await page.locator('#send').click();
+    await page.keyboard.type(' + human');
     await until(async () => (await state()).value === 'Agent before viewer + human', 'Native text insertion');
     await reference.locator('#message').click({ position: { x: 500, y: 24 } }); await reference.keyboard.insertText(' + human');
     const bounds = await page.locator('#desktop').boundingBox();
@@ -127,8 +130,38 @@ export async function verifyLive({ root, canvasKitDirectory, outputDir, executab
     await delay(160); await compare('human-input-scroll');
     report.steps.push('Human coordinate focus, native text insertion and wheel scrolling reach the real page and local pixels');
 
+    await point(520, 250); await until(() => page.evaluate(() => window.nativeViewer.state().pendingInputs === 0), 'Pointer input queue drained');
+    await page.keyboard.press(process.platform === 'darwin' ? 'Meta+A' : 'Control+A');
+    await page.keyboard.press('Backspace'); await page.keyboard.type('Direct typing 123');
+    await until(async () => (await state()).value === 'Direct typing 123', 'Fast direct typing without lost characters');
+    await page.locator('#keyboard-input').evaluate(sink => {
+      sink.dispatchEvent(new CompositionEvent('compositionstart', { data: '' }));
+      sink.value = '真实网页'; sink.dispatchEvent(new InputEvent('input', { data: '真实网页', isComposing: true }));
+    });
+    check((await state()).value === 'Direct typing 123', 'Uncommitted composition leaked to the page');
+    await page.locator('#keyboard-input').evaluate(sink => {
+      sink.dispatchEvent(new CompositionEvent('compositionend', { data: '真实网页' }));
+      sink.dispatchEvent(new InputEvent('input', { data: '真实网页', inputType: 'insertFromComposition' }));
+    });
+    await until(async () => (await state()).value === 'Direct typing 123真实网页', 'Composition committed once');
+    await page.locator('#keyboard-input').evaluate(sink => {
+      const clipboardData = new DataTransfer(); clipboardData.setData('text/plain', ' + paste');
+      sink.dispatchEvent(new ClipboardEvent('paste', { clipboardData, cancelable: true }));
+    });
+    try { await until(async () => (await state()).value === 'Direct typing 123真实网页 + paste', 'Direct clipboard paste'); }
+    catch (error) { report.directInputFailure = { state: await state(), frames: internal.frames.stats,
+      viewer: await page.evaluate(() => ({ ...window.nativeViewer.state(), notice: document.querySelector('#notice').textContent,
+        status: document.querySelector('#connection').textContent })) }; throw error; }
+    await page.keyboard.press('Escape');
+    check(await page.locator('#return').evaluate(button => button === document.activeElement), 'Keyboard capture traps local focus');
+    report.directInput = { rapidTyping: true, selectAllDelete: true, paste: true, compositionCommittedOnce: true, escapeRestoresToolbar: true,
+      scope: 'Real browser keyboard/paste flow; composition events injected, physical OS IME candidate UI not automated.' };
+    report.steps.push('Direct typing, shortcuts, paste and committed composition reach Chromium without a separate text bar; Escape releases local focus');
+
     const beforeTimer = await metrics(), beforeTimerImage = digest(await png(page));
-    await page.locator('[data-key="Tab"]').click(); await delay(100); await page.locator('[data-key="Enter"]').click();
+    await point(520, 250); await until(() => page.evaluate(() => window.nativeViewer.state().pendingInputs === 0), 'Focus action drained');
+    await page.keyboard.press('Tab'); await until(() => page.evaluate(() => window.nativeViewer.state().pendingInputs === 0), 'Remote Tab drained');
+    await page.keyboard.press('Enter');
     await until(async () => (await state()).tick >= 3, 'Autonomous timer progression');
     await ready();
     const afterTimer = await metrics(), afterTimerImage = digest(await png(page));
@@ -171,27 +204,29 @@ export async function verifyLive({ root, canvasKitDirectory, outputDir, executab
     await page.unroute('**/frames/resources/*');
     report.steps.push('A corrupt resource triggers a fresh snapshot/retry while preserving the same execution session');
 
-    const secondaryResult = await api('/api/sessions', 'test-admin', { backend: 'chromium' });
-    check(secondaryResult.status === 201, 'Second native session could not start');
-    const secondary = secondaryResult.data, secondaryAgent = new AgentClient(base, secondary);
-    const secondaryPath = operation => `/api/sessions/${secondary.id}/${operation}`;
-    const secondaryMetrics = (await api(secondaryPath('metrics'))).data;
-    check(secondaryMetrics.browserPid !== beforeTimer.browserPid && /Increment\s+0/.test((await secondaryAgent.observe()).text), 'Native sessions shared execution or storage');
-    check((await api(secondaryPath('observe'), session.viewerToken)).status === 403, 'A capability crossed native sessions');
-    await secondaryAgent.fill('#message', 'Ephemeral DOM'); await secondaryAgent.click('#increment');
-    check((await api(secondaryPath('release'), 'test-admin', { save: true })).status === 200, 'Native profile save failed');
-    const restoredResult = await api('/api/sessions', 'test-admin', { backend: 'chromium', profileId: secondary.profileId });
-    check(restoredResult.status === 201, 'Native storage profile did not restore');
-    const restored = restoredResult.data, restoredAgent = new AgentClient(base, restored), restoredObservation = await restoredAgent.observe();
-    const restoredMetrics = (await api(`/api/sessions/${restored.id}/metrics`)).data;
-    check(/Increment\s+1/.test(restoredObservation.text) && restoredObservation.targets.find(target => target.selector === '#message')?.value === '' &&
-      restoredMetrics.browserPid !== secondaryMetrics.browserPid, 'Native cold restore did not preserve only the documented storage state');
-    check((await state()).count === 2 && (await state()).value === 'Recovered native resource', 'Secondary native session changed the first page');
-    report.nativeIsolationAndStorage = { independentBrowsers: true, crossSessionCredentialRejected: true,
-      originalBrowserPid: secondaryMetrics.browserPid, restoredBrowserPid: restoredMetrics.browserPid,
-      persistedCount: 1, ephemeralInputCleared: true, scope: 'Cookies/localStorage profile in a new browser; no JS heap or DOM snapshot.' };
-    check((await api(`/api/sessions/${restored.id}/release`, 'test-admin', { save: false })).status === 200, 'Restored browser did not stop');
-    report.steps.push('Two native sessions keep separate state/capabilities; cold restore persists localStorage in a new browser and clears transient DOM');
+    if (maxNativeSessions > 1) {
+      const secondaryResult = await api('/api/sessions', 'test-admin', { backend: 'chromium' });
+      check(secondaryResult.status === 201, 'Second native session could not start');
+      const secondary = secondaryResult.data, secondaryAgent = new AgentClient(base, secondary);
+      const secondaryPath = operation => `/api/sessions/${secondary.id}/${operation}`;
+      const secondaryMetrics = (await api(secondaryPath('metrics'))).data;
+      check(secondaryMetrics.browserPid !== beforeTimer.browserPid && /Increment\s+0/.test((await secondaryAgent.observe()).text), 'Native sessions shared execution or storage');
+      check((await api(secondaryPath('observe'), session.viewerToken)).status === 403, 'A capability crossed native sessions');
+      await secondaryAgent.fill('#message', 'Ephemeral DOM'); await secondaryAgent.click('#increment');
+      check((await api(secondaryPath('release'), 'test-admin', { save: true })).status === 200, 'Native profile save failed');
+      const restoredResult = await api('/api/sessions', 'test-admin', { backend: 'chromium', profileId: secondary.profileId });
+      check(restoredResult.status === 201, 'Native storage profile did not restore');
+      const restored = restoredResult.data, restoredAgent = new AgentClient(base, restored), restoredObservation = await restoredAgent.observe();
+      const restoredMetrics = (await api(`/api/sessions/${restored.id}/metrics`)).data;
+      check(/Increment\s+1/.test(restoredObservation.text) && restoredObservation.targets.find(target => target.selector === '#message')?.value === '' &&
+        restoredMetrics.browserPid !== secondaryMetrics.browserPid, 'Native cold restore did not preserve only the documented storage state');
+      check((await state()).count === 2 && (await state()).value === 'Recovered native resource', 'Secondary native session changed the first page');
+      report.nativeIsolationAndStorage = { independentBrowsers: true, crossSessionCredentialRejected: true,
+        originalBrowserPid: secondaryMetrics.browserPid, restoredBrowserPid: restoredMetrics.browserPid,
+        persistedCount: 1, ephemeralInputCleared: true, scope: 'Cookies/localStorage profile in a new browser; no JS heap or DOM snapshot.' };
+      check((await api(`/api/sessions/${restored.id}/release`, 'test-admin', { save: false })).status === 200, 'Restored browser did not stop');
+      report.steps.push('Two native sessions keep separate state/capabilities; cold restore persists localStorage in a new browser and clears transient DOM');
+    } else report.nativeIsolationAndStorage = { skipped: true, reason: 'Single-native-session safety budget; this run does not revalidate dual-session isolation/cold storage.' };
 
     await internal.worker.call('diagnostics', { type: 'start' });
     await page.locator('#return').click(); await page.waitForFunction(() => window.nativeViewer.state().control.owner === 'agent');
@@ -231,7 +266,7 @@ export async function verifyLive({ root, canvasKitDirectory, outputDir, executab
       'Process memory in worker metrics excludes Chromium processes. No total CPU/RSS/bandwidth or production runtime-size claim.'];
   } catch (error) { report.errors.push(error.message); report.status = 'failed'; }
   finally {
-    if (browser) await browser.close().catch(error => report.errors.push(error.message));
+    if (browserServer) await browserServer.close().catch(error => report.errors.push(error.message));
     if (service) await service.close().catch(error => report.errors.push(error.message));
     await rm(dataDir, { recursive: true, force: true });
     if (report.errors.length && report.status === 'live-native-session-candidate') report.status = 'acceptance-not-met';

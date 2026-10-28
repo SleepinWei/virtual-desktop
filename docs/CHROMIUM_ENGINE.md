@@ -8,6 +8,8 @@
 
 同日后续已完成 **native-frame-candidate**：完整活跃树导出、原生层序/变换/裁剪/透明度分组、滚动、删层及本地 ACK 通道均通过固定页面验收，见 [CHROMIUM_FRAMES.md](CHROMIUM_FRAMES.md)。最新 **live-native-session-candidate** 已用原生 Unix socket 持续输出，接入会话 worker、agent/control epoch、人工输入、断线和资源失败恢复，见 [CHROMIUM_LIVE.md](CHROMIUM_LIVE.md) 与 [最新验收](chromium-live-2026-10-28.json)。
 
+之后的持续输入/并发测试修复了无显示模式的成功呈现回调累积：仅当两个实验 feature 同时开启时，Blink/cc 取消已失败帧的成功回调，保留普通模式语义与 DCHECK，不伪造物理呈现。当前补丁覆盖 20 个文件，过滤 C++ 共 21 项通过；新构建完成 64 个同页操作。有限压测与未通过的真实站点范围见 [NATIVE_RUNTIME.md](NATIVE_RUNTIME.md)。
+
 ## 构建
 
 本次构建根目录为 `/Volumes/Extreme-APFS/Builds`，位于外置 APFS SSD。路径不能含空格。工具先核对外置卷及 UUID，磁盘断开时拒绝向同名内置目录写入。源码、depot_tools、CIPD/vpython 缓存、临时目录、日志和输出均置于该根目录；Xcode/SDK 继续使用本机安装。
@@ -29,7 +31,7 @@ npm run experiment:engine
 
 `sync` 使用 shallow checkout，固定 revision，禁用自动 depot_tools 更新和工具指标上报。它也执行官方 `ensure_bootstrap`；单独运行过 gclient 的目录可能还没有 GN/autoninja 需要的 Python shim，可用 `build.py bootstrap` 补齐。后续同步遇到本地修改会拒绝覆盖；补丁输入哈希不符、已有不同 `args.gn` 或 `.gclient` 也会停止。
 
-默认构建使用 macOS arm64、release/component、`symbol_level=0`、保留 DCHECK、关闭 PGO 和远程执行，默认 2 个本地编译任务，本机实测可用 `--jobs 4`。构建目标包含 `headless_shell`、`cc_unittests` 和 `viz_unittests`。`objects` 只编译变动源文件和 C++ 测试对象；它成功不等于完整目标已链接或测试已运行。`test` 当前执行 7 项 cc/paint、4 项 Viz 测试，全部成功后状态为 `engine-tests-complete`，并不代表整个 Chromium 测试集已跑完。
+默认构建使用 macOS arm64、release/component、`symbol_level=0`、保留 DCHECK、关闭 PGO 和远程执行。当前注意本机负载，建议 `nice -n 10`、`--jobs 1`。构建目标包含 `headless_shell`、`cc_unittests` 和 `viz_unittests`。`objects` 只编译变动源文件和 C++ 测试对象；它成功不等于完整目标已链接或测试已运行。`test` 当前执行 17 项 cc/paint/callback、4 项 Viz 测试，全部成功后状态为 `engine-tests-complete`，并不代表整个 Chromium 测试集已跑完。
 
 运行状态位于 `chromium/virtual-desktop-build-state.json`，日志位于 `logs/chromium-*.log`，输出位于 `chromium/src/out/VirtualDesktop`。失败保留增量构建；修复后重跑对应阶段。运行前检查状态和实际进程，不能同时启动两个写入同一 checkout 的作业。`status` 只读检查当前空间、SDK、版本及记录阶段。
 

@@ -4,16 +4,18 @@
 
 默认 `npm start` 继续运行 LinkeDOM/Yoga v0；原生后端显式开启。当前仅开放仓库内固定 A8 字体的可信页面，`engineSplitGate: not-passed`、`serverRasterBypassed: false` 保留。
 
+后续已加入接管后直接键盘输入与有限并发测试，当前限制、保护停止、内核稳定性修复及真实性能对照见 [NATIVE_RUNTIME.md](NATIVE_RUNTIME.md)。新构建覆盖 20 个源码文件，过滤 C++ 测试共 21 项；本文早期验收 JSON 保留为历史。
+
 ## 启动与验证
 
-先按 [引擎构建说明](CHROMIUM_ENGINE.md) 完成当前补丁的构建、11 项过滤 C++ 测试和匹配 CanvasKit。旧补丁的成功状态不能用于启动新服务。
+先按 [引擎构建说明](CHROMIUM_ENGINE.md) 完成当前补丁的构建、21 项过滤 C++ 测试和匹配 CanvasKit。旧补丁的成功状态不能用于启动新服务。
 
 ```bash
 npm run start:native -- --root /Volumes/Extreme-APFS/Builds \
   --canvaskit /Volumes/Extreme-APFS/Builds/canvaskit/out --port 8081
 ```
 
-打开 <http://127.0.0.1:8081/native>，管理 token 默认 `dev-local`。创建会话后接管即可点击、滚动；先点击远端输入框，再用下方文本框发送文字。Tab、Enter、Backspace 按钮发送原生键盘输入；本地 Tab 键保留正常焦点导航。归还后 agent 重新 observe 获取控制 epoch。
+打开 <http://127.0.0.1:8081/native>，管理 token 默认 `dev-local`。创建会话、接管后直接点击画面中的字段并输入或粘贴；画面获焦时 Tab/Enter/删除键发给远端，Esc 返回本地工具栏。归还后 agent 重新 observe 获取控制 epoch。CLI 默认仅一个原生会话和一个启动任务，资源保护可能结束超预算会话。
 
 ```bash
 npm run experiment:live -- --root /Volumes/Extreme-APFS/Builds \
@@ -31,7 +33,7 @@ worker 在启动浏览器前创建 0700 私有目录、0600 socket 和随机 256
 
 socket JSON 必须完整、身份有效且大小有界；原生帧再经既有严格 normalizer 校验。worker IPC 合并中间更新；gateway 仅保留最新完整帧及未确认帧引用的资源。同一视觉内容不重复发送。完整帧权威成员、合成规则和逐字节 SKP 来源沿用 [完整帧协议](CHROMIUM_FRAMES.md)。
 
-每会话最多 4 个 viewer。每个通道最多 2 个未 ACK 帧和 1 个最新合并帧；未连接的握手 15 秒过期。资源缓存按序列化字节计上限 128 MiB，并非解码后 WASM 或进程 RSS 上限。浏览器生命周期独立于 viewer；worker 异常退出时父进程清理该 worker 专属的 Chromium 进程组并释放准入容量。
+每会话最多 4 个 viewer。每个通道最多 2 个未 ACK 帧和 1 个最新合并帧；未连接的握手 15 秒过期。资源缓存按序列化字节计上限 128 MiB，并非解码后 WASM 或进程 RSS 上限。浏览器生命周期独立于 viewer；worker、browser 或 renderer 异常时父进程清理该 worker 专属的 Chromium 进程组并释放准入容量，终止状态通知 viewer。
 
 控制转移和动作使用已有会话串行队列及 control epoch。只读 viewer 无法操作；失效的 agent/human epoch 被拒绝；重复 actionId 不执行两次。坐标输入绑定已 ACK 的完整画面，并在 gateway 与 worker 再次检查当前视觉签名。键盘/文字要求有效 ACK 和控制权，但不因光标闪烁而要求画面签名完全相同。
 

@@ -38,10 +38,10 @@ export class NativeFrames {
     }
     this.prune();
   }
-  unsupported(message) {
+  unsupported(message, terminal = false) {
     this.latest = null; this.fault = String(message).slice(0, 240);
     for (const connection of [...this.connections.values()]) {
-      connection.send?.({ kind: 'unsupported', message: this.fault, control: this.control() });
+      connection.send?.({ kind: 'unsupported', message: this.fault, terminal, control: this.control() });
       this.disconnect(connection.epoch);
     }
     this.prune();
@@ -50,7 +50,7 @@ export class NativeFrames {
     ensure(this.latest && !this.fault, 409, 'NATIVE_FRAME_UNAVAILABLE', this.fault || 'Native page has not produced a supported frame');
     ensure(this.connections.size < 4, 429, 'VIEWER_LIMIT', 'At most four native viewers are permitted');
     const epoch = randomUUID(), channel = new FrameChannel(epoch);
-    const connection = { epoch, role, channel, send: null, close: null, presented: null };
+    const connection = { epoch, role, channel, send: null, close: null, presented: null, presentations: new Map() };
     connection.timer = setTimeout(() => this.disconnect(epoch), 15000); connection.timer.unref();
     this.connections.set(epoch, connection);
     return { epoch, revision: this.revision, control: this.control() };
@@ -79,8 +79,12 @@ export class NativeFrames {
     let result;
     try { result = connection.channel.acknowledge(ack); }
     catch { throw new AppError(400, 'INVALID_FRAME_ACK', 'ACK does not match the offered native frame and resource inventory'); }
-    if (result.accepted) connection.presented = { seq: ack.seq, frameId: packet.frame.id,
-      revision: packet.frame.bridgeSeq, signature: visualSignature(packet.frame) };
+    if (result.accepted) {
+      connection.presented = { seq: ack.seq, frameId: packet.frame.id,
+        revision: packet.frame.bridgeSeq, signature: visualSignature(packet.frame) };
+      connection.presentations.set(ack.seq, connection.presented);
+      if (connection.presentations.size > 16) connection.presentations.delete(connection.presentations.keys().next().value);
+    }
     if (result.packet) this.deliver(connection, result.packet);
     this.prune();
     return { accepted: result.accepted, channel: connection.channel.state, control: this.control() };
@@ -95,7 +99,7 @@ export class NativeFrames {
   }
   assertPresented(action, requireCurrent = true) {
     ensure(!this.fault && this.latest, 409, 'NATIVE_FRAME_UNAVAILABLE', 'A current supported frame is required');
-    const connection = this.connections.get(action.connectionEpoch), presented = connection?.presented;
+    const connection = this.connections.get(action.connectionEpoch), presented = connection?.presentations.get(action.seq);
     ensure(presented && action.seq === presented.seq && action.frameId === presented.frameId &&
       (!requireCurrent || presented.signature === this.latest.signature), 409, 'STALE_FRAME', 'The displayed frame changed; wait for the next presented frame');
     return this.latest.signature;

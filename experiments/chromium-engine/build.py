@@ -242,13 +242,16 @@ class Build:
                    'obj/cc/cc/picture_layer_impl.o',
                    'obj/cc/cc/layer_tree_impl.o',
                    'obj/cc/cc/layer_tree_host_impl.o',
+                   'obj/cc/cc/presentation_time_callback_buffer.o',
                    'obj/cc/cc_unittests/picture_layer_impl_unittest.o',
+                   'obj/cc/cc_unittests/presentation_time_callback_buffer_unittest.o',
                    'obj/cc/cc_unittests/display_item_list_unittest.o',
                    'obj/components/viz/service/service/display.o',
                    'obj/components/viz/service/service/output_surface_provider_impl.o',
                    'obj/components/viz/service/service/output_surface_unified.o',
                    'obj/components/viz/service/unit_tests/display_unittest.o',
-                   'obj/third_party/blink/renderer/platform/platform/layer_tree_settings.o']
+                   'obj/third_party/blink/renderer/platform/platform/layer_tree_settings.o',
+                   'obj/third_party/blink/renderer/platform/platform/layer_tree_view.o']
         self.run('objects', [self.root / 'depot_tools/autoninja', '-C', OUT,
                              '-j', str(jobs)] + targets)
         self.save(compiledObjectsPassed=True)
@@ -258,6 +261,7 @@ class Build:
         self.run('cc-tests', [self.src / OUT / 'cc_unittests',
                  '--gtest_filter=RemotePaintPictureLayerImplTest.*:'
                  'DisplayItemListTest.RemotePaint*:'
+                 'PresentationTimeCallbackBufferTest.*:'
                  'LegacySWPictureLayerImplTest.UpdateTilesCreatesTilings',
                  '--test-launcher-jobs=1'])
         self.save(ccTestsPassed=True)

@@ -75,6 +75,18 @@
     "cc/trees/layer_tree_impl.h": {
       "upstreamSha256": "0d8014fa6b7af4e744e7911163f5e80de20b9799433d4681e0ef1bd3326faeba",
       "patchedSha256": "c6721eceac3f75a4e1aea0f2099997206c9b98c635cce9f341a17e0ed7a6b76d"
+    },
+    "cc/trees/presentation_time_callback_buffer.cc": {
+      "upstreamSha256": "c36f4e5d1f09ff2c7e1c858507d454c6184b0d6e369e54d7ddc6d90da293cc2b",
+      "patchedSha256": "4e6072c0c2024519ada2e6ff90ca99d748a48122c71c81c64105cd3fc8ee0dbd"
+    },
+    "cc/trees/presentation_time_callback_buffer_unittest.cc": {
+      "upstreamSha256": "341da70e787ab0c5c260b46cf4328dbe557bc23eae6c5a904d191623b66c126e",
+      "patchedSha256": "17d5ce7c070e0388a3df5e9345d5be9019424c0e26d4e8c5d40b6d8eb975887c"
+    },
+    "third_party/blink/renderer/platform/widget/compositing/layer_tree_view.cc": {
+      "upstreamSha256": "45e099ee3a249118873bbad0828dee1aac08cbae709952c242e0e6b81529ec92",
+      "patchedSha256": "2fa1b61a804983a2b240a71b8f38eea4e4b4bb66b8e811105a117dda23085f23"
     }
   },
   "skiaRevision": "886e42fda11610a56dd1b22e8697e27f9d1e34f2",

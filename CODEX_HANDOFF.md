@@ -6,6 +6,12 @@
 
 ## 当前实现
 
+最新接续先读 [NATIVE_RUNTIME.md](docs/NATIVE_RUNTIME.md) 和 [2026-10-28 runtime 记录](docs/chromium-runtime-2026-10-28.json)：直接输入已替代独立文字栏；74 JS、5 Python、74 JS 语法、21 C++、3 普通 viewer E2E 通过。有界 96 请求为 64 成功/32 限流。原生 presentation 成功回调在失败反馈后累积到 61 的崩溃已修复，20 个源码文件与 manifest 匹配；没有关闭 DCHECK 或伪造服务端呈现。
+
+本机资源预算优先：原生 CLI 默认一个活跃会话/一个启动任务、带独立长期 watchdog。测试低优先级，1.5 GiB 进程树 RSS 上限；两个测试浏览器、另开独立参考浏览器和真实 HTTPS 预览均实际触发安全停止，不能声称新构建严格视觉复测通过。直接输入有现有本机浏览器的实际画面证据。当前新入口用 8082，旧用户 8081 会话保留；两个服务的 profile 目录分开。
+
+小红书未通过：普通无头对照到 IP 风险页 300012；原生首帧前超预算，交互选项禁用。持续 producer tracing buffer 从 32 MiB 改为 8 MiB，修复跨站启动触及上游共享内存 switch 的 8 MiB CHECK；画面仍走 socket。缺字会把整套系统字体嵌入 SKP，超过记录上限，不要放大内存上限绕过。后续优先字体/图片资源协议、最小 runtime 与长会话内存，再扩大真实网站/iframe/IME/DPR 和分布式调度。此前三模式及完整帧、双会话冷恢复记录保留为历史，不能当作本轮新构建全覆盖结果。
+
 v0 是 Node.js + LinkeDOM + Yoga 的可信应用协议 PoC。服务端没有 Chromium 和像素后端；本地 Canvas 绘制 JSON 指令。提供每 session 子进程、语义操作、控制 epoch、有界队列、增量帧、profile 保存恢复。任意网站/完整 CSS/网站 JS/CDP 兼容均未实现。详见框架与验证记录。
 
 仓库已补齐早期下载源码包中的代码、测试、协议和验证记录。下载包保留用于溯源；后续开发以当前 Git 历史为准。

@@ -58,6 +58,8 @@ BENCH_SESSIONS=8 BENCH_ITERATIONS=20 npm run bench
 
 ## Chromium 原生绘图实验
 
+当前优先读取 [NATIVE_RUNTIME.md](NATIVE_RUNTIME.md)。本机 16 GiB，默认只测一个原生执行浏览器，使用 `nice -n 10 npm run bench:native -- ... --max-active 1`；96 请求突发不等于 96 个浏览器。看门狗触发即停止，不提高预算补跑。加 `--single-session --guard` 的 `experiment:live` 会明确跳过双会话恢复；额外参考浏览器仍可能超预算，不能把安全停止写成视觉通过。原生 GUI 可复用现有本机浏览器验证，避免额外起完整参考进程。
+
 持续会话入口为 `npm run experiment:live`，复现和完整验收见 [CHROMIUM_LIVE.md](CHROMIUM_LIVE.md)。额外 E2E 的 `CHROMIUM_LIVE_BUILD_ROOT` 必须指向当前成功构建/测试的固定引擎，`CANVASKIT_DIRECTORY` 指向匹配 runtime。它实际启动持续执行 worker 和独立本地验证浏览器，检查接管、输入、自动更新、断线/刷新/坏资源恢复、双会话和冷存储恢复及崩溃清理。
 
 ```bash

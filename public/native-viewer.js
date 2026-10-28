@@ -1,17 +1,23 @@
 import { NativeClient } from '/native-client.js';
+import { captureNativeInput } from '/native-input.js';
 
 const $ = selector => document.querySelector(selector), canvas = $('#desktop');
-let session, client, kit, control = { owner: 'agent', epoch: 1 }, busy = false, inputBusy = false, lastFrame;
+let session, client, kit, control = { owner: 'agent', epoch: 1 }, busy = false, draining = false, lastFrame, connectionStatus;
+const inputs = [];
 function notice(message, error = false) { $('#notice').textContent = message; $('#notice').classList.toggle('error', error); }
 function buttons() {
   const active = session?.state === 'ACTIVE', human = active && control.owner === 'human';
   $('#create').disabled = busy || active;
   $('#take').disabled = busy || !active || human; $('#return').disabled = busy || !active || !human;
   $('#close').disabled = busy || !active; $('#reconnect').disabled = busy || !active;
-  for (const element of [$('#text'), $('#send'), ...document.querySelectorAll('[data-key]')]) element.disabled = !human || busy;
   $('#owner').textContent = `${human ? 'You own' : 'Agent owns'} input · control ${control.epoch}`;
 }
-function mergeControl(value) { if (value?.epoch >= control.epoch) { control = value; buttons(); } }
+function mergeControl(value) {
+  if (value?.epoch >= control.epoch) {
+    if (value.epoch !== control.epoch || value.owner !== 'human') { inputs.length = 0; keyboard.reset(); }
+    control = value; buttons();
+  }
+}
 async function attachSession(value) {
   kit ||= await window.CanvasKitInit({ locateFile: file => '/native-runtime/' + file });
   session = value; control = { owner: value.owner, epoch: value.epoch };
@@ -20,10 +26,11 @@ async function attachSession(value) {
   client = new NativeClient({ kit, canvas, session,
     onControl: mergeControl,
     onStatus(status, message) {
+      const changed = status !== connectionStatus; connectionStatus = status;
       $('#connection').textContent = message; $('#connection').classList.toggle('error', status === 'error');
       document.documentElement.dataset.connection = status;
-      if (status === 'ended') { session.state = 'FAILED'; sessionStorage.removeItem('vd-native-viewer'); buttons(); }
-      if (status === 'connected') notice('Live frame ready. Reconnecting the viewer keeps this Chromium page alive.');
+      if (status === 'ended') { inputs.length = 0; keyboard.reset(); session.state = 'FAILED'; sessionStorage.removeItem('vd-native-viewer'); buttons(); }
+      if (changed && status === 'connected') notice('Live frame ready. Reconnecting the viewer keeps this Chromium page alive.');
     },
     onFrame(frame) {
       lastFrame = frame; canvas.dataset.ready = 'true'; canvas.dataset.revision = String(frame.revision);
@@ -41,21 +48,36 @@ async function request(operation, payload, credential = session?.humanToken) {
   return result;
 }
 async function input(action) {
-  if (inputBusy || control.owner !== 'human') return;
+  if (control.owner !== 'human' || session?.state !== 'ACTIVE') return;
   if (!client?.presented) { notice('Wait for a complete frame before sending input.', true); return; }
-  inputBusy = true;
+  if (inputs.length >= 64) { notice('Input queue is full. Wait for the page to catch up.', true); return; }
+  const last = inputs.at(-1);
+  if (action.type === 'text' && last?.action.type === 'text' && last.epoch === control.epoch && last.action.value.length + action.value.length <= 2000) last.action.value += action.value;
+  else inputs.push({ sessionId: session.id, epoch: control.epoch, action: { ...action }, shown: { ...client.presented } });
+  if (draining) return;
+  draining = true;
   try {
-    await request('actions', { epoch: control.epoch, actionId: crypto.randomUUID(), action: { ...action, ...client.presented } });
-    notice('Input sent to the running Chromium page.');
-  } catch (error) { notice(error.code === 'STALE_FRAME' ? 'The page changed. Wait for the next frame, then try again.' : error.message, true); }
-  finally { inputBusy = false; }
+    while (inputs.length) {
+      const next = inputs.shift();
+      if (next.sessionId !== session?.id || next.epoch !== control.epoch || control.owner !== 'human') continue;
+      if (!client?.presented) { inputs.length = 0; notice('Connection interrupted; input stopped. Reconnect before typing.', true); break; }
+      const shown = ['pointer', 'wheel'].includes(next.action.type) ? next.shown : client.presented;
+      await request('actions', { epoch: next.epoch, actionId: crypto.randomUUID(), action: { ...next.action, ...shown } });
+    }
+  } catch (error) {
+    inputs.length = 0;
+    notice(error.code === 'STALE_FRAME' ? 'The page changed. Click the field again before typing.' : error.message, true);
+  } finally { draining = false; }
 }
+const keyboard = captureNativeInput({ canvas, sink: $('#keyboard-input'), enabled: () => control.owner === 'human' && session?.state === 'ACTIVE',
+  send: input, leave: () => $('#return').focus(), onError: message => notice(message, true) });
 $('#create-form').addEventListener('submit', async event => {
   event.preventDefault(); if (busy || session?.state === 'ACTIVE') return;
   busy = true; buttons(); $('#create').textContent = 'Starting Chromium…'; notice('Starting a verified native browser session…');
   try {
     const health = await (await fetch('/health')).json();
     if (!health.nativeAvailable) throw new Error('Native backend is not configured. Start the verified native service first.');
+    if (health.nativeResources?.stop) throw new Error(`Host resource guard stopped this service (${health.nativeResources.stop}). Reduce load and restart the native service.`);
     kit ||= await window.CanvasKitInit({ locateFile: file => '/native-runtime/' + file });
     const response = await fetch('/api/sessions', { method: 'POST', headers: {
       Authorization: `Bearer ${$('#admin-token').value}`, 'Content-Type': 'application/json' },
@@ -70,7 +92,7 @@ $('#create-form').addEventListener('submit', async event => {
 });
 for (const [selector, owner] of [['#take', 'human'], ['#return', 'agent']]) $(selector).addEventListener('click', async () => {
   if (busy) return; busy = true; buttons();
-  try { mergeControl(await request('control', { epoch: control.epoch, owner })); notice(owner === 'human' ? 'You can click and scroll in the page. Use the text field below for native input.' : 'Input returned to the agent.'); }
+  try { mergeControl(await request('control', { epoch: control.epoch, owner })); notice(owner === 'human' ? 'Click a field in the page and type directly. Escape returns focus to the toolbar.' : 'Input returned to the agent.'); }
   catch (error) { notice(error.message, true); }
   finally { busy = false; buttons(); }
 });
@@ -82,14 +104,14 @@ $('#reconnect').addEventListener('click', async () => {
 });
 $('#close').addEventListener('click', async () => {
   if (!session || busy) return; busy = true; buttons();
-  try { await client.stop(); await request('release', { save: false }, $('#admin-token').value); session.state = 'COLD';
+  try { inputs.length = 0; keyboard.reset(); await client.stop(); await request('release', { save: false }, $('#admin-token').value); session.state = 'COLD';
     sessionStorage.removeItem('vd-native-viewer');
     $('#connection').textContent = 'Session closed'; document.documentElement.dataset.connection = 'closed'; notice('The owned Chromium browser was stopped.'); }
   catch (error) { notice(error.message, true); }
   finally { busy = false; buttons(); }
 });
 canvas.addEventListener('click', event => {
-  const bounds = canvas.getBoundingClientRect(); canvas.focus({ preventScroll: true });
+  const bounds = canvas.getBoundingClientRect();
   input({ type: 'pointer', x: (event.clientX - bounds.left) * canvas.width / bounds.width,
     y: (event.clientY - bounds.top) * canvas.height / bounds.height });
 });
@@ -101,18 +123,15 @@ canvas.addEventListener('wheel', event => {
     y: (event.clientY - bounds.top) * canvas.height / bounds.height,
     deltaX: Math.max(-2000, Math.min(2000, event.deltaX * multiplier)), deltaY: Math.max(-2000, Math.min(2000, event.deltaY * multiplier)) });
 }, { passive: false });
-canvas.addEventListener('keydown', event => {
-  if (control.owner === 'human' && ['Enter', 'Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End', 'Escape'].includes(event.key)) {
-    event.preventDefault(); input({ type: 'key', key: event.key });
-  }
-});
-for (const button of document.querySelectorAll('[data-key]')) button.addEventListener('click', () => input({ type: 'key', key: button.dataset.key }));
-$('#text-form').addEventListener('submit', event => { event.preventDefault(); if ($('#text').value) input({ type: 'text', value: $('#text').value }); });
 window.nativeViewer = { state: () => ({ sessionId: session?.id, control: { ...control }, client: client?.state,
-  frame: lastFrame ? { id: lastFrame.frameId, revision: lastFrame.revision } : null }), reconnect: () => client?.connect() };
+  pendingInputs: inputs.length + Number(draining), frame: lastFrame ? { id: lastFrame.frameId, revision: lastFrame.revision } : null }), reconnect: () => client?.connect() };
 window.addEventListener('pagehide', () => { client?.stop(); });
 buttons();
 try {
+  const health = await (await fetch('/health')).json();
+  for (const target of health.externalTargets || []) {
+    const option = [...$('#fixture').options].find(item => item.value === target); if (option) option.disabled = false;
+  }
   const stored = sessionStorage.getItem('vd-native-viewer');
   if (stored) {
     busy = true; buttons();

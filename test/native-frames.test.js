@@ -46,8 +46,9 @@ test('coordinate input requires an ACK and the same current visual state', t => 
 test('stream faults invalidate old frames and reconnecting creates a fresh epoch without retaining old resources', t => {
   const frames = create(t); frames.ingest(payload(1)); const first = frames.connect('viewer'), sent = [];
   frames.attach(first.epoch, 'viewer', packet => sent.push(packet), () => {});
-  frames.unsupported('Unsupported native surface');
+  frames.unsupported('Unsupported native surface', true);
   assert.equal(sent.at(-1).kind, 'unsupported'); assert.equal(frames.stats.connections.length, 0);
+  assert.equal(sent.at(-1).terminal, true);
   assert.equal(frames.stats.resourceBytes, 0); assert.equal(frames.stats.frameId, null);
   assert.throws(() => frames.connect('viewer'), error => error.code === 'NATIVE_FRAME_UNAVAILABLE');
   frames.ingest(payload(2, 'b'));
@@ -73,4 +74,17 @@ test('connection count is bounded and control changes do not create fake paint f
   assert.throws(() => frames.connect('viewer'), error => error.code === 'VIEWER_LIMIT');
   frames.controlChanged(); assert.equal(messages.at(-1).kind, 'control'); assert.equal(frames.revision, 1);
   frames.disconnect(epoch); assert.equal(frames.stats.connections.length, 3);
+});
+
+test('typing can use a recently acknowledged frame while stale coordinates remain fenced', t => {
+  const frames = create(t); frames.ingest(payload(1)); const { epoch } = frames.connect('viewer'), sent = [];
+  frames.attach(epoch, 'viewer', packet => sent.push(packet), () => {});
+  frames.acknowledge(ack(sent[0]), 'viewer');
+  const action = { connectionEpoch: epoch, seq: 1, frameId: sent[0].frame.id };
+  frames.ingest(payload(2, 'b')); frames.acknowledge(ack(sent[1]), 'viewer');
+  assert.equal(frames.assertPresented(action, false), frames.latest.signature);
+  assert.throws(() => frames.assertPresented(action), error => error.code === 'STALE_FRAME');
+  assert.throws(() => frames.assertPresented({ ...action, seq: 99 }, false), error => error.code === 'STALE_FRAME');
+  frames.disconnect(epoch);
+  assert.throws(() => frames.assertPresented(action, false), error => error.code === 'STALE_FRAME');
 });

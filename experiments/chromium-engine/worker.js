@@ -31,8 +31,14 @@ process.on('message', ({ id, method, params }) => {
       await flush();
       process.send?.({ id, result });
     } catch (error) {
+      // Keep bounded operational diagnostics without recording input values,
+      // selectors, credentials or Playwright's multi-line call log.
+      const diagnostic = error.message.split('\n')[0].replace(/https?:\/\/[^\s]+/g, '[site]').slice(0, 180);
+      process.stderr.write(JSON.stringify({ method, name: error.name, message: diagnostic }) + '\n');
       process.send?.({ id, error: { status: error.status || 502, code: error.code || 'NATIVE_WORKER_ERROR',
-        message: error.status ? error.message : 'Native execution failed; inspect the local build and supported fixture' } });
+        message: error.status ? error.message : method === 'init' && params.site
+          ? 'External page initialization failed: ' + error.message.split('\n')[0].replace(/https?:\/\/[^\s]+/g, address => { try { const url = new URL(address); return url.origin + url.pathname; } catch { return '[site]'; } }).slice(0, 180)
+          : 'Native execution failed; inspect the local build and supported fixture' } });
     }
   });
 });

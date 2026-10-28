@@ -5,6 +5,7 @@ import { SessionManager, sameToken } from './sessions.js';
 import { AppError, ensure } from './errors.js';
 import { nativeAssets, nativeFixtures, nativeAllowedPaths } from '../experiments/chromium-engine/assets.js';
 import { verifiedEngine } from '../experiments/chromium-engine/verified.js';
+import { externalSites } from '../experiments/chromium-engine/sites.js';
 import { loadReplayRuntime, verifyRuntimeBuild } from '../experiments/chromium-paint/runtime.js';
 
 const assets = new Map([
@@ -63,7 +64,9 @@ export function createService({ adminToken = 'dev-local', chromium: nativeOption
         return;
       }
       if (request.method === 'GET' && url.pathname === '/health') { json(200, { ok: true, runtime: 'linkedom-yoga-poc', protocolVersion: 1,
-        ...(nativeEngine ? { nativeAvailable: true, nativeProtocolVersion: 1, engineSplitGate: 'not-passed' } : {}) }); return; }
+        ...(nativeEngine ? { nativeAvailable: true, nativeProtocolVersion: 1, engineSplitGate: 'not-passed',
+          externalTargets: nativeOptions.externalSites ? Object.keys(externalSites).filter(site => externalSites[site].interactive !== false) : [],
+          ...(nativeOptions.resourceStatus ? { nativeResources: nativeOptions.resourceStatus() } : {}) } : {}) }); return; }
       const credential = request.headers.authorization?.startsWith('Bearer ') ? request.headers.authorization.slice(7) : '';
       const admin = () => ensure(sameToken(credential, adminToken), 403, 'FORBIDDEN', 'Management capability required');
       // Browser calls must originate from this local app. CLI clients need no Origin.
@@ -148,7 +151,7 @@ export function createService({ adminToken = 'dev-local', chromium: nativeOption
       }
       await new Promise((resolve, reject) => { server.once('error', reject); server.listen(port, host, resolve); });
       const baseUrl = `http://${host.includes(':') ? `[${host}]` : host}:${server.address().port}`;
-      if (nativeEngine) manager.nativeConfig = { baseUrl, maxSessions: nativeOptions.maxSessions || 2, worker: {
+      if (nativeEngine) manager.nativeConfig = { baseUrl, maxSessions: nativeOptions.maxSessions || 2, externalSites: Boolean(nativeOptions.externalSites), worker: {
         root: nativeEngine.root, expectedArtifactsSha256: nativeEngine.artifactsSha256,
         expectedPatchSha256: nativeEngine.patchSha256, allowedPaths: nativeAllowedPaths } };
       return baseUrl;

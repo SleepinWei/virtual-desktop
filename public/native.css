@@ -16,6 +16,8 @@ button { min-height: 44px; border: 1px solid #bccbdf; border-radius: 6px; backgr
 button:hover:not(:disabled) { background: #edf3ff; border-color: #8caaf1; }
 button:disabled, input:disabled { opacity: .5; cursor: default; }
 button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible, canvas:focus-visible { outline: 3px solid #245ce7; outline-offset: 3px; }
+.surface:has(#keyboard-input:focus) { outline: 3px solid #245ce7; outline-offset: 3px; }
+#keyboard-input { position: absolute; width: 1px; height: 24px; opacity: 0; padding: 0; border: 0; resize: none; pointer-events: none; font-size: 16px; }
 .primary { background: #245ce7; color: white; border-color: #245ce7; }
 .primary:hover:not(:disabled) { background: #174dce; }
 .toolbar { display: flex; justify-content: space-between; gap: 16px; align-items: center; margin: 24px 0 16px; }
@@ -26,9 +28,6 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
 canvas { display: block; width: 100%; height: auto; touch-action: manipulation; }
 #empty { position: absolute; inset: 0; margin: 0; display: grid; place-items: center; padding: 20px; text-align: center; pointer-events: none; }
 .surface:has(canvas[data-ready]) #empty { display: none; }
-.text-controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 18px; }
-.text-controls label { width: 100%; }
-.text-controls input { flex: 1; min-width: 180px; }
 #notice { min-height: 24px; margin-bottom: 12px; }
 #notice.error, #connection.error { color: #b52635; }
 footer { display: flex; justify-content: space-between; gap: 16px; line-height: 1.6; padding-bottom: env(safe-area-inset-bottom); }

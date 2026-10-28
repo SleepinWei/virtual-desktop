@@ -3,6 +3,7 @@ export const nativeAssets = new Map([
   asset('/native', '../../public/native.html', 'text/html; charset=utf-8'),
   asset('/native-viewer.js', '../../public/native-viewer.js', 'text/javascript; charset=utf-8'),
   asset('/native-client.js', '../../public/native-client.js', 'text/javascript; charset=utf-8'),
+  asset('/native-input.js', '../../public/native-input.js', 'text/javascript; charset=utf-8'),
   asset('/native.css', '../../public/native.css', 'text/css; charset=utf-8'),
   asset('/native/frame-protocol.js', '../chromium-paint/frame-protocol.js', 'text/javascript; charset=utf-8'),
   asset('/native/frame-renderer.js', '../chromium-paint/frame-renderer.js', 'text/javascript; charset=utf-8'),

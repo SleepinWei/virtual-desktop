@@ -75,7 +75,7 @@ export class NativeClient {
     if (generation !== this.generation || this.stopped) return;
     if (packet.control) this.onControl(packet.control);
     if (packet.kind === 'ping' || packet.kind === 'control') return;
-    if (packet.kind === 'unsupported') throw Object.assign(new Error(packet.message), { code: 'NATIVE_UNSUPPORTED' });
+    if (packet.kind === 'unsupported') throw Object.assign(new Error(packet.message), { code: packet.terminal ? 'SESSION_NOT_ACTIVE' : 'NATIVE_UNSUPPORTED' });
     const receiver = this.receiver, epoch = this.epoch;
     const result = await receiver.receive(packet);
     if (result.status !== 'presented' || generation !== this.generation || this.stopped) return;
@@ -96,7 +96,10 @@ export class NativeClient {
       this.stopped = true; this.painter.dispose(); this.onStatus('ended', error.message); return;
     }
     if (error.code === 'NATIVE_UNSUPPORTED' || this.attempts >= 2) {
-      this.onStatus('error', `${error.message}. Use reconnect after the page or connection recovers.`); return;
+      const message = error.message === 'frame-too-large'
+        ? 'This page uses fonts or content too large for native replay. Close the session and try a supported page.'
+        : `${error.message}. Use reconnect after the page or connection recovers.`;
+      this.onStatus('error', message); return;
     }
     this.onStatus('reconnecting', `${error.message}; restoring the latest frame…`);
     await wait([200, 600][this.attempts++]);

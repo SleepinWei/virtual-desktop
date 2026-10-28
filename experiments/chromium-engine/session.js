@@ -1,6 +1,8 @@
 import { chromium } from 'playwright';
 import { verifiedEngine } from './verified.js';
 import { createNativeStream } from './native-stream.js';
+import { browserAction } from './browser-actions.js';
+import { allowedSiteRequest, externalSites } from './sites.js';
 import { captureLaunchArgs, findPageProvenance, recordTrace, settlePage } from '../chromium-paint/capture.js';
 import { normalizeNativeFrame } from '../chromium-paint/native-frame.js';
 import { visualSignature } from '../../src/native-frames.js';
@@ -16,42 +18,56 @@ export class ChromiumSession {
     this.candidates = new Map(); this.actions = new Map(); this.frames = 0; this.excluded = 0;
     this.latest = null; this.route = null; this.closed = false; this.traceActive = false;
   }
-  async start({ root, expectedArtifactsSha256, expectedPatchSha256, url, viewport, saved, allowedPaths }) {
+  async start({ root, expectedArtifactsSha256, expectedPatchSha256, url, viewport, saved, allowedPaths, site }) {
     const verified = await verifiedEngine(root, { requireStream: true });
     ensure(verified.artifactsSha256 === expectedArtifactsSha256 && verified.patchSha256 === expectedPatchSha256,
       409, 'ENGINE_CHANGED', 'Native build changed; restart the service before creating sessions');
-    this.viewport = viewport; this.url = url;
+    ensure(!site || externalSites[site] && allowedSiteRequest(site, url, { navigation: true }), 400, 'INVALID_SITE', 'Unknown external site');
+    this.viewport = viewport; this.url = url; this.site = site;
     if (saved) ensure(saved.kind === 'chromium-storage-v1' && saved.storageState && Array.isArray(saved.storageState.cookies) &&
       Array.isArray(saved.storageState.origins), 409, 'INVALID_PROFILE_STATE', 'Expected a Chromium storage profile');
     this.stream = await createNativeStream(message => this.receive(message));
     this.server = await chromium.launchServer({ executablePath: verified.binary, headless: true, host: '127.0.0.1',
-      chromiumSandbox: false, args: captureLaunchArgs({ remotePaint: true, noDisplay: true, producerBufferBytes: 33554432 }),
+      // Cross-site process launches serialize tracing shared memory through an
+      // upstream switch capped at 8 MiB. Live frames do not use trace transport.
+      chromiumSandbox: false, args: captureLaunchArgs({ remotePaint: true, noDisplay: true, producerBufferBytes: 8388608 }),
       env: { ...process.env, ...this.stream.environment } });
     this.browserPid = this.server.process().pid; this.onBrowser(this.browserPid, this.server.process());
+    let diagnosticBytes = 0;
+    this.server.process().stderr?.on('data', chunk => {
+      if (diagnosticBytes >= 16384) return;
+      const bounded = chunk.subarray(0, 16384 - diagnosticBytes); diagnosticBytes += bounded.length;
+      process.stderr.write(bounded);
+    });
     this.browser = await chromium.connect(this.server.wsEndpoint());
     this.browser.on('disconnected', () => { if (!this.closed) this.onFault('Native browser disconnected', true); });
     const origin = new URL(url).origin, paths = new Set(allowedPaths);
-    this.context = await this.browser.newContext({ viewport, deviceScaleFactor: 1, acceptDownloads: false,
+    this.context = await this.browser.newContext({ viewport, deviceScaleFactor: 1, acceptDownloads: false, serviceWorkers: 'block',
       ...(saved ? { storageState: saved.storageState } : {}) });
     await this.context.route('**/*', route => {
-      const request = new URL(route.request().url());
-      return request.origin === origin && paths.has(request.pathname) && route.request().method() === 'GET'
+      const request = route.request(), address = new URL(request.url());
+      const allowed = site ? allowedSiteRequest(site, request.url(), { navigation: request.isNavigationRequest(), method: request.method() })
+        : address.origin === origin && paths.has(address.pathname) && request.method() === 'GET';
+      return allowed
         ? route.continue() : route.abort('blockedbyclient');
     });
     this.page = await this.context.newPage();
+    this.page.on('crash', () => { if (!this.closed) this.onFault('Native renderer crashed; session stopped', true); });
     this.context.on('page', page => { if (page !== this.page) page.close().catch(() => {}); });
     this.cdp = await this.context.newCDPSession(this.page);
     this.traceActive = true;
     let trace;
     try {
       trace = await recordTrace(this.cdp, async () => {
-        const response = await this.page.goto(url, { waitUntil: 'load', timeout: 15000 });
-        ensure(response?.ok() && this.page.url() === url, 502, 'NATIVE_NAVIGATION_FAILED', 'Trusted native fixture did not load');
-        await settlePage(this.page);
+        const response = await this.page.goto(url, { waitUntil: site ? 'domcontentloaded' : 'load', timeout: 15000 });
+        this.url = this.page.url();
+        ensure(response?.ok() && (site ? allowedSiteRequest(site, this.url, { navigation: true }) : this.url === url),
+          502, 'NATIVE_NAVIGATION_FAILED', 'Native page did not load within its configured site policy');
+        if (site) await this.page.waitForTimeout(750); else await settlePage(this.page);
       }, { traceConfig: STARTUP_TRACE });
     } finally { this.traceActive = false; }
     ensure(trace.dataLossOccurred === false, 502, 'NATIVE_PROVENANCE_INCOMPLETE', 'Startup process metadata was incomplete');
-    const provenance = findPageProvenance(trace.events, url);
+    const provenance = findPageProvenance(trace.events, this.url);
     ensure(provenance.rendererPids.length === 1, 502, 'NATIVE_PROVENANCE_MISSING', 'Expected one renderer for the exact trusted page URL');
     this.provenance = { ...provenance, scope: 'One short metadata-only startup trace; frame delivery uses the authenticated native socket.' };
     this.rendererPid = provenance.rendererPids[0];
@@ -71,7 +87,8 @@ export class ChromiumSession {
       }
       if (!this.latest) await delay(20);
     }
-    ensure(this.latest, 504, 'NATIVE_FRAME_TIMEOUT', 'Native producer did not deliver a supported complete frame');
+    ensure(this.latest, this.lastFault ? 422 : 504, this.lastFault ? 'NATIVE_FRAME_UNSUPPORTED' : 'NATIVE_FRAME_TIMEOUT',
+      this.lastFault || 'Native producer did not deliver a supported complete frame');
     this.candidates.clear();
     this.page.on('framenavigated', frame => {
       if (frame === this.page.mainFrame() && frame.url() !== this.url) this.onFault('Navigation outside the bound native page is unsupported');
@@ -103,7 +120,7 @@ export class ChromiumSession {
       this.frames++;
       this.latest = { frame, signature: visualSignature(frame) };
       this.onFrame({ frame, resources: [...bytes].map(([id, data]) => ({ id, data })) });
-    } catch (error) { this.latest = null; this.onFault(error.message); }
+    } catch (error) { this.latest = null; this.lastFault = error.message; this.onFault(error.message); }
   }
   async action({ actionId, action, expectedSignature }) {
     const signature = JSON.stringify(action), existing = this.actions.get(actionId);
@@ -115,29 +132,7 @@ export class ChromiumSession {
     if (['pointer', 'wheel'].includes(action.type)) {
       ensure(this.latest && expectedSignature === this.latest.signature, 409, 'STALE_FRAME', 'Native page changed before input dispatch');
     }
-    if (action.type === 'click' || action.type === 'fill') {
-      ensure(typeof action.selector === 'string' && action.selector.length <= 200, 400, 'INVALID_SELECTOR', 'A short CSS selector is required');
-      if (action.type === 'fill') {
-        ensure(typeof action.value === 'string' && action.value.length <= 2000, 400, 'INVALID_VALUE', 'Input is limited to 2000 characters');
-        await this.page.locator(action.selector).fill(action.value, { timeout: 3000 });
-      } else await this.page.locator(action.selector).click({ timeout: 3000 });
-    } else if (action.type === 'pointer' || action.type === 'wheel') {
-      ensure(Number.isFinite(action.x) && Number.isFinite(action.y) && action.x >= 0 && action.y >= 0 &&
-        action.x < this.viewport.width && action.y < this.viewport.height, 400, 'INVALID_COORDINATES', 'Input must lie within the native viewport');
-      if (action.type === 'pointer') await this.page.mouse.click(action.x, action.y);
-      else {
-        ensure(Number.isFinite(action.deltaY) && Math.abs(action.deltaY) <= 2000 &&
-          Number.isFinite(action.deltaX ?? 0) && Math.abs(action.deltaX ?? 0) <= 2000, 400, 'INVALID_WHEEL', 'Wheel delta exceeds the local limit');
-        await this.page.mouse.move(action.x, action.y); await this.page.mouse.wheel(action.deltaX ?? 0, action.deltaY);
-      }
-    } else if (action.type === 'text') {
-      ensure(typeof action.value === 'string' && action.value.length <= 2000, 400, 'INVALID_VALUE', 'Text is limited to 2000 characters');
-      await this.page.keyboard.insertText(action.value);
-    } else if (action.type === 'key') {
-      ensure(['Enter', 'Tab', 'Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End', 'Escape'].includes(action.key),
-        400, 'INVALID_KEY', 'Unsupported native key');
-      await this.page.keyboard.press(action.key);
-    } else ensure(false, 400, 'UNSUPPORTED_ACTION', 'Unsupported native action');
+    await browserAction(this.page, this.viewport, action);
     await settlePage(this.page);
     const deadline = Date.now() + 250;
     while (this.frames === before && Date.now() < deadline) await delay(10);

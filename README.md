@@ -12,6 +12,7 @@
 - [固定版本 Chromium 引擎构建与 picture-layer 补丁](docs/CHROMIUM_ENGINE.md)
 - [原生完整帧、图层合成与 ACK 实验](docs/CHROMIUM_FRAMES.md)
 - [持续 Chromium 会话、实时画面与人工接管](docs/CHROMIUM_LIVE.md)
+- [直接输入、后端调度与有限并发对照](docs/NATIVE_RUNTIME.md)
 
 ## 运行
 
@@ -58,7 +59,7 @@ npm run experiment:paint
 
 2026-10-28 的[固定版本引擎实验](docs/CHROMIUM_ENGINE.md)增加 headless NullRenderer 和匹配 Skia 的 CanvasKit 文本覆盖策略，三种模式均通过固定页面严格视觉比较。[完整帧实验](docs/CHROMIUM_FRAMES.md)验证了真实多层画面、7° 旋转、透明度分组、裁剪、滚动和删层。
 
-目前已接入[持续 Chromium 会话](docs/CHROMIUM_LIVE.md)：原生 socket 实时输出完整帧、本地 CanvasKit 绘制、agent/人工操作共用页面，并有 ACK、资源复用、坏资源恢复及断线/刷新重连。显式启动命令如下；默认 `npm start` 保持 v0。当前只开放可信固定页面，通用网站及完整引擎关卡仍未通过。
+目前已接入[持续 Chromium 会话](docs/CHROMIUM_LIVE.md)：原生 socket 实时输出完整帧、本地 CanvasKit 绘制、agent/人工共用页面，具备 ACK、资源复用、恢复与接管后直接键盘输入。独立文字栏已移除。显式启动命令如下；默认 `npm start` 保持 v0。原生 CLI 默认一个活跃会话并有资源 watchdog；通用网站及完整引擎关卡仍未通过。
 
 ```bash
 npm run start:native -- --root /Volumes/Extreme-APFS/Builds \
@@ -66,3 +67,5 @@ npm run start:native -- --root /Volumes/Extreme-APFS/Builds \
 ```
 
 打开 <http://127.0.0.1:8081/native>。需要当前已通过原生测试的自编译引擎和匹配 CanvasKit；不会自动使用已安装 Chrome 代替。
+
+最新[有限压测](docs/NATIVE_RUNTIME.md)比较同构建原生记录和每动作 JPEG，验证 96 请求中的 64 个执行与 32 个限流，并修复原生呈现回调累积崩溃。小红书未通过：普通对照遇到 IP 风险页，原生尝试超出本机预算；没有开放可用的 XHS 交互入口。固定字形之外的中文、字体/图片资源协议和长期内存仍需继续处理。

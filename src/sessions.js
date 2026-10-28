@@ -4,6 +4,7 @@ import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { AppError, ensure } from './errors.js';
 import { NativeFrames } from './native-frames.js';
+import { externalSites } from '../experiments/chromium-engine/sites.js';
 
 const token = () => randomBytes(32).toString('base64url');
 export function sameToken(actual, expected) {
@@ -12,18 +13,20 @@ export function sameToken(actual, expected) {
   return a.length === b.length && timingSafeEqual(a, b);
 }
 
-class WorkerClient {
+export class WorkerClient {
   pending = new Map();
   sequence = 0;
   stopping = false;
   constructor(onExit, { backend = 'poc', onFrame, onFault } = {}) {
-    this.native = backend === 'chromium';
-    this.child = fork(new URL(this.native ? '../experiments/chromium-engine/worker.js' : './worker.js', import.meta.url), [], {
+    this.native = backend === 'chromium' || backend === 'traditional-benchmark';
+    this.child = fork(new URL(backend === 'traditional-benchmark' ? '../experiments/chromium-engine/raster-worker.js'
+      : this.native ? '../experiments/chromium-engine/worker.js' : './worker.js', import.meta.url), [], {
       execArgv: [this.native ? '--max-old-space-size=256' : '--max-old-space-size=128'],
       stdio: ['ignore', 'ignore', 'pipe', 'ipc'], serialization: 'advanced',
       env: { PATH: process.env.PATH, NODE_ENV: 'production' },
     });
-    this.child.stderr.resume();
+    this.diagnostics = '';
+    this.child.stderr.on('data', chunk => { this.diagnostics = (this.diagnostics + chunk.toString()).slice(-32768); });
     this.child.on('message', ({ id, result, error, event, payload, message, fatal, pid }) => {
       if (this.native && event === 'native-browser') {
         if (Number.isSafeInteger(pid) && pid > 1 && pid !== process.pid) this.browserPid = pid;
@@ -31,7 +34,7 @@ class WorkerClient {
       }
       if (this.native && event === 'native-frame') { onFrame(payload); return; }
       if (this.native && event === 'native-fault') {
-        onFault(message);
+        onFault(message, Boolean(fatal));
         if (fatal) this.child.kill('SIGTERM');
         return;
       }
@@ -95,8 +98,9 @@ export class SessionManager {
   closing = false;
   starts = new Set();
 
-  constructor({ dataDir, maxActive = 8, maxQueued = 16, maxStarting = 2, queueTimeoutMs = 15000 } = {}) {
+  constructor({ dataDir, maxActive = 8, maxQueued = 16, maxStarting = 2, queueTimeoutMs = 15000, onWorker } = {}) {
     this.dataDir = dataDir || '.data';
+    this.onWorker = onWorker;
     for (const [name, value] of Object.entries({ maxActive, maxQueued, maxStarting, queueTimeoutMs })) {
       ensure(Number.isInteger(value) && value > 0, 500, 'INVALID_CONFIG', `${name} must be a positive integer`);
       this[name] = value;
@@ -109,7 +113,8 @@ export class SessionManager {
     ensure(['poc', 'chromium'].includes(backend), 400, 'INVALID_BACKEND', 'Unknown execution backend');
     if (backend === 'chromium') {
       ensure(this.nativeConfig, 503, 'NATIVE_NOT_CONFIGURED', 'Start the service with a verified native engine and matching CanvasKit');
-      ensure(['live', 'frames'].includes(fixture), 400, 'INVALID_FIXTURE', 'Only checked-in native fixtures are enabled');
+      ensure(['live', 'frames'].includes(fixture) || this.nativeConfig.externalSites && Object.hasOwn(externalSites, fixture),
+        400, 'INVALID_FIXTURE', 'Page is not enabled in this native service');
       ensure([...this.sessions.values()].filter(session => session.backend === 'chromium' &&
         ['QUEUED', 'CREATING', 'ACTIVE', 'EVICTING'].includes(session.state)).length < (this.nativeConfig.maxSessions || 2),
       429, 'NATIVE_SESSION_LIMIT', 'Native experiment session limit reached');
@@ -165,9 +170,11 @@ export class SessionManager {
         this.releaseSlot(s);
       }, { backend: s.backend,
         onFrame: payload => { try { s.frames.ingest(payload); } catch { s.frames.unsupported('Native resource or frame validation failed'); } },
-        onFault: message => s.frames.unsupported(message) });
+        onFault: (message, fatal) => s.frames.unsupported(message, fatal) });
+      this.onWorker?.(s.worker);
       await s.worker.call('init', { saved, viewport: s.viewport, ...(s.backend === 'chromium' ? {
-        ...this.nativeConfig.worker, url: this.nativeConfig.baseUrl + (s.fixture === 'frames' ? '/frames.html' : '/live-fixture.html'),
+        ...this.nativeConfig.worker, ...(Object.hasOwn(externalSites, s.fixture) ? { site: s.fixture, url: externalSites[s.fixture].url }
+          : { url: this.nativeConfig.baseUrl + (s.fixture === 'frames' ? '/frames.html' : '/live-fixture.html') }),
       } : {}) });
       s.state = 'ACTIVE';
       s.resolve({ ...this.public(s), agentToken: s.agentToken, viewerToken: s.viewerToken, humanToken: s.humanToken });

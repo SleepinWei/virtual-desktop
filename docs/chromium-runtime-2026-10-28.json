@@ -1,0 +1,522 @@
+{
+  "version": 1,
+  "date": "2026-10-28",
+  "status": "direct-input-and-bounded-producer-comparison",
+  "engineSplitGate": "not-passed",
+  "serverRasterBypassed": false,
+  "build": {
+    "revision": "d0c02bfad08ec92a6ffcf989e53cd995e6381a4c",
+    "patchSha256": "9a8c986d9bf7a34fb6f296e09eddb78e60f487c76059f51491d98d923b823437",
+    "artifactsSha256": "883c6169437857120e035772217e5cf85bf5c4f8b1cbf928c612d066eb0a9ab8"
+  },
+  "fixtureSha256": {
+    "/live-fixture.html": "3d7e26e593da2001f17ac306f93899d1589f272767c64ecd6e96acd0d7e01029",
+    "/live-fixture.css": "0014db7f0313d0f7f4eaff2d1a752613d7ed6364fa32d65d407831154de6faf4",
+    "/live-fixture.js": "312899af7a49dbc056df16c4e79fade88e962760a1235ef9b8c8d9283b4c7f04",
+    "/fonts/fixture-sans.otf": "c52e024b0e36b06ccf319a934862675adbbdc1aac76e66cb60fb718f05426637"
+  },
+  "configuration": {
+    "runtimeProducerTraceBufferBytes": 8388608,
+    "nativeMessageLimitBytes": 8388608,
+    "defaultLocalActiveNativeSessions": 1,
+    "browserSandbox": false
+  },
+  "comparison": {
+    "scope": "Bounded local producer benchmark. Same pinned Chromium, fixed fixture, per-session browser process. No claim about 100+ active sessions.",
+    "rounds": [
+      {
+        "mode": "native-records",
+        "active": 1,
+        "operations": 20,
+        "elapsedMs": 1320.7028329999994,
+        "operationsPerSecond": 15.143452031953059,
+        "latencyMs": {
+          "p50": 66.69312499999978,
+          "p95": 67.12033299999985,
+          "max": 67.6176660000001
+        },
+        "processCpuSeconds": 0.3699999999999999,
+        "peakSummedRssBytes": 991805440,
+        "maxProcessCount": 11,
+        "minHostFreePercent": 52,
+        "newHostSwapoutBytes": 0,
+        "maxCoordinatorLoopDelayMs": 21.577727,
+        "producerPayloadBytes": 1457392,
+        "producerMetadataBytes": 32260,
+        "producedFrames": 20,
+        "correctFinalState": true
+      },
+      {
+        "mode": "traditional-jpeg",
+        "active": 1,
+        "operations": 20,
+        "elapsedMs": 1670.8446249999997,
+        "operationsPerSecond": 11.969993918494968,
+        "latencyMs": {
+          "p50": 83.49904199999946,
+          "p95": 84.47816600000078,
+          "max": 87.49658299999828
+        },
+        "processCpuSeconds": 0.77,
+        "peakSummedRssBytes": 960446464,
+        "maxProcessCount": 9,
+        "minHostFreePercent": 53,
+        "newHostSwapoutBytes": 0,
+        "maxCoordinatorLoopDelayMs": 21.430271,
+        "producerPayloadBytes": 911709,
+        "producerMetadataBytes": 0,
+        "producedFrames": 20,
+        "correctFinalState": true
+      }
+    ],
+    "exclusions": [
+      "Client raster/decode CPU and end-to-end viewer latency are not included.",
+      "Transport bytes count producer payloads to the Node coordinator, not actual HTTP/TLS/compressed network bandwidth.",
+      "RSS sums processes and double-counts shared pages; it is not unique physical memory.",
+      "Conventional control captures one JPEG quality 80 per action; this is not an optimized video/screencast or pooled-browser baseline.",
+      "Small sample, host has other applications running; do not extrapolate production capacity or general websites."
+    ],
+    "safety": {
+      "stopped": null,
+      "minHostFreePercent": 52,
+      "peakSummedRssBytes": 1081589760,
+      "newHostSwapoutBytes": 0
+    }
+  },
+  "burst": {
+    "requests": 96,
+    "accepted": 64,
+    "elapsedMs": 4289.981499999998,
+    "statusCounts": {
+      "200": 64,
+      "429": 32
+    },
+    "unexpected": [],
+    "activeSlots": 1,
+    "requestedSessions": 16,
+    "rejectedSessions": 16,
+    "maxActiveBrowsers": 1,
+    "rejected": 32,
+    "acceptedLatencyMs": {
+      "p50": 2154.066499999997,
+      "p95": 4086.97825
+    },
+    "processCpuSeconds": 1.75,
+    "peakSummedRssBytes": 1083719680,
+    "maxProcessCount": 11,
+    "minHostFreePercent": 53,
+    "newHostSwapoutBytes": 0,
+    "correctFinalState": true
+  },
+  "stoppedTwoBrowserAttempt": {
+    "build": {
+      "revision": "d0c02bfad08ec92a6ffcf989e53cd995e6381a4c",
+      "patchSha256": "eeea86df4bec1b895f1b8c77bee389734f1cf6f2bd7f8bc41c124d36d2d2a466",
+      "artifactsSha256": "9a618f24325e78fad79d8e1f9f7c4d07fd926b02d22c7cd2a518c30e36f2ad6f"
+    },
+    "status": "safety-stopped",
+    "safety": {
+      "stopped": "owned-process-rss-limit",
+      "minHostFreePercent": 52,
+      "peakSummedRssBytes": 1834352640,
+      "newHostSwapoutBytes": 0
+    }
+  },
+  "fixedNativeFailure": {
+    "beforeStatuses": {
+      "200": 58,
+      "429": 32,
+      "502": 6
+    },
+    "beforeAccepted": 58,
+    "assertion": "LayerTreeView::AddCallback: callbacks.size() <= 60 failed (61 vs. 60)",
+    "fix": "Cancel unsuccessful server-presentation callbacks in Blink and cc only when both RemotePaint and NoDisplay are enabled; do not fabricate a successful presentation. Keep DCHECK and resource budgets.",
+    "cppTestsPassed": 21,
+    "sourceManifestFiles": 20
+  },
+  "directInput": {
+    "automatedBeforePresentationFix": {
+      "status": "live-native-session-candidate",
+      "build": {
+        "revision": "d0c02bfad08ec92a6ffcf989e53cd995e6381a4c",
+        "skiaRevision": "886e42fda11610a56dd1b22e8697e27f9d1e34f2",
+        "patchSha256": "eeea86df4bec1b895f1b8c77bee389734f1cf6f2bd7f8bc41c124d36d2d2a466",
+        "artifactsSha256": "9a618f24325e78fad79d8e1f9f7c4d07fd926b02d22c7cd2a518c30e36f2ad6f"
+      },
+      "input": {
+        "rapidTyping": true,
+        "selectAllDelete": true,
+        "paste": true,
+        "compositionCommittedOnce": true,
+        "escapeRestoresToolbar": true,
+        "scope": "Real browser keyboard/paste flow; composition events injected, physical OS IME candidate UI not automated."
+      },
+      "visuals": [
+        {
+          "name": "agent-before-viewer",
+          "passed": true,
+          "whole": {
+            "passed": true,
+            "meanAbsoluteChannelError": 0.30636043595679013,
+            "pixelsOver32Fraction": 0.0016550925925925926,
+            "limits": {
+              "maxMeanAbsoluteChannelError": 3,
+              "maxPixelsOver32Fraction": 0.02
+            },
+            "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+          },
+          "regions": [
+            {
+              "selector": "header",
+              "bounds": {
+                "x": 24,
+                "y": 20,
+                "width": 364.15625,
+                "height": 70
+              },
+              "passed": true,
+              "meanAbsoluteChannelError": 1.8265492498369211,
+              "pixelsOver32Fraction": 0.018434442270058707,
+              "limits": {
+                "maxMeanAbsoluteChannelError": 3,
+                "maxPixelsOver32Fraction": 0.02
+              },
+              "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+            },
+            {
+              "selector": "#increment",
+              "bounds": {
+                "x": 24,
+                "y": 118,
+                "width": 160,
+                "height": 44
+              },
+              "passed": true,
+              "meanAbsoluteChannelError": 1.4283617424242425,
+              "pixelsOver32Fraction": 0.014488636363636363,
+              "limits": {
+                "maxMeanAbsoluteChannelError": 3,
+                "maxPixelsOver32Fraction": 0.02
+              },
+              "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+            },
+            {
+              "selector": "#count",
+              "bounds": {
+                "x": 210,
+                "y": 118,
+                "width": 16.65625,
+                "height": 44
+              },
+              "passed": true,
+              "meanAbsoluteChannelError": 0.059714795008912656,
+              "pixelsOver32Fraction": 0,
+              "limits": {
+                "maxMeanAbsoluteChannelError": 3,
+                "maxPixelsOver32Fraction": 0.02
+              },
+              "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+            },
+            {
+              "selector": "#message",
+              "bounds": {
+                "x": 24,
+                "y": 226,
+                "width": 550,
+                "height": 52
+              },
+              "passed": true,
+              "meanAbsoluteChannelError": 0.5870163170163171,
+              "pixelsOver32Fraction": 0.0017832167832167833,
+              "limits": {
+                "maxMeanAbsoluteChannelError": 3,
+                "maxPixelsOver32Fraction": 0.02
+              },
+              "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+            },
+            {
+              "selector": "#echo",
+              "bounds": {
+                "x": 24,
+                "y": 292,
+                "width": 550,
+                "height": 29
+              },
+              "passed": true,
+              "meanAbsoluteChannelError": 0.9724137931034482,
+              "pixelsOver32Fraction": 0.0006269592476489029,
+              "limits": {
+                "maxMeanAbsoluteChannelError": 3,
+                "maxPixelsOver32Fraction": 0.02
+              },
+              "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+            },
+            {
+              "selector": "#pulse",
+              "bounds": {
+                "x": 230,
+                "y": 380,
+                "width": 340,
+                "height": 160
+              },
+              "passed": true,
+              "meanAbsoluteChannelError": 0.1380514705882353,
+              "pixelsOver32Fraction": 0.0007904411764705883,
+              "limits": {
+                "maxMeanAbsoluteChannelError": 3,
+                "maxPixelsOver32Fraction": 0.02
+              },
+              "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+            },
+            {
+              "selector": "#scroller",
+              "bounds": {
+                "x": 650,
+                "y": 118,
+                "width": 286,
+                "height": 540
+              },
+              "passed": true,
+              "meanAbsoluteChannelError": 0.37332728999395665,
+              "pixelsOver32Fraction": 0.00016187516187516187,
+              "limits": {
+                "maxMeanAbsoluteChannelError": 3,
+                "maxPixelsOver32Fraction": 0.02
+              },
+              "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+            }
+          ]
+        },
+        {
+          "name": "human-input-scroll",
+          "passed": true,
+          "whole": {
+            "passed": true,
+            "meanAbsoluteChannelError": 0.33562885802469133,
+            "pixelsOver32Fraction": 0.0017259837962962962,
+            "limits": {
+              "maxMeanAbsoluteChannelError": 3,
+              "maxPixelsOver32Fraction": 0.02
+            },
+            "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+          },
+          "regions": [
+            {
+              "selector": "header",
+              "bounds": {
+                "x": 24,
+                "y": 20,
+                "width": 364.15625,
+                "height": 70
+              },
+              "passed": true,
+              "meanAbsoluteChannelError": 1.8265492498369211,
+              "pixelsOver32Fraction": 0.018434442270058707,
+              "limits": {
+                "maxMeanAbsoluteChannelError": 3,
+                "maxPixelsOver32Fraction": 0.02
+              },
+              "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+            },
+            {
+              "selector": "#increment",
+              "bounds": {
+                "x": 24,
+                "y": 118,
+                "width": 160,
+                "height": 44
+              },
+              "passed": true,
+              "meanAbsoluteChannelError": 1.4283617424242425,
+              "pixelsOver32Fraction": 0.014488636363636363,
+              "limits": {
+                "maxMeanAbsoluteChannelError": 3,
+                "maxPixelsOver32Fraction": 0.02
+              },
+              "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+            },
+            {
+              "selector": "#count",
+              "bounds": {
+                "x": 210,
+                "y": 118,
+                "width": 16.65625,
+                "height": 44
+              },
+              "passed": true,
+              "meanAbsoluteChannelError": 0.39037433155080214,
+              "pixelsOver32Fraction": 0,
+              "limits": {
+                "maxMeanAbsoluteChannelError": 3,
+                "maxPixelsOver32Fraction": 0.02
+              },
+              "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+            },
+            {
+              "selector": "#message",
+              "bounds": {
+                "x": 24,
+                "y": 226,
+                "width": 550,
+                "height": 52
+              },
+              "passed": true,
+              "meanAbsoluteChannelError": 1.057132867132867,
+              "pixelsOver32Fraction": 0.0032167832167832168,
+              "limits": {
+                "maxMeanAbsoluteChannelError": 3,
+                "maxPixelsOver32Fraction": 0.02
+              },
+              "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+            },
+            {
+              "selector": "#echo",
+              "bounds": {
+                "x": 24,
+                "y": 292,
+                "width": 550,
+                "height": 29
+              },
+              "passed": true,
+              "meanAbsoluteChannelError": 1.3904075235109719,
+              "pixelsOver32Fraction": 0.0010031347962382445,
+              "limits": {
+                "maxMeanAbsoluteChannelError": 3,
+                "maxPixelsOver32Fraction": 0.02
+              },
+              "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+            },
+            {
+              "selector": "#pulse",
+              "bounds": {
+                "x": 230,
+                "y": 380,
+                "width": 340,
+                "height": 160
+              },
+              "passed": true,
+              "meanAbsoluteChannelError": 0.1380514705882353,
+              "pixelsOver32Fraction": 0.0007904411764705883,
+              "limits": {
+                "maxMeanAbsoluteChannelError": 3,
+                "maxPixelsOver32Fraction": 0.02
+              },
+              "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+            },
+            {
+              "selector": "#scroller",
+              "bounds": {
+                "x": 650,
+                "y": 118,
+                "width": 286,
+                "height": 540
+              },
+              "passed": true,
+              "meanAbsoluteChannelError": 0.37248985582318916,
+              "pixelsOver32Fraction": 0.00017482517482517483,
+              "limits": {
+                "maxMeanAbsoluteChannelError": 3,
+                "maxPixelsOver32Fraction": 0.02
+              },
+              "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+            }
+          ]
+        }
+      ]
+    },
+    "afterFixUi": {
+      "method": "Existing Codex in-app browser; real coordinate click and OS input wrappers",
+      "typedFixtureText": "Direct typing 42 · 真实网页",
+      "selectAllAndEscapeVerified": true,
+      "screenshot": "test-results/direct-input-live.png",
+      "noSeparateTextBar": true
+    },
+    "guardedFreshReferenceRun": {
+      "status": "safety-stopped",
+      "safety": {
+        "stopped": "owned-process-rss-limit",
+        "minHostFreePercent": 54,
+        "peakSummedRssBytes": 1912832000,
+        "newHostSwapoutBytes": 0
+      },
+      "scope": "Independent reference browser exceeded budget before visual comparison; no fresh strict visual pass claimed."
+    }
+  },
+  "fontBoundary": {
+    "status": "unsupported",
+    "observedFault": "frame-too-large",
+    "scope": "Text reached the real DOM, but missing glyphs embedded a large system fallback font and exceeded the 8 MiB frame budget. Fixed-subset Chinese glyphs only; physical OS IME candidate UI not automated."
+  },
+  "externalSites": {
+    "xiaohongshu": {
+      "status": "safety-stopped",
+      "nativeHttpStatus": 503,
+      "nativeError": {
+        "code": "WORKER_UNAVAILABLE",
+        "message": "Execution process is unavailable; observe before retrying"
+      },
+      "safety": {
+        "stopped": "owned-process-rss-limit",
+        "minHostFreePercent": 49,
+        "peakSummedRssBytes": 1632157696,
+        "newHostSwapoutBytes": 0
+      },
+      "ordinaryEarlierControl": {
+        "path": "https://www.xiaohongshu.com/website-login/error",
+        "errorCode": "300012",
+        "message": "IP 存在风险，请切换可靠网络环境后重试"
+      },
+      "interactiveEnabled": false,
+      "scope": "No login, CAPTCHA bypass or arbitrary-site visual compatibility claim."
+    },
+    "example": {
+      "status": "not-validated",
+      "interactiveUiAttempt": "Stopped at the owned-process RSS budget; no successful external replay claim."
+    }
+  },
+  "verification": {
+    "javascriptTests": {
+      "passed": 74,
+      "failed": 0
+    },
+    "pythonToolTests": {
+      "passed": 5,
+      "failed": 0
+    },
+    "javascriptSyntaxFiles": 74,
+    "nativeCppFilteredTests": {
+      "passed": 21,
+      "failed": 0
+    },
+    "ordinaryViewerE2E": {
+      "passed": 3,
+      "failed": 0
+    },
+    "nativeE2EInOrdinaryCommand": {
+      "skipped": 3,
+      "reason": "No native input environment set; native bounded API/producer and manual UI validations are separate."
+    }
+  },
+  "rawReports": [
+    "test-results/chromium-bounded-final-20261028/report.json",
+    "test-results/chromium-xiaohongshu-8m-20261028/report.json",
+    "test-results/chromium-direct-input-20261028/live-report.json",
+    "test-results/chromium-direct-input-fixed-20261028/live-report.json"
+  ],
+  "interactiveResourceObservation": {
+    "nativeResourceStop": "owned-process-rss-limit",
+    "freePercent": 37,
+    "treeRssMiB": 1542.140625
+  },
+  "delivery": {
+    "url": "http://127.0.0.1:8082/native",
+    "activeNativeLimit": 1,
+    "externalPreviewsEnabled": false,
+    "priorUserService8081Preserved": true,
+    "persistentResourceGuard": {
+      "rssLimitBytes": 1610612736,
+      "minFreePercent": 35,
+      "maxSwapoutBytesPer10Seconds": 67108864
+    }
+  }
+}
