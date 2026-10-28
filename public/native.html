@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>virtual-desktop / live Chromium</title>
+  <link rel="stylesheet" href="/native.css">
+  <script defer src="/native-runtime/canvaskit.js"></script>
+  <script type="module" src="/native-viewer.js"></script>
+</head>
+<body>
+  <header><a href="/">virtual-desktop</a><span>Live Chromium · experimental</span></header>
+  <main>
+    <div class="intro"><div><h1>A running page, drawn here.</h1><p>Chromium keeps the page state. This viewer draws its native records.</p></div><span id="connection" role="status">Not connected</span></div>
+    <form id="create-form" class="setup">
+      <label>Local management token<input id="admin-token" type="password" value="dev-local" autocomplete="off"></label>
+      <label>Trusted page<select id="fixture"><option value="live">Input and live updates</option><option value="frames">Layers and transforms</option></select></label>
+      <button id="create" class="primary">Create session</button>
+    </form>
+    <div class="toolbar"><div><strong id="session">No active session</strong><span id="owner">Agent owns input</span></div>
+      <div class="buttons"><button id="take" disabled>Take control</button><button id="return" disabled>Return to agent</button><button id="reconnect" disabled>Reconnect viewer</button><button id="close" disabled>Close session</button></div>
+    </div>
+    <div class="surface"><canvas id="desktop" width="960" height="720" tabindex="0" aria-label="Live Chromium page. Take control to click, scroll or send keys."></canvas><p id="empty">Create a session to open the page.</p></div>
+    <form id="text-form" class="text-controls"><label for="text">Text for the focused page field</label><input id="text" autocomplete="off" placeholder="Take control, then click an input in the page" disabled><button id="send" disabled>Send text</button><button type="button" data-key="Tab" disabled>Tab</button><button type="button" data-key="Enter" disabled>Enter</button><button type="button" data-key="Backspace" disabled>Backspace</button></form>
+    <p id="notice" role="status">The viewer can disconnect while Chromium keeps running. Closing the session stops its browser.</p>
+    <footer><span id="frame">Waiting for a native frame</span><span>Fixed A8 font fixtures · general website gate not passed</span></footer>
+  </main>
+</body>
+</html>

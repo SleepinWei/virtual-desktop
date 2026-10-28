@@ -9,6 +9,7 @@
   },
   "scripts": {
     "start": "node src/server.js",
+    "start:native": "node experiments/chromium-engine/live.js",
     "test": "node --test test/*.test.js",
     "test:e2e": "node --test test/e2e/*.test.js",
     "bench": "node scripts/benchmark.js",
@@ -19,6 +20,7 @@
     "experiment:headless": "node experiments/chromium-paint/run.js --headless-probe --output test-results/chromium-headless",
     "experiment:engine": "node experiments/chromium-engine/run.js",
     "experiment:frames": "node experiments/chromium-engine/run-frames.js",
+    "experiment:live": "node experiments/chromium-engine/run-live.js",
     "test:engine-build": "python3 -B -m unittest discover -s experiments/chromium-engine -p '*_test.py'"
   },
   "dependencies": {

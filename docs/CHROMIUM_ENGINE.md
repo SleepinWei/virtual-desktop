@@ -2,11 +2,11 @@
 
 此阶段把原生绘图实验推进到固定源码版本的引擎改动。`source.json` 固定 Chromium **156.0.8078.48 / d0c02bfad08ec92a6ffcf989e53cd995e6381a4c**、depot_tools 提交及补丁前后各文件的 SHA-256。仓库保存补丁和工具，不保存 Chromium 源码、编译器或构建输出。
 
-**完整引擎切分关卡仍未通过。** `VirtualDesktopRemotePaint` 控制 Blink compositor 的 picture-layer tile 与 picture quad；另一个需同时启用的 `VirtualDesktopRemotePaintNoDisplay` 仅在 headless output provider 内选用 NullRenderer，跳过 Viz 像素绘制。Canvas、WebGL、视频、图片解码及通用资源/图层传输仍需独立处理。这是可信本地 fixture 实验，不能替换当前 worker 后端。
+**完整引擎切分关卡仍未通过。** `VirtualDesktopRemotePaint` 控制 Blink compositor 的 picture-layer tile 与 picture quad；另一个需同时启用的 `VirtualDesktopRemotePaintNoDisplay` 仅在 headless output provider 内选用 NullRenderer，跳过 Viz 像素绘制。Canvas、WebGL、视频、图片解码及通用资源/图层传输仍需独立处理。这是可信本地 fixture 实验，通过显式选项接入原生 worker。
 
 2026-10-28 已达到 **record-only-display-candidate**：三种模式的原生 SKP 一致、严格本地视觉比较通过；无绘制模式记录到明确的 native skip 标记，且真实输入、滚动、刷新和会话存储检查通过。完整记录见 [chromium-engine-2026-10-28.json](chromium-engine-2026-10-28.json)。
 
-同日后续已完成 **native-frame-candidate**：完整活跃树导出、原生层序/变换/裁剪/透明度分组、滚动、删层及本地 ACK 通道均通过固定页面验收。复现、协议和最新后续任务见 [CHROMIUM_FRAMES.md](CHROMIUM_FRAMES.md)，最新指纹与指标见 [chromium-frames-2026-10-28.json](chromium-frames-2026-10-28.json)。它仍使用批量 trace 捕获，尚未接入持续运行的 Chromium 会话。
+同日后续已完成 **native-frame-candidate**：完整活跃树导出、原生层序/变换/裁剪/透明度分组、滚动、删层及本地 ACK 通道均通过固定页面验收，见 [CHROMIUM_FRAMES.md](CHROMIUM_FRAMES.md)。最新 **live-native-session-candidate** 已用原生 Unix socket 持续输出，接入会话 worker、agent/control epoch、人工输入、断线和资源失败恢复，见 [CHROMIUM_LIVE.md](CHROMIUM_LIVE.md) 与 [最新验收](chromium-live-2026-10-28.json)。
 
 ## 构建
 
@@ -43,7 +43,7 @@ npm run experiment:engine
 4. `RemotePaintPictureLayerImplTest` 检查 recording 保留、无 tiling/显存、连续激活新 recording，以及 hardware/software/resourceless 三种模式均不产生 picture quad。普通模式的既有 tiling 创建测试作为对照。
 5. 两个 feature 同时开启且 provider 为 headless 时，`OutputSurfaceProviderImpl` 不创建 display GPU dependency，沿已有 `OutputSurfaceUnified` / `NullRenderer` 路径完成 aggregation 和 draw callbacks，再在 `skips_draw` 分支返回，发出 `VirtualDesktop.RemotePaintDisplaySkipped`。单独开启 NoDisplay 不切换后台。新增 Viz 测试验证连续三帧回调、无 swap/缓冲分配，以及两种开关对照；既有正常绘制测试也运行。
 
-这没有增加完整帧、property tree、资源生命周期、层移除或跨网络 ACK 协议。现有 debug serializer 对 raster-inducing scroll 使用零偏移；滚动和复杂合成不能由固定 fixture 的结果推断。
+以上为最初 picture-layer/无显示改动。后续原生完整帧导出保留 layer 坐标并使用实际 scroll offsets，支持既定二维合成与成员移除；持续 socket producer 不依赖 trace 传递画面。当前补丁覆盖 17 个文件，新的 forced-JSON 与 Perfetto 导出共用调用方 writer，避免嵌套不同 writer 类型导致 renderer 断言退出。协议和资源生命周期见完整帧/持续会话说明；旧 debug serializer 继续使用原来的零偏移策略。
 
 ## 匹配 CanvasKit
 
@@ -83,11 +83,11 @@ npm run experiment:engine -- --root /Volumes/Extreme-APFS/Builds \
 
 ## 后续任务
 
-1. **持续帧与恢复**：固定二维 fixture 的完整帧、分组、真实 scroll offsets、资源引用/复用、删层、ACK 与过期帧保护已完成；接下来从批量 trace 转为运行中会话的持续输出，补断线恢复、资源失败恢复和 DPR/zoom。旧 `experiment:paint` 仍是 debug 单 picture 路线。
+1. **扩大持续会话覆盖**：固定二维 fixture 的完整帧、持续 producer、ACK、接管、断线和资源失败恢复已完成；继续处理导航、多 renderer/widget、嵌套滚动和 DPR/zoom。旧 `experiment:paint` 仍是 debug 单 picture 路线。
 2. **真实页面视觉与输入**：覆盖 transform/clip/opacity、多个图层、iframe、文本输入/IME、滚动和缩放，逐区域比较重放与本地原页面；扩展字体和图片资源版本/生命周期协议。
 3. **能力边界**：明确 Canvas/WebGL/video/readback 的拒绝或协作方案，避免这些路径静默恢复服务端像素生成。当前无显示模式不提供 screenshot/copy-output。
 4. **运行时与成本**：从 component 开发构建整理最小分发包；在无调试 trace 的对照下测 CPU、RSS、线程、网络字节及本地绘制成本。WASM heap 固定大小不等于进程 RSS，记录条数不等于 CPU 节省。
-5. **接入会话与人工接管**：将真实 Chromium 后端接入 worker/control epoch/动作队列和保存恢复，再验证 agent browser use 和人工坐标输入使用同一权威帧。收益成立后再做跨节点调度及容量测试。
+5. **会话恢复与扩容**：当前已有 worker/control epoch、动作队列、同页 agent/人工输入及 cookies/localStorage 冷恢复；继续研究完整执行状态恢复。收益成立后再做跨节点调度及容量测试。
 
 ## 本地工具验证
 

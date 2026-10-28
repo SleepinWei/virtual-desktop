@@ -3,6 +3,9 @@ import { readFile } from 'node:fs/promises';
 import { pathToFileURL } from 'node:url';
 import { SessionManager, sameToken } from './sessions.js';
 import { AppError, ensure } from './errors.js';
+import { nativeAssets, nativeFixtures, nativeAllowedPaths } from '../experiments/chromium-engine/assets.js';
+import { verifiedEngine } from '../experiments/chromium-engine/verified.js';
+import { loadReplayRuntime, verifyRuntimeBuild } from '../experiments/chromium-paint/runtime.js';
 
 const assets = new Map([
   ['/', ['index.html', 'text/html; charset=utf-8']],
@@ -11,11 +14,11 @@ const assets = new Map([
   ['/style.css', ['style.css', 'text/css; charset=utf-8']],
   ['/protocol.js', ['../src/protocol.js', 'text/javascript; charset=utf-8']],
 ]);
-async function body(request) {
+async function body(request, maxBytes = 16384) {
   let bytes = 0, result = '';
   for await (const chunk of request) {
     bytes += chunk.length;
-    ensure(bytes <= 16384, 413, 'BODY_TOO_LARGE', 'Request is limited to 16 KiB');
+    ensure(bytes <= maxBytes, 413, 'BODY_TOO_LARGE', 'Request exceeds the local body limit');
     result += chunk;
   }
   if (!result) return {};
@@ -29,30 +32,90 @@ async function body(request) {
   }
 }
 
-export function createService({ adminToken = 'dev-local', ...options } = {}) {
+export function createService({ adminToken = 'dev-local', chromium: nativeOptions, ...options } = {}) {
   const manager = new SessionManager(options);
+  let replayRuntime, nativeEngine;
   const server = http.createServer(async (request, response) => {
     response.setHeader('X-Content-Type-Options', 'nosniff');
     response.setHeader('Cache-Control', 'no-store');
     response.setHeader('Referrer-Policy', 'no-referrer');
-    response.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'");
+    response.setHeader('Content-Security-Policy', `default-src 'self'; script-src 'self'${nativeOptions ? " 'wasm-unsafe-eval'" : ''}; style-src 'self'; connect-src 'self'; img-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'`);
     const json = (status, result) => { response.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8' }); response.end(JSON.stringify(result)); };
     try {
       ensure(/^(127\.0\.0\.1|localhost|\[::1\])(?::\d+)?$/.test(request.headers.host || ''), 403, 'INVALID_HOST', 'Only local hostnames are permitted');
       const url = new URL(request.url, 'http://localhost');
+      if (request.method === 'GET' && (nativeAssets.has(url.pathname) || nativeEngine && nativeFixtures.has(url.pathname))) {
+        const asset = nativeAssets.get(url.pathname) || nativeFixtures.get(url.pathname);
+        response.writeHead(200, { 'Content-Type': asset.type }); response.end(await readFile(asset.file)); return;
+      }
+      if (request.method === 'GET' && url.pathname.startsWith('/native-runtime/')) {
+        ensure(replayRuntime, 503, 'NATIVE_NOT_CONFIGURED', 'A verified native runtime is not configured');
+        const name = url.pathname.slice('/native-runtime/'.length);
+        if (name === 'runtime.json') { json(200, replayRuntime.metadata); return; }
+        ensure(['canvaskit.js', 'canvaskit.wasm'].includes(name), 404, 'NOT_FOUND', 'Unknown runtime asset');
+        response.writeHead(200, { 'Content-Type': name.endsWith('.wasm') ? 'application/wasm' : 'text/javascript; charset=utf-8' });
+        response.end(replayRuntime.assets.get(name)); return;
+      }
       if (request.method === 'GET' && assets.has(url.pathname)) {
         const [file, type] = assets.get(url.pathname);
         response.writeHead(200, { 'Content-Type': type });
         response.end(await readFile(new URL(`../public/${file}`, import.meta.url)));
         return;
       }
-      if (request.method === 'GET' && url.pathname === '/health') { json(200, { ok: true, runtime: 'linkedom-yoga-poc', protocolVersion: 1 }); return; }
+      if (request.method === 'GET' && url.pathname === '/health') { json(200, { ok: true, runtime: 'linkedom-yoga-poc', protocolVersion: 1,
+        ...(nativeEngine ? { nativeAvailable: true, nativeProtocolVersion: 1, engineSplitGate: 'not-passed' } : {}) }); return; }
       const credential = request.headers.authorization?.startsWith('Bearer ') ? request.headers.authorization.slice(7) : '';
       const admin = () => ensure(sameToken(credential, adminToken), 403, 'FORBIDDEN', 'Management capability required');
       // Browser calls must originate from this local app. CLI clients need no Origin.
       if (request.headers.origin) ensure(request.headers.origin === `http://${request.headers.host}`, 403, 'INVALID_ORIGIN', 'Cross-origin requests are forbidden');
       if (url.pathname === '/api/sessions' && request.method === 'POST') { admin(); json(201, await manager.create(await body(request))); return; }
       if (url.pathname === '/api/sessions' && request.method === 'GET') { admin(); json(200, { sessions: [...manager.sessions.values()].map(s => manager.public(s)), stats: manager.stats() }); return; }
+      const nativeMatch = /^\/api\/sessions\/([a-f0-9-]{36})\/frames\/(connect|stream|ack|disconnect|resources\/([a-f0-9]{64}))$/.exec(url.pathname);
+      if (nativeMatch) {
+        const [, id, operation, resourceId] = nativeMatch, { frames, role } = manager.native(id, credential);
+        if (request.method === 'POST' && operation === 'connect') {
+          const input = await body(request);
+          if (input.previousEpoch) frames.disconnect(frames.get(input.previousEpoch, role).epoch);
+          json(201, frames.connect(role)); return;
+        }
+        if (request.method === 'POST' && operation === 'ack') { json(200, frames.acknowledge(await body(request, 131072), role)); return; }
+        if (request.method === 'POST' && operation === 'disconnect') {
+          const input = await body(request); frames.disconnect(frames.get(input.epoch, role).epoch); json(200, { disconnected: true }); return;
+        }
+        if (request.method === 'GET' && resourceId) {
+          const bytes = frames.resource(url.searchParams.get('epoch'), role, resourceId);
+          response.writeHead(200, { 'Content-Type': 'application/octet-stream' }); response.end(bytes); return;
+        }
+        if (request.method === 'GET' && operation === 'stream') {
+          const epoch = url.searchParams.get('epoch'), connection = frames.get(epoch, role);
+          ensure(!connection.send, 409, 'FRAME_CONNECTION_BUSY', 'Frame stream is already attached');
+          let blocked = false, ended = false, queuedControl = null;
+          const queue = [];
+          const write = message => { blocked = !response.write(JSON.stringify(message) + '\n'); };
+          const send = message => {
+            if (ended) return;
+            if (message.kind === 'unsupported') { queue.length = 0; queuedControl = null; response.end(JSON.stringify(message) + '\n'); ended = true; return; }
+            if (blocked) {
+              if (message.kind === 'control') queuedControl = message;
+              else { ensure(queue.length < 2, 500, 'FRAME_OUTBOX_FULL', 'Native stream backpressure limit exceeded'); queue.push(message); }
+            } else write(message);
+          };
+          response.writeHead(200, { 'Content-Type': 'application/x-ndjson', 'X-Accel-Buffering': 'no' });
+          response.setTimeout(0);
+          response.on('drain', () => {
+            if (ended || response.destroyed) return;
+            blocked = false;
+            while (!blocked && queue.length) write(queue.shift());
+            if (!blocked && queuedControl) { const message = queuedControl; queuedControl = null; write(message); }
+          });
+          response.on('error', () => response.destroy());
+          const detach = frames.attach(epoch, role, send, () => { ended = true; queue.length = 0; queuedControl = null; response.end(); });
+          const heartbeat = setInterval(() => { if (!blocked && !ended) write({ kind: 'ping' }); }, 10000); heartbeat.unref();
+          response.once('close', () => { ended = true; clearInterval(heartbeat); detach(); });
+          return;
+        }
+        throw new AppError(405, 'METHOD_NOT_ALLOWED', 'Unsupported native stream method');
+      }
       const match = /^\/api\/sessions\/([a-f0-9-]{36})\/(observe|frame|actions|control|release|metrics)$/.exec(url.pathname);
       ensure(match, 404, 'NOT_FOUND', 'Route not found');
       const [, id, operation] = match;
@@ -61,7 +124,8 @@ export function createService({ adminToken = 'dev-local', ...options } = {}) {
         ensure(since === undefined || Number.isSafeInteger(since) && since >= 0, 400, 'INVALID_SEQUENCE', 'Invalid frame sequence');
         json(200, await manager.read(id, credential, operation, { since })); return;
       }
-      if (request.method === 'GET' && operation === 'metrics') { admin(); const s = manager.get(id); manager.active(s); json(200, await s.worker.call('metrics')); return; }
+      if (request.method === 'GET' && operation === 'metrics') { admin(); const s = manager.get(id); manager.active(s);
+        json(200, { ...await s.worker.call('metrics'), ...(s.frames ? { frames: s.frames.stats } : {}) }); return; }
       if (request.method === 'POST' && operation === 'actions') { json(200, await manager.action(id, credential, await body(request))); return; }
       if (request.method === 'POST' && operation === 'control') { json(200, await manager.control(id, credential, await body(request))); return; }
       if (request.method === 'POST' && operation === 'release') { admin(); json(200, await manager.release(id, await body(request))); return; }
@@ -75,13 +139,24 @@ export function createService({ adminToken = 'dev-local', ...options } = {}) {
   return {
     server, manager,
     async listen(port = 8080, host = '127.0.0.1') {
+      if (nativeOptions) {
+        ensure(process.platform !== 'win32' && nativeOptions.canvasKitDirectory, 500, 'INVALID_NATIVE_CONFIG', 'Native stream requires POSIX and a matching CanvasKit build');
+        nativeEngine = await verifiedEngine(nativeOptions.root, { requireStream: true });
+        replayRuntime = await loadReplayRuntime(nativeOptions.canvasKitDirectory);
+        ensure(replayRuntime.metadata.skiaRevision === nativeEngine.source.skiaRevision, 500, 'INVALID_NATIVE_RUNTIME', 'CanvasKit must match the Chromium Skia revision');
+        await verifyRuntimeBuild(replayRuntime, nativeOptions.canvasKitDirectory, nativeEngine.root, nativeEngine.source);
+      }
       await new Promise((resolve, reject) => { server.once('error', reject); server.listen(port, host, resolve); });
-      return `http://${host.includes(':') ? `[${host}]` : host}:${server.address().port}`;
+      const baseUrl = `http://${host.includes(':') ? `[${host}]` : host}:${server.address().port}`;
+      if (nativeEngine) manager.nativeConfig = { baseUrl, maxSessions: nativeOptions.maxSessions || 2, worker: {
+        root: nativeEngine.root, expectedArtifactsSha256: nativeEngine.artifactsSha256,
+        expectedPatchSha256: nativeEngine.patchSha256, allowedPaths: nativeAllowedPaths } };
+      return baseUrl;
     },
     async close() {
-      server.closeAllConnections();
+      if (server.listening) server.closeAllConnections();
       await manager.close();
-      await new Promise(resolve => server.close(resolve));
+      if (server.listening) await new Promise(resolve => server.close(resolve));
     },
   };
 }

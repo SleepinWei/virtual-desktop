@@ -231,11 +231,11 @@ async function probeLifecycle(page, viewport, runId) {
     scope: 'Real input, scroll, reload and session liveness only; scrolled/multi-layer visual replay is not validated' };
 }
 
-export async function recordTrace(cdp, action) {
+export async function recordTrace(cdp, action, { traceConfig = TRACE_CONFIG } = {}) {
   let tracing = false;
   try {
     await cdp.send('Tracing.start', {
-      traceConfig: TRACE_CONFIG,
+      traceConfig,
       transferMode: 'ReturnAsStream', streamFormat: 'json',
     });
     tracing = true;

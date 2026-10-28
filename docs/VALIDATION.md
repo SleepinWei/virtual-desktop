@@ -1,5 +1,25 @@
 # 验证记录
 
+## 持续 Chromium 会话验收：2026-10-28
+
+原生后端已达到 **live-native-session-candidate**，复现见 [CHROMIUM_LIVE.md](CHROMIUM_LIVE.md)，完整构建/fixture/runtime 指纹和实际结果见 [chromium-live-2026-10-28.json](chromium-live-2026-10-28.json)。原生 C++ 源码 17 个文件与 manifest 一致；增量构建和 7 项 cc/paint、4 项 Viz 测试通过。
+
+| 验证项 | 本机结果 |
+| --- | --- |
+| 持续来源 | 私有 Unix socket → 原生 worker → 会话网关 → 本地 CanvasKit；画面不使用 trace 传输 |
+| Agent 与人工输入 | 无 viewer 操作；接管、归还、真实坐标焦点/文字/滚动、Tab/Enter、动作重试去重通过 |
+| 权限与画面时序 | 只读 mutation、旧控制 epoch、过期画面坐标及跨会话 capability 被拒绝 |
+| 页面自主更新 | trace 停止期间定时器持续改变真实原生帧和本地像素，无逐次捕获请求 |
+| 恢复 | viewer 离线、刷新、单次 SKP 损坏后恢复最新快照，执行 browser PID 保持相同 |
+| 会话与存储 | 双原生浏览器状态分离；新 browser 恢复 localStorage，临时 DOM 输入清空 |
+| 生命周期 | 强杀执行 worker 后专属 browser/renderer 退出，会话 FAILED 且准入槽释放 |
+| 严格视觉 | 两组整图及每组 7 个独立区域通过原阈值；主对照浏览器为同构建普通模式 |
+| 回归 | 71 JS、5 Python、66 JS 语法、11 过滤 C++、6 本地浏览器 E2E 通过 |
+
+短的诊断 trace 显式未丢数，并有配对 recording/no-tiles 和正向 display skipped 标记；匹配 raster 与 renderer DrawFrame 记录均为 0，结束诊断后动作仍经 socket 送来新帧。此前 ordinary 对照保留为历史记录；零 trace 记录不能单独证明所有像素路径已被消除。
+
+启动仍用一次短的纯元数据 trace 绑定 renderer 来源。当前限定固定 A8 字体/960×720/DPR 1 的可信 fixture，Chromium sandbox 关闭；不开放任意网站。保持 `engineSplitGate: not-passed` 和 `serverRasterBypassed: false`；未验证多 renderer、通用字体/图片/IME、Canvas/WebGL/video/readback，也没有测完整 Chromium CPU/RSS/网络成本或生产隔离。CI 缺少本机原生输入时跳过三项原生 E2E，继续执行其余协议、HTTP/socket 与三项 v0 浏览器测试。以下保留此前里程碑。
+
 ## Chromium 完整帧验收：2026-10-28 后续
 
 同一固定版本 Chromium 和匹配 Skia 的 CanvasKit，新增完整活跃树导出及本地合成，达到 **native-frame-candidate**。详细约定见 [CHROMIUM_FRAMES.md](CHROMIUM_FRAMES.md)，构建/资源指纹、各区域指标、反例与同构建旧模式回归见 [chromium-frames-2026-10-28.json](chromium-frames-2026-10-28.json)。

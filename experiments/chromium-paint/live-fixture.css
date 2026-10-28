@@ -1,0 +1,21 @@
+@font-face { font-family: Fixture; src: url('/fonts/fixture-sans.otf') format('opentype'); font-display: block; }
+* { box-sizing: border-box; }
+html, body { margin: 0; width: 960px; min-height: 720px; background: #e9eef7; color: #17243b; font: 18px Fixture, sans-serif; -webkit-font-smoothing: antialiased; }
+header { position: absolute; left: 24px; top: 20px; }
+h1 { margin: 0; font-size: 30px; line-height: 42px; }
+header p { margin: 4px 0 0; font-size: 16px; }
+button { position: absolute; left: 24px; width: 160px; height: 44px; border: 0; border-radius: 0; font: 18px Fixture; color: white; background: #17243b; }
+#increment { top: 118px; }
+#count { position: absolute; left: 210px; top: 118px; font-size: 30px; }
+label { position: absolute; left: 24px; top: 196px; font-size: 16px; }
+#message { position: absolute; left: 24px; top: 226px; width: 550px; height: 52px; padding: 10px 12px; border: 2px solid #96a8c5; border-radius: 0; outline: 0; font: 20px Fixture; color: #17243b; background: white; }
+#message:focus { border-color: #2b68ca; }
+#echo { position: absolute; left: 24px; top: 292px; width: 550px; margin: 0; font-size: 20px; overflow-wrap: anywhere; }
+#animate { top: 380px; }
+#pulse { position: absolute; left: 230px; top: 380px; width: 340px; height: 160px; padding: 20px; color: white; background: #2b68ca; will-change: transform; transform: translate(0, 0); }
+#pulse span { display: block; font-size: 18px; }
+#tick { display: block; font-size: 46px; line-height: 70px; }
+#session-note { position: absolute; left: 24px; top: 600px; width: 550px; color: #53627a; font-size: 16px; }
+#scroller { position: absolute; left: 650px; top: 118px; width: 286px; height: 540px; overflow: auto; scrollbar-width: none; border: 4px solid #17243b; background: #c6e3d1; }
+.row { height: 80px; padding: 22px 16px; background: #e2f1e8; border-bottom: 2px solid #9cbca9; font-size: 22px; }
+.row:nth-child(even) { background: #c6e3d1; }

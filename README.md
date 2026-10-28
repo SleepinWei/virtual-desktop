@@ -11,6 +11,7 @@
 - [Chromium 原生 SKP 与客户端重放实验](docs/CHROMIUM_PAINT.md)
 - [固定版本 Chromium 引擎构建与 picture-layer 补丁](docs/CHROMIUM_ENGINE.md)
 - [原生完整帧、图层合成与 ACK 实验](docs/CHROMIUM_FRAMES.md)
+- [持续 Chromium 会话、实时画面与人工接管](docs/CHROMIUM_LIVE.md)
 
 ## 运行
 
@@ -55,4 +56,13 @@ npm run experiment:paint
 
 实验运行真实 HTML/CSS/JavaScript，导出原生 SKP，用本地 CanvasKit 重放按钮操作前后的状态，保存 trace、来源及逐区域视觉比较。`-- --serve` 保留实验页面。此入口使用普通浏览器，仍执行常规 raster，详情见 [实验说明](docs/CHROMIUM_PAINT.md)。
 
-2026-10-28 的[固定版本引擎实验](docs/CHROMIUM_ENGINE.md)增加 headless NullRenderer 和匹配 Skia 的 CanvasKit 文本覆盖策略，三种模式均通过固定页面严格视觉比较。后续的[完整帧实验](docs/CHROMIUM_FRAMES.md)达到 `native-frame-candidate`：真实多层画面、7° 旋转、透明度分组、裁剪、滚动和删层均通过，具备资源哈希复用、有界队列、ACK 与过期帧保护。当前通过 trace 批量捕获后重放，尚未接上持续运行的 Chromium 会话或 v0 worker；通用网站及完整引擎关卡仍未通过。
+2026-10-28 的[固定版本引擎实验](docs/CHROMIUM_ENGINE.md)增加 headless NullRenderer 和匹配 Skia 的 CanvasKit 文本覆盖策略，三种模式均通过固定页面严格视觉比较。[完整帧实验](docs/CHROMIUM_FRAMES.md)验证了真实多层画面、7° 旋转、透明度分组、裁剪、滚动和删层。
+
+目前已接入[持续 Chromium 会话](docs/CHROMIUM_LIVE.md)：原生 socket 实时输出完整帧、本地 CanvasKit 绘制、agent/人工操作共用页面，并有 ACK、资源复用、坏资源恢复及断线/刷新重连。显式启动命令如下；默认 `npm start` 保持 v0。当前只开放可信固定页面，通用网站及完整引擎关卡仍未通过。
+
+```bash
+npm run start:native -- --root /Volumes/Extreme-APFS/Builds \
+  --canvaskit /Volumes/Extreme-APFS/Builds/canvaskit/out --port 8081
+```
+
+打开 <http://127.0.0.1:8081/native>。需要当前已通过原生测试的自编译引擎和匹配 CanvasKit；不会自动使用已安装 Chrome 代替。

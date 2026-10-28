@@ -18,7 +18,13 @@ v0 是 Node.js + LinkeDOM + Yoga 的可信应用协议 PoC。服务端没有 Chr
 
 2026-10-28 后续已实现 **native-frame-candidate**，见 [CHROMIUM_FRAMES.md](docs/CHROMIUM_FRAMES.md) 和 [完整验收](docs/chromium-frames-2026-10-28.json)。原生补丁现在覆盖 17 个文件；7 项 cc/paint 与 4 项 Viz 通过。`npm run experiment:frames` 验证 6→5 个真实内容层、2 个 surface、7° 旋转/层序/矩形 clip/组 opacity、180px 滚动和删层；四阶段整图与独立区域均通过未放宽的阈值。默认文字平滑反例失败，显式 A8 才通过，不可外推所有字体。客户端有资源哈希复用、2 个未 ACK 帧加 1 个最新合并帧、有界缓存、原子显示及旧帧/损坏资源保护。
 
-最新真实产物在 `test-results/chromium-frames-rotation-20261028/`；旧三模式同构建回归在 `test-results/chromium-engine-frame-regression-20261028/`。60 JS、5 Python、50 JS 语法、11 C++、5 本地 E2E 通过。native frame trace 仍批量捕获，HTTP ACK 实验重放已保存的状态，**尚未接上持续运行的 Chromium、agent/control epoch 或 v0 worker**。下一步优先实现原生持续 producer/资源失败与断线恢复，再扩字体/图片/iframe/IME/DPR 兼容，最后测去除 trace 后的 CPU/RSS/总带宽及多 worker。Canvas/WebGL/video/readback 的像素路径仍未覆盖。不要通过放宽视觉阈值、回传截图或把 v0 的性能数据套到 Chromium 来推进关卡。
+最新已达到 **live-native-session-candidate**，见 [CHROMIUM_LIVE.md](docs/CHROMIUM_LIVE.md) 和 [实际验收记录](docs/chromium-live-2026-10-28.json)。持续 producer 通过私有、带 capability 的 Unix socket 导出完整原生帧，worker IPC 合并中间状态；`src/` 网关已接入原生 backend、agent/control epoch、ACK 画面坐标输入与资源缓存。短的启动元数据 trace 只用于精确 URL→renderer 绑定，画面不依赖 trace 传输。forced-JSON 与 Perfetto 子 writer 混用导致的 renderer 断言已经修复并重建，17 个源码指纹均匹配。
+
+`npm run start:native -- --root /Volumes/Extreme-APFS/Builds --canvaskit /Volumes/Extreme-APFS/Builds/canvaskit/out --port 8081` 开启原生实验，入口 `/native`；默认 `npm start` 保留 v0。实测无 viewer 的 agent、人工点击/文字/滚动/键盘、定时器自主更新、离线/刷新恢复、坏资源重试、双原生会话状态和凭据分离、localStorage 冷恢复、动作去重、worker 崩溃后的 Chromium 进程组清理均通过。71 JS、5 Python、66 JS 语法、11 C++、6 本地 E2E 通过；CI 无本机原生输入时显式跳过 3 项，其余照常执行。
+
+最新真实产物在 `test-results/chromium-live-20261028/` 和 `test-results/chromium-live-e2e/`；此前完整帧与三模式回归在 `test-results/chromium-frames-rotation-20261028/`、`test-results/chromium-engine-frame-regression-20261028/`。旧捕获记录的补丁指纹属于历史构建，不能当作新原生构建的验收状态。
+
+下一步扩默认字体/图片/iframe/IME/DPR、多 widget/renderer 和导航，再测无调试 trace 的总 CPU/RSS/带宽并整理最小 runtime 包。当前只允许精确的可信 fixture GET，Chromium sandbox 关闭；cookies/localStorage 冷恢复不是 JS heap/DOM 快照。Canvas/WebGL/video/readback 未覆盖，通用关卡仍未通过。不要通过放宽视觉阈值、回传截图或把 v0 的性能数据套到 Chromium 来推进关卡。
 
 ## 立即执行
 

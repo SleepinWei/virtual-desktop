@@ -3,6 +3,7 @@ import { randomUUID, randomBytes, timingSafeEqual } from 'node:crypto';
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { AppError, ensure } from './errors.js';
+import { NativeFrames } from './native-frames.js';
 
 const token = () => randomBytes(32).toString('base64url');
 export function sameToken(actual, expected) {
@@ -15,13 +16,25 @@ class WorkerClient {
   pending = new Map();
   sequence = 0;
   stopping = false;
-  constructor(onExit) {
-    this.child = fork(new URL('./worker.js', import.meta.url), [], {
-      execArgv: ['--max-old-space-size=128'], stdio: ['ignore', 'ignore', 'pipe', 'ipc'],
+  constructor(onExit, { backend = 'poc', onFrame, onFault } = {}) {
+    this.native = backend === 'chromium';
+    this.child = fork(new URL(this.native ? '../experiments/chromium-engine/worker.js' : './worker.js', import.meta.url), [], {
+      execArgv: [this.native ? '--max-old-space-size=256' : '--max-old-space-size=128'],
+      stdio: ['ignore', 'ignore', 'pipe', 'ipc'], serialization: 'advanced',
       env: { PATH: process.env.PATH, NODE_ENV: 'production' },
     });
     this.child.stderr.resume();
-    this.child.on('message', ({ id, result, error }) => {
+    this.child.on('message', ({ id, result, error, event, payload, message, fatal, pid }) => {
+      if (this.native && event === 'native-browser') {
+        if (Number.isSafeInteger(pid) && pid > 1 && pid !== process.pid) this.browserPid = pid;
+        return;
+      }
+      if (this.native && event === 'native-frame') { onFrame(payload); return; }
+      if (this.native && event === 'native-fault') {
+        onFault(message);
+        if (fatal) this.child.kill('SIGTERM');
+        return;
+      }
       const pending = this.pending.get(id);
       if (!pending) return;
       clearTimeout(pending.timer);
@@ -31,6 +44,11 @@ class WorkerClient {
     this.child.on('error', () => this.fail());
     this.exited = new Promise(resolve => this.child.once('exit', () => {
       this.fail();
+      // Playwright launches each owned Chromium in a separate process group.
+      // Also reap it when the Node worker dies before its graceful handler runs.
+      if (this.browserPid && process.platform !== 'win32') {
+        try { process.kill(-this.browserPid, 'SIGKILL'); } catch (error) { if (error.code !== 'ESRCH') this.cleanupError = error.code; }
+      }
       if (!this.stopping) onExit();
       resolve();
     }));
@@ -50,7 +68,7 @@ class WorkerClient {
         this.pending.delete(id);
         reject(new AppError(504, 'WORKER_TIMEOUT', 'Operation result is unknown; observe before retrying'));
         this.child.kill('SIGKILL');
-      }, 5000);
+      }, this.native ? method === 'init' ? 30000 : 12000 : 5000);
       this.pending.set(id, { resolve, reject, timer });
       this.child.send({ id, method, params }, error => {
         if (!error) return;
@@ -60,9 +78,11 @@ class WorkerClient {
     });
   }
   async stop() {
+    if (this.stopping) return this.exited;
     this.stopping = true;
     this.child.kill('SIGTERM');
-    await this.exited;
+    const timer = setTimeout(() => this.child.kill('SIGKILL'), 4000);
+    try { await this.exited; } finally { clearTimeout(timer); }
   }
 }
 
@@ -83,14 +103,22 @@ export class SessionManager {
     }
   }
 
-  async create({ profileId = randomUUID(), viewport = { width: 960, height: 720 } } = {}) {
+  async create({ profileId = randomUUID(), viewport = { width: 960, height: 720 }, backend = 'poc', fixture = 'live' } = {}) {
     ensure(!this.closing, 503, 'SHUTTING_DOWN', 'Service is stopping');
     ensure(this.sessions.size < 4096, 429, 'SESSION_RECORD_LIMIT', 'Local experiment session record limit reached');
+    ensure(['poc', 'chromium'].includes(backend), 400, 'INVALID_BACKEND', 'Unknown execution backend');
+    if (backend === 'chromium') {
+      ensure(this.nativeConfig, 503, 'NATIVE_NOT_CONFIGURED', 'Start the service with a verified native engine and matching CanvasKit');
+      ensure(['live', 'frames'].includes(fixture), 400, 'INVALID_FIXTURE', 'Only checked-in native fixtures are enabled');
+      ensure([...this.sessions.values()].filter(session => session.backend === 'chromium' &&
+        ['QUEUED', 'CREATING', 'ACTIVE', 'EVICTING'].includes(session.state)).length < (this.nativeConfig.maxSessions || 2),
+      429, 'NATIVE_SESSION_LIMIT', 'Native experiment session limit reached');
+    }
     ensure(typeof profileId === 'string' && /^[a-zA-Z0-9_-]{1,64}$/.test(profileId), 400, 'INVALID_PROFILE', 'Invalid profile id');
     ensure(viewport && Number.isInteger(viewport.width) && viewport.width >= 480 && viewport.width <= 1600 && Number.isInteger(viewport.height) && viewport.height >= 320 && viewport.height <= 1600, 400, 'INVALID_VIEWPORT', 'Invalid viewport');
     ensure(!this.profileLocks.has(profileId), 409, 'PROFILE_BUSY', 'Profile already has a writer or queued request');
     ensure(this.queue.length < this.maxQueued, 429, 'QUEUE_FULL', 'Session creation queue is full');
-    const s = { id: randomUUID(), profileId, state: 'QUEUED', viewport, epoch: 1, owner: 'agent',
+    const s = { id: randomUUID(), profileId, backend, fixture, state: 'QUEUED', viewport, epoch: 1, owner: 'agent',
       agentToken: token(), viewerToken: token(), humanToken: token(), chain: Promise.resolve(), createdAt: new Date().toISOString() };
     this.sessions.set(s.id, s);
     this.profileLocks.set(profileId, s.id);
@@ -125,19 +153,27 @@ export class SessionManager {
       try {
         const file = JSON.parse(await readFile(join(this.dataDir, `${s.profileId}.json`), 'utf8'));
         ensure(file.version === 1 && file.profileId === s.profileId, 409, 'INVALID_PROFILE_STATE', 'Unsupported saved profile');
+        ensure((file.backend || 'poc') === s.backend, 409, 'PROFILE_BACKEND_MISMATCH', 'Profile belongs to a different execution backend');
         saved = file.state;
       } catch (error) { if (error.code !== 'ENOENT') throw error; }
       ensure(!this.closing, 503, 'SHUTTING_DOWN', 'Service is stopping');
+      if (s.backend === 'chromium') { s.frames = new NativeFrames(() => ({ owner: s.owner, epoch: s.epoch })); s.actions = new Map(); }
       s.worker = new WorkerClient(() => {
         s.state = 'FAILED';
+        s.frames?.close();
         this.profileLocks.delete(s.profileId);
         this.releaseSlot(s);
-      });
-      await s.worker.call('init', { saved, viewport: s.viewport });
+      }, { backend: s.backend,
+        onFrame: payload => { try { s.frames.ingest(payload); } catch { s.frames.unsupported('Native resource or frame validation failed'); } },
+        onFault: message => s.frames.unsupported(message) });
+      await s.worker.call('init', { saved, viewport: s.viewport, ...(s.backend === 'chromium' ? {
+        ...this.nativeConfig.worker, url: this.nativeConfig.baseUrl + (s.fixture === 'frames' ? '/frames.html' : '/live-fixture.html'),
+      } : {}) });
       s.state = 'ACTIVE';
       s.resolve({ ...this.public(s), agentToken: s.agentToken, viewerToken: s.viewerToken, humanToken: s.humanToken });
     } catch (error) {
       if (s.worker) await s.worker.stop();
+      s.frames?.close();
       s.state = 'FAILED';
       this.profileLocks.delete(s.profileId);
       this.releaseSlot(s);
@@ -149,7 +185,8 @@ export class SessionManager {
     if (s.reserved) { s.reserved = false; this.reserved--; }
     this.pump();
   }
-  public(s) { return { id: s.id, profileId: s.profileId, state: s.state, epoch: s.epoch, owner: s.owner, createdAt: s.createdAt }; }
+  public(s) { return { id: s.id, profileId: s.profileId, backend: s.backend, fixture: s.backend === 'chromium' ? s.fixture : undefined,
+    state: s.state, epoch: s.epoch, owner: s.owner, createdAt: s.createdAt }; }
   get(id) {
     const s = this.sessions.get(id);
     ensure(s, 404, 'SESSION_NOT_FOUND', 'Session not found');
@@ -167,13 +204,19 @@ export class SessionManager {
     return operation;
   }
   active(s) { ensure(s.state === 'ACTIVE', 409, 'SESSION_NOT_ACTIVE', `Session is ${s.state}`); }
+  native(id, credential) {
+    const s = this.get(id), role = this.role(s, credential); this.active(s);
+    ensure(s.backend === 'chromium' && s.frames, 409, 'NATIVE_STREAM_REQUIRED', 'Session does not use the native frame protocol');
+    return { session: s, role, frames: s.frames };
+  }
 
   async read(id, credential, method, params) {
     const s = this.get(id); this.role(s, credential);
     return this.serial(s, async () => {
       this.active(s);
+      ensure(s.backend !== 'chromium' || method !== 'frame', 409, 'NATIVE_STREAM_REQUIRED', 'Connect to the native frame stream');
       const result = await s.worker.call(method, params);
-      return { ...result, sessionId: s.id, control: { owner: s.owner, epoch: s.epoch } };
+      return { ...result, ...(s.frames ? { seq: s.frames.revision } : {}), sessionId: s.id, control: { owner: s.owner, epoch: s.epoch } };
     });
   }
   async action(id, credential, { epoch, actionId, action } = {}) {
@@ -184,6 +227,20 @@ export class SessionManager {
       this.active(s);
       ensure(role !== 'viewer', 403, 'READ_ONLY', 'Viewer cannot change page state');
       ensure(epoch === s.epoch && role === s.owner, 409, 'CONTROL_LOST', 'Control lease changed; observe before continuing');
+      if (s.frames) {
+        const signature = JSON.stringify(action), old = s.actions.get(actionId);
+        if (old) {
+          ensure(old.signature === signature, 409, 'ACTION_ID_REUSED', 'Action id already used with a different payload');
+          return { ...old.result, deduplicated: true, control: { owner: s.owner, epoch: s.epoch } };
+        }
+        const expectedSignature = ['pointer', 'wheel', 'key', 'text'].includes(action.type)
+          ? s.frames.assertPresented(action, ['pointer', 'wheel'].includes(action.type)) : undefined;
+        const result = await s.worker.call('action', { actionId, action, expectedSignature });
+        const response = { ...result, control: { owner: s.owner, epoch: s.epoch } };
+        s.actions.set(actionId, { signature, result: response });
+        if (s.actions.size > 1000) s.actions.delete(s.actions.keys().next().value);
+        return response;
+      }
       return s.worker.call('action', { actionId, action });
     });
   }
@@ -195,6 +252,7 @@ export class SessionManager {
       this.active(s);
       ensure(epoch === s.epoch, 409, 'CONTROL_LOST', 'Control lease changed');
       s.owner = owner; s.epoch++;
+      s.frames?.controlChanged();
       return { owner, epoch: s.epoch };
     });
   }
@@ -208,11 +266,12 @@ export class SessionManager {
           const state = await s.worker.call('save');
           await mkdir(this.dataDir, { recursive: true });
           const target = join(this.dataDir, `${s.profileId}.json`), temporary = `${target}.${randomUUID()}.tmp`;
-          await writeFile(temporary, JSON.stringify({ version: 1, profileId: s.profileId, savedAt: new Date().toISOString(), state }), { mode: 0o600 });
+          await writeFile(temporary, JSON.stringify({ version: 1, profileId: s.profileId, backend: s.backend, savedAt: new Date().toISOString(), state }), { mode: 0o600 });
           await rename(temporary, target);
         }
       } catch (error) { s.state = 'ACTIVE'; throw error; }
       await s.worker.stop();
+      s.frames?.close();
       s.state = 'COLD';
       this.profileLocks.delete(s.profileId);
       this.releaseSlot(s);
@@ -231,6 +290,7 @@ export class SessionManager {
     await Promise.allSettled([...this.sessions.values()].map(async s => {
       await s.chain;
       if (s.worker) await s.worker.stop();
+      s.frames?.close();
     }));
   }
 }

@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Live native Chromium session</title>
+  <link rel="stylesheet" href="/live-fixture.css"><script defer src="/live-fixture.js"></script>
+</head>
+<body>
+  <header><h1>Live Chromium session</h1><p>The page stays alive when its viewer disconnects.</p></header>
+  <button id="increment">Increment</button><output id="count">0</output>
+  <label for="message">Native page input</label><input id="message" autocomplete="off" placeholder="Click here, then send text">
+  <p id="echo">Input is empty</p>
+  <button id="animate">Start updates</button>
+  <article id="pulse"><span>Page timer</span><strong id="tick">0</strong></article>
+  <p id="session-note">State belongs to this running Chromium page.</p>
+  <aside id="scroller" aria-label="Native scroll area"><div id="rows"></div></aside>
+</body>
+</html>

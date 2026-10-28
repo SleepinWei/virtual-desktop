@@ -38,11 +38,11 @@
     },
     "cc/paint/display_item_list.h": {
       "upstreamSha256": "8796e36b51876a6a715e53939181a115fe9fbbc439e71600c311a3e9d73b3a35",
-      "patchedSha256": "477c6cce3d7a39d1f4ba19d74f8be329f119b6b624b4b28460a60e1ede954dc1"
+      "patchedSha256": "333a0d9c5f7b4d8112df1c36ae4f67915392519138131f6825f5b2b00d4b8aaf"
     },
     "cc/paint/display_item_list.cc": {
       "upstreamSha256": "e88babbfb156dfd3d2e0cce4734ee08ac6431daaa6b1a428c77e120a184cb181",
-      "patchedSha256": "93c78622a86e5feb9f97d52ae2be25b6f806e34224a6d9a7eda1199ef7bc2e4c"
+      "patchedSha256": "bc7a3de51567730b53ee465758a793145a1fe8c5d3835591991b907e8a97f33d"
     },
     "components/viz/service/BUILD.gn": {
       "upstreamSha256": "15c828cd6a1bf5552b480b5574827359f8a3377ae4e9e8f7f1860511f827f875",
@@ -66,18 +66,26 @@
     },
     "cc/trees/layer_tree_host_impl.cc": {
       "upstreamSha256": "d96b905bf5e63dcd9e76707df8c119294651540d671bfc5b0ff14b03ad740efd",
-      "patchedSha256": "21118121c1aaba81ad0ab31b190a9d8449b661ae00bc4f2412af670e23822529"
+      "patchedSha256": "c17c4fea3938071bcd0bdfe303c608cf102e1c9e2abf4ff6ede987ec88206dff"
     },
     "cc/trees/layer_tree_impl.cc": {
       "upstreamSha256": "16ec1ac875aa36b063faecf1dde840db8a0f17cdb92c100f6f4720ed0b605924",
-      "patchedSha256": "880aaa24879e4a063319b99b339fe809a015aed6ffbfdd918b695b6bbc6d153b"
+      "patchedSha256": "bdf75a19c1a8877097bec78dfc4aca4b860ef08ea05eceea229f108de9364dd9"
     },
     "cc/trees/layer_tree_impl.h": {
       "upstreamSha256": "0d8014fa6b7af4e744e7911163f5e80de20b9799433d4681e0ef1bd3326faeba",
-      "patchedSha256": "6c804ec96d26e65aeb4b97cd08136fbe76ae79c794fd87853587fb3a55a0a450"
+      "patchedSha256": "c6721eceac3f75a4e1aea0f2099997206c9b98c635cce9f341a17e0ed7a6b76d"
     }
   },
   "skiaRevision": "886e42fda11610a56dd1b22e8697e27f9d1e34f2",
   "displayFeature": "VirtualDesktopRemotePaintNoDisplay",
-  "frameEvent": "VirtualDesktop.RemotePaintFrame"
+  "frameEvent": "VirtualDesktop.RemotePaintFrame",
+  "stream": {
+    "version": 1,
+    "transport": "authenticated-posix-unix-stream",
+    "maxMessageBytes": 8388608,
+    "socketEnvironment": "VIRTUAL_DESKTOP_REMOTE_PAINT_SOCKET",
+    "tokenEnvironment": "VIRTUAL_DESKTOP_REMOTE_PAINT_TOKEN",
+    "queue": "one-writing-plus-one-latest"
+  }
 }

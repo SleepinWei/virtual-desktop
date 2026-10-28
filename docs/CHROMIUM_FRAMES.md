@@ -2,7 +2,7 @@
 
 2026-10-28 达到 **native-frame-candidate**：同一真实 Chromium 页面导出 6 个内容层、2 个合成 surface，客户端通过层序变化、平移与 7° 旋转、矩形裁剪、重叠子层的分组透明度、180px 滚动和删层后的逐区域视觉对照。删除后剩 5 个内容层，原层位置的像素误差为 0。完整指标与构建指纹见 [chromium-frames-2026-10-28.json](chromium-frames-2026-10-28.json)。
 
-实验仍限定在 960×720、DPR 1、固定字体和明确 A8 平滑策略的可信页面。`engineSplitGate: not-passed`、`serverRasterBypassed: false` 保留。生产 `src/` 仍是 v0 后端。
+实验仍限定在 960×720、DPR 1、固定字体和明确 A8 平滑策略的可信页面。`engineSplitGate: not-passed`、`serverRasterBypassed: false` 保留。本文记录批量帧里程碑；最新[持续会话接入](CHROMIUM_LIVE.md)复用此协议和绘制器，默认服务保持 v0。
 
 ## 数据来源与合成
 
@@ -32,7 +32,7 @@ SKP 导出保留 layer 坐标，传入 `GetRasterInducingScrollOffsets()` 提供
 
 四阶段正向客户端只下载 9 份不同 SKP，共 **207,309 bytes**；逐帧重复发送全部引用会计入 23 份、529,015 bytes。这里只比较此 fixture 的 SKP 字节，不含 JSON、HTTP、首次约 4.35 MB 的 CanvasKit、trace 或其他运行成本。原生 trace 目前仍重复导出完整记录，不能据此声称服务端 CPU 或总带宽收益。
 
-HTTP frame/ACK 通道当前传输的是**已捕获的帧**。用户在 recorder 的真实页面点击、滚动，recorder 关闭后，独立本地浏览器重放这些状态。它还没有把持续运行的 Chromium、agent 动作或人工控制 epoch 接入此通道。实验服务仅绑定 loopback，校验 Host、POST Origin 和资源白名单，最多保留 4 个实验会话；这不是生产会话网关或隔离方案。
+此批量 HTTP frame/ACK 通道传输的是**已捕获的帧**：用户在 recorder 的真实页面点击、滚动，recorder 关闭后，独立本地浏览器重放这些状态。实验服务仅绑定 loopback，校验 Host、POST Origin 和资源白名单，最多保留 4 个实验会话。后续实时服务通过独立入口接入持续 Chromium、agent 与人工控制 epoch，并增加资源失败自动重试，见 [CHROMIUM_LIVE.md](CHROMIUM_LIVE.md)。两种实验均不能当作生产隔离方案。
 
 ## 复现与验证
 
@@ -63,7 +63,7 @@ CHROMIUM_EXECUTABLE_PATH='/Applications/Google Chrome.app/Contents/MacOS/Google 
 
 ## 后续实现
 
-1. 将原生 producer 从批量 trace 改为持续输出，接上仍在运行的 Chromium 会话；绑定动作结果、原生 frame 与 viewer ACK，补断线重发和资源失败恢复。
+1. 持续 producer、运行中 Chromium、动作/控制权、viewer ACK、断线重连和资源失败恢复已接入，见 [持续会话验收](CHROMIUM_LIVE.md)。继续补多 widget/renderer 与导航处理。
 2. 扩展默认字体策略、图片资源与生命周期；覆盖嵌套滚动、缩放/DPR、iframe surface、输入框/IME 和真实网站，继续逐区域验收。
 3. 明确 Canvas/WebGL/video/readback 的支持或拒绝边界；不能静默恢复服务端像素路径并仍报告切分成功。
-4. 整理最小 runtime 分发包，去掉调试 trace 后测同等任务成功率下的 CPU、RSS、线程、总网络及本地负担，再决定多 worker 调度和人工接管方案。
+4. 整理最小 runtime 分发包，去掉调试 trace 后测同等任务成功率下的 CPU、RSS、线程、总网络及本地负担，再决定多 worker 调度方案。

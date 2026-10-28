@@ -28,7 +28,7 @@ Linux 缺少浏览器系统依赖时，可在自己控制的开发机按 Playwri
 npx playwright install --with-deps chromium
 ```
 
-测试启动本地服务和一个客户端 Chromium，验证 Canvas 实际像素、增量更新、人工点击输入、热会话切换及保存恢复，并写入 `test-results/viewer.png`。生产服务路径不启动浏览器。
+默认测试启动 v0 本地服务和一个客户端 Chromium，验证 Canvas 实际像素、增量更新、人工点击输入、热会话切换及保存恢复，并写入 `test-results/viewer.png`。v0 执行路径不启动浏览器；显式启用的原生后端有独立执行浏览器。
 
 可以通过 `CHROMIUM_EXECUTABLE_PATH` 指定已有浏览器，例如 macOS 上使用独立的 Chrome 测试进程：
 
@@ -58,7 +58,17 @@ BENCH_SESSIONS=8 BENCH_ITERATIONS=20 npm run bench
 
 ## Chromium 原生绘图实验
 
-完整帧入口为 `npm run experiment:frames`，需要已构建并通过原生测试的固定引擎和匹配 CanvasKit；复现命令见 [CHROMIUM_FRAMES.md](CHROMIUM_FRAMES.md)。`CHROMIUM_FRAME_CAPTURE_DIRECTORY` 启用真实多层捕获的额外 E2E，`CHROMIUM_CAPTURE_DIRECTORY` 启用旧单 picture 内存检查；两者都需要对应真实产物。无这些输入的 CI 显式跳过这两项，不跳过普通 viewer E2E 或协议/HTTP 测试。
+持续会话入口为 `npm run experiment:live`，复现和完整验收见 [CHROMIUM_LIVE.md](CHROMIUM_LIVE.md)。额外 E2E 的 `CHROMIUM_LIVE_BUILD_ROOT` 必须指向当前成功构建/测试的固定引擎，`CANVASKIT_DIRECTORY` 指向匹配 runtime。它实际启动持续执行 worker 和独立本地验证浏览器，检查接管、输入、自动更新、断线/刷新/坏资源恢复、双会话和冷存储恢复及崩溃清理。
+
+```bash
+CHROMIUM_LIVE_BUILD_ROOT=/Volumes/Extreme-APFS/Builds \
+CHROMIUM_FRAME_CAPTURE_DIRECTORY=test-results/chromium-frames-rotation-20261028 \
+CHROMIUM_CAPTURE_DIRECTORY=test-results/chromium-engine-frame-regression-20261028/record-only-display \
+CANVASKIT_DIRECTORY=/Volumes/Extreme-APFS/Builds/canvaskit/out \
+CHROMIUM_EXECUTABLE_PATH='/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' npm run test:e2e
+```
+
+批量完整帧入口仍为 `npm run experiment:frames`，说明见 [CHROMIUM_FRAMES.md](CHROMIUM_FRAMES.md)。`CHROMIUM_FRAME_CAPTURE_DIRECTORY` 启用真实多层捕获的 E2E，`CHROMIUM_CAPTURE_DIRECTORY` 启用旧单 picture 内存检查。无原生输入的 CI 显式跳过这三项，不跳过普通 viewer E2E 或协议/HTTP 测试；本机提供全部输入时 6 项均实际执行。
 
 `npm test` 另外覆盖 trace 原生字节提取、来源和阶段分类、损坏记录拒绝、空数据/错误像素拒绝、实验服务资源白名单及 headless 能力失败报告。这些纯分析测试不启动 Chromium，不能代替实际 SKP 解码与视觉验证。
 
