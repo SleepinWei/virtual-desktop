@@ -1,5 +1,6 @@
 import { FrameReceiver } from '/native/frame-protocol.js';
 import { createFramePainter } from '/native/frame-renderer.js';
+import { createNativeDecoder } from '/native/font-runtime.js';
 
 const wait = milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds));
 export class NativeClient {
@@ -25,6 +26,7 @@ export class NativeClient {
     const generation = ++this.generation, previousEpoch = this.epoch;
     this.abort?.abort(); this.abort = new AbortController(); this.presented = null;
     this.receiver?.reset('reconnecting');
+    this.decoder?.dispose();
     this.onStatus('connecting', 'Connecting to the running page…');
     if (previousEpoch) await this.call('disconnect', { epoch: previousEpoch }).catch(() => {});
     if (generation !== this.generation || this.stopped) return;
@@ -33,20 +35,25 @@ export class NativeClient {
       if (generation !== this.generation || this.stopped) return;
       this.epoch = connection.epoch; this.onControl(connection.control);
       const signal = this.abort.signal, epoch = this.epoch;
+      if (!this.runtimeFonts) {
+        const response = await fetch('/native-runtime/runtime.json', { signal });
+        if (!response.ok) throw new Error('Native runtime metadata is unavailable');
+        const metadata = await response.json();
+        this.runtimeFonts = new Map((metadata.fonts || []).map(font => [font.id, font]));
+      }
+      if (generation !== this.generation || this.stopped) return;
+      this.decoder = createNativeDecoder(this.kit, {
+        fetchResource: resource => {
+          if (resource.kind === 'font' && this.runtimeFonts.get(resource.id)?.bytes === resource.bytes) {
+            this.downloads.preinstalledFonts = (this.downloads.preinstalledFonts || 0) + 1;
+            return fetch('/native-runtime/' + resource.path, { signal });
+          }
+          return this.call(`resources/${resource.id}?epoch=${epoch}`, undefined, signal);
+        }, downloads: this.downloads,
+      });
       this.receiver = new FrameReceiver(epoch, {
-        load: async resource => {
-          const response = await this.call(`resources/${resource.id}?epoch=${epoch}`, undefined, signal);
-          if (Number(response.headers.get('content-length') || resource.bytes) > resource.bytes) throw new Error('Resource exceeds its declared size');
-          const data = new Uint8Array(await response.arrayBuffer());
-          if (data.length !== resource.bytes) throw new Error('Resource byte length mismatch');
-          const digest = [...new Uint8Array(await crypto.subtle.digest('SHA-256', data))].map(value => value.toString(16).padStart(2, '0')).join('');
-          if (digest !== resource.id) throw new Error('Resource SHA-256 mismatch');
-          const picture = this.kit.MakePicture(data);
-          if (!picture) throw new Error('Native picture decoder rejected the frame');
-          this.downloads.resources++; this.downloads.bytes += data.length;
-          return picture;
-        },
-        present: (frame, pictures) => this.painter.present(frame, pictures), release: picture => picture.delete(),
+        load: this.decoder.load,
+        present: (frame, pictures) => this.painter.present(frame, pictures), release: this.decoder.release,
       });
       const response = await this.call(`stream?epoch=${epoch}`, undefined, signal);
       this.read(response, generation).catch(error => this.recover(error, generation));
@@ -91,7 +98,7 @@ export class NativeClient {
   }
   async recover(error, generation) {
     if (generation !== this.generation || this.stopped || error.name === 'AbortError') return;
-    this.presented = null; this.receiver?.reset('recovering'); this.abort?.abort();
+    this.presented = null; this.receiver?.reset('recovering'); this.abort?.abort(); this.decoder?.dispose();
     if (['SESSION_NOT_ACTIVE', 'SESSION_NOT_FOUND', 'FORBIDDEN'].includes(error.code)) {
       this.stopped = true; this.painter.dispose(); this.onStatus('ended', error.message); return;
     }
@@ -107,7 +114,7 @@ export class NativeClient {
   }
   async stop() {
     this.stopped = true; this.generation++; this.presented = null; this.abort?.abort();
-    this.receiver?.reset('stopped'); this.painter.dispose();
+    this.receiver?.reset('stopped'); this.decoder?.dispose(); this.painter.dispose();
     if (this.epoch) await this.call('disconnect', { epoch: this.epoch }).catch(() => {});
   }
   get state() { return { epoch: this.epoch, generation: this.generation, presented: this.presented,

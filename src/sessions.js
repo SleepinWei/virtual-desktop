@@ -1,11 +1,12 @@
 import { fork } from 'node:child_process';
 import { randomUUID, randomBytes, timingSafeEqual } from 'node:crypto';
-import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, rename, writeFile, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { AppError, ensure } from './errors.js';
 import { NativeFrames } from './native-frames.js';
 import { externalSites } from '../experiments/chromium-engine/sites.js';
 import { nativeWorkerEnvironment } from '../experiments/chromium-engine/browser-runtime.js';
+import { nativeStreamDirectory } from '../experiments/chromium-engine/native-stream.js';
 
 const token = () => randomBytes(32).toString('base64url');
 export function sameToken(actual, expected) {
@@ -28,7 +29,11 @@ export class WorkerClient {
     });
     this.diagnostics = '';
     this.child.stderr.on('data', chunk => { this.diagnostics = (this.diagnostics + chunk.toString()).slice(-32768); });
-    this.child.on('message', ({ id, result, error, event, payload, message, fatal, pid }) => {
+    this.child.on('message', ({ id, result, error, event, payload, message, fatal, pid, directory }) => {
+      if (this.native && event === 'native-directory') {
+        if (!this.nativeDirectory && nativeStreamDirectory(directory, this.child.pid)) this.nativeDirectory = directory;
+        return;
+      }
       if (this.native && event === 'native-browser') {
         if (Number.isSafeInteger(pid) && pid > 1 && pid !== process.pid) this.browserPid = pid;
         return;
@@ -46,7 +51,7 @@ export class WorkerClient {
       error ? pending.reject(new AppError(error.status, error.code, error.message)) : pending.resolve(result);
     });
     this.child.on('error', () => this.fail());
-    this.exited = new Promise(resolve => this.child.once('exit', () => {
+    this.exited = new Promise(resolve => this.child.once('exit', async () => {
       this.fail();
       // Playwright launches each owned Chromium in a separate process group.
       // Also reap it when the Node worker dies before its graceful handler runs.
@@ -54,6 +59,10 @@ export class WorkerClient {
         try { process.kill(-this.browserPid, 'SIGKILL'); } catch (error) { if (error.code !== 'ESRCH') this.cleanupError = error.code; }
       }
       if (!this.stopping) onExit();
+      if (this.nativeDirectory) {
+        try { await rm(this.nativeDirectory, { recursive: true, force: true }); }
+        catch (error) { this.cleanupError = error.code; }
+      }
       resolve();
     }));
   }

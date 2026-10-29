@@ -1,8 +1,9 @@
 import { FrameReceiver, layerIds } from './frame-protocol.js';
 import { createFramePainter } from './frame-renderer.js';
+import { createNativeDecoder } from './font-runtime.js';
 
 const $ = selector => document.querySelector(selector);
-let receiver, painter, metadata, runtime, epoch;
+let receiver, painter, metadata, runtime, epoch, decoder;
 const packets = [];
 const downloads = { resources: 0, bytes: 0 };
 function report(status, value) {
@@ -50,21 +51,11 @@ try {
   ({ epoch } = await request('/api/session', {}));
   const kit = await window.CanvasKitInit({ locateFile: name => '/' + name });
   painter = createFramePainter(kit, $('#skp'));
+  decoder = createNativeDecoder(kit, { fetchResource: resource => fetch('/' + resource.path), downloads });
   receiver = new FrameReceiver(epoch, {
-    async load(resource) {
-      const response = await fetch('/' + resource.path);
-      if (!response.ok || Number(response.headers.get('content-length') || resource.bytes) > resource.bytes) throw new Error('Resource request failed');
-      const data = new Uint8Array(await response.arrayBuffer());
-      if (data.byteLength !== resource.bytes) throw new Error('Resource byte length mismatch');
-      const digest = [...new Uint8Array(await crypto.subtle.digest('SHA-256', data))].map(value => value.toString(16).padStart(2, '0')).join('');
-      if (digest !== resource.id) throw new Error('Resource SHA-256 mismatch');
-      const picture = kit.MakePicture(data);
-      if (!picture) throw new Error('CanvasKit rejected the native frame picture');
-      downloads.resources++; downloads.bytes += data.byteLength;
-      return picture;
-    },
+    load: decoder.load,
     present: (frame, pictures) => painter.present(frame, pictures),
-    release: picture => picture.delete(),
+    release: decoder.release,
   });
   window.frameLab = { loadStage, consume, packets,
     state: () => ({ receiver: receiver.state, downloads: { ...downloads } }) };
@@ -74,4 +65,4 @@ try {
   $('#stage').addEventListener('change', () => { loadStage($('#stage').value).catch(() => {}); });
   await loadStage(metadata.stages[0].name);
 } catch (error) { report('unsupported', { error: error.message, fallback: 'none' }); }
-window.addEventListener('pagehide', () => { receiver?.reset(epoch); painter?.dispose(); });
+window.addEventListener('pagehide', () => { receiver?.reset(epoch); decoder?.dispose(); painter?.dispose(); });

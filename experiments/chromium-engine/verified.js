@@ -21,7 +21,7 @@ export async function verifiedEngine(root, { requireStream = false, layout = 'co
   if (monolithic) {
     const evidence = state.cppTestsEvidence;
     if (!evidence || evidence.version !== 1 || evidence.revision !== source.revision || evidence.binarySha256 !== state.binarySha256 ||
-      evidence.profileSha256 !== state.profileSha256 || !evidence.results?.cc?.passed || evidence.results.cc.count !== 17 ||
+      evidence.profileSha256 !== state.profileSha256 || !evidence.results?.cc?.passed || evidence.results.cc.count !== 19 ||
       !evidence.results?.viz?.passed || evidence.results.viz.count !== 4 ||
       !['cc_unittests', 'viz_unittests'].every(name => /^[a-f0-9]{64}$/.test(evidence.testArtifacts?.[name] ?? '')) ||
       !['cc', 'viz'].every(name => /^[a-f0-9]{64}$/.test(evidence.results[name].xmlSha256 ?? '')))

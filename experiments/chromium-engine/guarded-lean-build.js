@@ -15,6 +15,7 @@ if (!Number.isInteger(jobs) || jobs < 1 || jobs > 8 || !Number.isSafeInteger(max
   throw new Error('Use --jobs 1..8 and --max-rss-mib 512..8192');
 const root = resolve(values.root), output = resolve(values.output);
 const task = leanTask(values.task);
+if (jobs > (task.maxJobs || 8)) throw new Error('Too many jobs for this build task');
 await mkdir(output, { recursive: true });
 const statePath = join(root, 'chromium', task.state);
 const report = { version: 1, startedAt: new Date().toISOString(), status: 'initializing', root, jobs, task: values.task, builder: 'ninja',

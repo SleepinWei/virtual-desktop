@@ -21,7 +21,7 @@ export function normalizeNativeFrame(event) {
   }
   const surfaces = raw.surfaces.map(surface => ({ id: surface.id, rect: surface.content_rect, items: [] }));
   const targets = new Map(surfaces.map(surface => [surface.id, surface]));
-  const resources = new Map(), bytes = new Map();
+  const resources = new Map(), fonts = new Map(), bytes = new Map();
   for (const entry of entries) {
     const target = targets.get(entry.target);
     if (!target) throw new Error('Native entry has no render target');
@@ -29,13 +29,28 @@ export function normalizeNativeFrame(event) {
       opacity: entry.opacity, clipped: entry.is_clipped, clip: entry.clip };
     if (entry.kind !== 'surface') item.bounds = entry.bounds;
     if (entry.kind === 'picture') {
+      const record = entry.record;
+      if (record?.font_error === true) throw new Error('Native font export failed');
+      const dependencies = record?.fonts ?? (record?.font_count === 0 ? [] : null);
+      // Legacy captures have embedded fonts. New exporters explicitly report
+      // a complete external font inventory, including the empty case.
+      if (record?.font_count !== undefined && (!Array.isArray(dependencies) ||
+          dependencies.length !== record.font_count || record.font_error !== false)) throw new Error('Invalid native font inventory');
+      const ids = [];
+      for (const font of dependencies || []) {
+        const descriptor = { kind: 'font', id: font.id, bytes: font.bytes, path: `fonts/${font.id}.font` };
+        if (ids.includes(font.id) || fonts.has(font.id) && fonts.get(font.id).bytes !== font.bytes) throw new Error('Conflicting native font');
+        fonts.set(font.id, descriptor); ids.push(font.id);
+      }
       const encoded = entry.record?.skp64;
       if (typeof encoded !== 'string' || encoded.length > Math.ceil(FRAME_LIMITS.resourceBytes / 3) * 4 ||
           !encoded.length || encoded.length % 4 || !/^[A-Za-z0-9+/]*={0,2}$/.test(encoded)) throw new Error('Invalid native SKP base64');
       const data = Buffer.from(encoded, 'base64');
       if (data.length > FRAME_LIMITS.resourceBytes || data.subarray(0, 8).toString('ascii') !== 'skiapict') throw new Error('Invalid native SKP bytes');
       const id = createHash('sha256').update(data).digest('hex');
-      resources.set(id, { id, bytes: data.length, path: `pictures/${id}.skp` });
+      const descriptor = { id, bytes: data.length, path: `pictures/${id}.skp`, ...(record?.font_count !== undefined ? { fonts: ids.sort() } : {}) };
+      if (resources.has(id) && JSON.stringify(resources.get(id)) !== JSON.stringify(descriptor)) throw new Error('Changed picture font inventory');
+      resources.set(id, descriptor);
       bytes.set(id, data); item.resource = id;
     } else if (entry.kind === 'solid') item.color = entry.color;
     target.items.push(item);
@@ -45,8 +60,8 @@ export function normalizeNativeFrame(event) {
   const native = { pid: event.pid, treeId: raw.tree_id, ts: event.ts, sourceFrameNumber: raw.source_frame_number };
   const frame = validateFrame({ version: FRAME_VERSION, id: `${event.pid}:${raw.tree_id}:${event.ts}`, native,
     viewport: { width: raw.viewport[2], height: raw.viewport[3] }, background: raw.background,
-    root: raw.root, surfaces, resources: [...resources.values()], scrollOffsets });
-  return { frame, bytes };
+    root: raw.root, surfaces, resources: [...fonts.values(), ...resources.values()], scrollOffsets });
+  return { frame, bytes, fonts };
 }
 
 export function selectNativeFrame(events, { rendererPids, start, end, viewport }) {

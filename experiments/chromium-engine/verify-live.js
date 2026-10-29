@@ -118,6 +118,13 @@ export async function verifyLive({ root, canvasKitDirectory, outputDir, executab
     const ready = () => page.waitForFunction(() => document.documentElement.dataset.connection === 'connected' &&
       Boolean(window.nativeViewer?.state().client?.presented), undefined, { timeout: 15000 });
     await ready();
+    const firstClient = await page.evaluate(() => window.nativeViewer.state().client);
+    const offeredFonts = internal.frames.latest.frame.resources.filter(resource => resource.kind === 'font');
+    const installedFonts = new Set((report.replayRuntime.fonts || []).map(font => font.id));
+    report.fontRuntime = { catalogFonts: installedFonts.size, firstClientDownloads: firstClient.downloads,
+      offeredFonts, preinstalledOffered: offeredFonts.filter(font => installedFonts.has(font.id)).map(font => font.id) };
+    check(firstClient.downloads.fonts > 0, 'Native client did not load an independent font asset');
+    if (report.fontRuntime.preinstalledOffered.length) check(firstClient.downloads.preinstalledFonts > 0, 'Preinstalled runtime font was not used');
     async function compare(name) {
       await ready();
       const reference = references.get(name);
@@ -187,13 +194,17 @@ export async function verifyLive({ root, canvasKitDirectory, outputDir, executab
     report.steps.push('Direct typing, shortcuts, paste and committed composition reach Chromium without a separate text bar; Escape releases local focus');
 
     const beforeTimer = await metrics(), beforeTimerImage = digest(await png(page));
+    const beforeTimerDownloads = await page.evaluate(() => window.nativeViewer.state().client.downloads);
     await point(520, 250); await until(() => page.evaluate(() => window.nativeViewer.state().pendingInputs === 0), 'Focus action drained');
     await page.keyboard.press('Tab'); await until(() => page.evaluate(() => window.nativeViewer.state().pendingInputs === 0), 'Remote Tab drained');
     await page.keyboard.press('Enter');
     await until(async () => (await state()).tick >= 3, 'Autonomous timer progression');
     await ready();
     const afterTimer = await metrics(), afterTimerImage = digest(await png(page));
-    report.autonomous = { before: beforeTimer, after: afterTimer, pixelsChanged: beforeTimerImage !== afterTimerImage };
+    const afterTimerDownloads = await page.evaluate(() => window.nativeViewer.state().client.downloads);
+    report.autonomous = { before: beforeTimer, after: afterTimer, pixelsChanged: beforeTimerImage !== afterTimerImage,
+      fontDownloads: { before: beforeTimerDownloads, after: afterTimerDownloads } };
+    check(beforeTimerDownloads.fonts === afterTimerDownloads.fonts, 'Stable fonts were downloaded again for autonomous frames');
     check(!afterTimer.traceActive && afterTimer.nativeFrames > beforeTimer.nativeFrames + 2 &&
       afterTimer.frames.revision > beforeTimer.frames.revision + 2 && report.autonomous.pixelsChanged, 'Autonomous page updates do not stream without trace/action capture');
     report.steps.push('Native Tab/Enter starts page-owned timers; multiple new frames and pixels arrive while trace is stopped');
@@ -202,10 +213,24 @@ export async function verifyLive({ root, canvasKitDirectory, outputDir, executab
     await context.setOffline(true); await delay(900);
     const duringOffline = await state();
     check(duringOffline.tick > beforeOffline.tick && (await metrics()).browserPid === beforeTimer.browserPid, 'Viewer disconnection stopped/restarted the browser');
-    await context.setOffline(false); await page.locator('#reconnect').click(); await ready();
+    await context.setOffline(false); await page.locator('#reconnect').click();
+    try { await ready(); }
+    catch (error) {
+      report.reconnectFailure = { phase: 'offline-reconnect', frames: internal.frames.stats, metrics: await metrics(),
+        viewer: await page.evaluate(() => ({ ...window.nativeViewer.state(), notice: document.querySelector('#notice').textContent,
+          status: document.querySelector('#connection').textContent })) };
+      throw error;
+    }
     const afterReconnect = await page.evaluate(() => window.nativeViewer.state());
     check(afterReconnect.client.epoch !== oldEpoch && afterReconnect.sessionId === session.id, 'Reconnect did not establish a fresh full-frame epoch');
-    await page.reload(); await ready();
+    await page.reload();
+    try { await ready(); }
+    catch (error) {
+      report.reconnectFailure = { phase: 'reload', frames: internal.frames.stats, metrics: await metrics(),
+        viewer: await page.evaluate(() => ({ ...window.nativeViewer.state(), notice: document.querySelector('#notice').textContent,
+          status: document.querySelector('#connection').textContent })) };
+      throw error;
+    }
     check((await page.evaluate(() => window.nativeViewer.state())).sessionId === session.id && (await metrics()).browserPid === beforeTimer.browserPid,
       'Viewer reload failed to restore the same running page');
     report.reconnect = { browserPid: beforeTimer.browserPid, oldEpoch, newEpoch: afterReconnect.client.epoch,

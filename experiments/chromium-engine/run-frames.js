@@ -67,7 +67,7 @@ try {
     ? 'native-frame-candidate' : 'acceptance-not-met';
   report.limitations = ['Trusted fixed 2D fixture and trace transport only; not a production Chromium backend.',
     'Images, filters, masking, non-SrcOver blending, 3D, iframe surfaces, Canvas, WebGL, video and copy-output are rejected or unverified.',
-    'SKP resources include embedded fonts; independent font/image deltas, DPR/zoom, resumption, cost and multi-worker handoff remain unverified.'];
+    'Fonts are independent binary assets; image deltas, DPR/zoom, resumption, cost and multi-worker handoff remain unverified.'];
   report.finishedAt = new Date().toISOString(); await save();
   console.log(JSON.stringify({ status: report.status, stages: report.stages, nativeChanges: report.nativeChanges,
     raster: report.engine.raster.eventCount, pixelDraw: report.engine.pixelDraw.eventCount,

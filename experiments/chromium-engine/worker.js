@@ -22,6 +22,7 @@ const backend = new ChromiumSession({
   onFrame(payload) { latest = { payload, sequence: ++produced }; sendLatest(); },
   onFault(message, fatal = false) { process.send?.({ event: 'native-fault', message, fatal }); },
   onBrowser(pid) { process.send?.({ event: 'native-browser', pid }); },
+  onFontDirectory(directory) { process.send?.({ event: 'native-directory', directory }); },
 });
 let chain = Promise.resolve();
 process.on('message', ({ id, method, params }) => {

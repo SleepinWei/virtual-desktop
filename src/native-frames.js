@@ -1,6 +1,7 @@
 import { randomUUID, createHash } from 'node:crypto';
 import { FrameChannel, FRAME_LIMITS, validateFrame } from '../experiments/chromium-paint/frame-protocol.js';
 import { AppError, ensure } from './errors.js';
+import { openNativeFont } from './native-font-file.js';
 
 export function visualSignature(frame) {
   return createHash('sha256').update(JSON.stringify({ viewport: frame.viewport, background: frame.background,
@@ -18,16 +19,34 @@ export class NativeFrames {
     validateFrame(frame);
     ensure(Array.isArray(resources) && resources.length === frame.resources.length, 500, 'NATIVE_RESOURCE_ERROR', 'Native resource inventory is incomplete');
     const incoming = new Map();
-    for (const entry of resources) {
-      const descriptor = frame.resources.find(resource => resource.id === entry.id), data = entry.data;
-      ensure(descriptor && Buffer.isBuffer(data) && data.length === descriptor.bytes &&
-        createHash('sha256').update(data).digest('hex') === descriptor.id && !incoming.has(entry.id),
-      500, 'NATIVE_RESOURCE_ERROR', 'Native resource bytes do not match');
-      incoming.set(entry.id, data);
+    try {
+      for (const entry of resources) {
+        const descriptor = frame.resources.find(resource => resource.id === entry.id), data = entry.data;
+        ensure(descriptor && !incoming.has(entry.id), 500, 'NATIVE_RESOURCE_ERROR', 'Native resource inventory does not match');
+        if (descriptor.kind === 'font') {
+          ensure(data === undefined, 500, 'NATIVE_RESOURCE_ERROR', 'Font bytes must use the binary asset store');
+          ensure(!this.resources.has(entry.id) || this.resources.get(entry.id).length === descriptor.bytes,
+            500, 'NATIVE_RESOURCE_ERROR', 'Changed native font length');
+          // Previously verified assets are immutable and pinned by open inode.
+          incoming.set(entry.id, this.resources.get(entry.id) || openNativeFont(entry.filePath, descriptor));
+        } else {
+          ensure(Buffer.isBuffer(data) && data.length === descriptor.bytes &&
+            createHash('sha256').update(data).digest('hex') === descriptor.id,
+          500, 'NATIVE_RESOURCE_ERROR', 'Native resource bytes do not match');
+          incoming.set(entry.id, data);
+        }
+      }
+    } catch (error) {
+      for (const [id, data] of incoming) if (!this.resources.has(id)) data.close?.();
+      if (error instanceof AppError) throw error;
+      throw new AppError(500, 'NATIVE_RESOURCE_ERROR', error.message);
     }
     this.received++;
     const signature = visualSignature(frame);
-    if (!this.fault && this.latest?.signature === signature) { this.duplicates++; return; }
+    if (!this.fault && this.latest?.signature === signature) {
+      for (const [id, data] of incoming) if (!this.resources.has(id)) data.close?.();
+      this.duplicates++; return;
+    }
     this.latest = { frame: { ...structuredClone(frame), bridgeSeq: ++this.revision }, signature };
     this.fault = null;
     for (const [id, data] of incoming) if (!this.resources.has(id)) this.resources.set(id, data);
@@ -119,17 +138,22 @@ export class NativeFrames {
       for (const packet of channel.pending.values()) for (const resource of packet.frame.resources) pinned.add(resource.id);
       for (const resource of channel.queued?.resources || []) pinned.add(resource.id);
     }
-    for (const id of this.resources.keys()) if (!pinned.has(id)) this.resources.delete(id);
+    for (const [id, data] of this.resources) if (!pinned.has(id)) { data.close?.(); this.resources.delete(id); }
     // The cap includes bytes pinned by all viewers, not just the newest frame.
     if (this.bytes > FRAME_LIMITS.cacheBytes) {
       for (const epoch of [...this.connections.keys()]) this.disconnect(epoch);
       const active = new Set(this.latest?.frame.resources.map(resource => resource.id) || []);
-      for (const id of this.resources.keys()) if (!active.has(id)) this.resources.delete(id);
+      for (const [id, data] of this.resources) if (!active.has(id)) { data.close?.(); this.resources.delete(id); }
     }
   }
   get bytes() { return [...this.resources.values()].reduce((sum, value) => sum + value.length, 0); }
   get stats() { return { revision: this.revision, received: this.received, duplicates: this.duplicates,
     resourceBytes: this.bytes, resources: this.resources.size, fault: this.fault,
     frameId: this.latest?.frame.id ?? null, connections: [...this.connections.values()].map(connection => connection.channel.state) }; }
-  close() { for (const epoch of [...this.connections.keys()]) this.disconnect(epoch); this.latest = null; this.resources.clear(); }
+  close() {
+    for (const epoch of [...this.connections.keys()]) this.disconnect(epoch);
+    this.latest = null;
+    for (const data of this.resources.values()) data.close?.();
+    this.resources.clear();
+  }
 }

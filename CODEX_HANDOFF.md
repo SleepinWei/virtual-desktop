@@ -6,6 +6,15 @@
 
 ## 当前实现
 
+
+本机新入口已在 `http://127.0.0.1:8082/native` 启动，使用独立 `.data/native-fonts-20261030`、单活跃会话与默认长期 watchdog；显式进程内 GPU。PID 文件 `/private/tmp/vd-fonts-8082-20261030.pid`，日志同名前缀 `.log`。8081 和旧 profile 未改。
+
+**2026-10-30 字体 runtime 改造已完成本轮验收，见 [证据](docs/chromium-font-runtime-2026-10-30.json) 和 [结构](docs/NATIVE_RUNTIME.md)。** 新包 `/Volumes/Extreme-APFS/Runtimes/virtual-desktop-fonts-156-20261030` payload 504.77 MiB，8 份预置资源共 10,208,879 bytes。普通字体以独立 SFNT 二进制提供，SKP 只保留 `vdfont01` 哈希/实例描述；当前 macOS 苹方的 Apple hvgl 无法被 FreeType 读取，已加入 `vdglyph1` 原 glyph ID 的原生矢量轮廓子集（8 个中文字符 7,952 bytes）。字体程序不进帧 JSON 或 worker IPC，后台 writer 先写完文件再发帧；每个 HTTP 下载复制已验证 inode 的描述符，已修复 ReadStream.destroy 关闭共享 FD 导致重连失败的问题。客户端验证字体和字形齐全才解码/ACK，淘汰旧字体子集及相关 picture。
+
+117 JS、16 Python、98 JS 语法、19 cc + 4 Viz 通过；9/9 字体导出/解码、有效哈希但缺 glyph 的拒绝测试、动态/预置字体两条 live 流程及共享 host 回归通过。预置字体实际命中，计时器多帧更新不重复下载字体。CERN 两个生产端成功，SKP 769,855→13,751 bytes；但严格密集文字区域仍有差异，网站性能比值不采纳，整体 gate 仍未通过。字体探针密集区域仅 1/9 通过，不要用整页留白冒充文字画质验收。图片、默认独立 GPU、通用网站完整覆盖未完成。中文预置的是测试字形子集，不是完整字库；累计子集每实例上限 4,096 glyph，单资源 64 MiB、缓存 128 MiB，尚非 glyph delta。
+
+编译对象已完成。最终链接的 6 GiB RSS 保护略超线时主机仍有 71% free、零新增换页；确认只剩单链接后仅该阶段使用单任务 8 GiB 上限，实际峰值约 6.24 GiB。常规 C++/WASM 编译仍 6 GiB，默认 native 测试 1.5 GiB，显式组合 live 2 GiB，35% free/近期 swap/4 秒心跳保护保留。用户授权关闭未用模拟器，并暂停了另一个持续重新拉起它们的任务；实体 Android 未动。旧两个已验收 runtime 包未改。真实新结果路径为 `test-results/font-runtime-20261030/{fonts-hvgl,live-dynamic-fixed,live-preinstalled,pool,cern}`，失败探针和旧候选保留作溯源。
+
 **2026-10-30 原因诊断完成，见 [证据](docs/chromium-native-diagnosis-2026-10-30.json) 与 [说明](docs/NATIVE_RUNTIME.md)。** 当前主要障碍在资源封装和客户端字体重放。CERN 769,855-byte SKP 的 98.23% 是两份完整 Times 字体；29 个拉丁字符用小字体仅 22,085 bytes，系统 UI 字体已超限。CoreText 精确匹配测得 SFNS 完整表约 7.87 MB（Base64 10.50 MB）、苹方约 59.43 MB（Base64 79.24 MB），远超 8 MiB JSON 帧预算。默认 SKP `kDoIncludeData` 不按 glyph 裁剪，不能靠扩大上限解决。上轮 Example 的轻量英文分类不准确，实际为多语种；本轮改用本地合成字体对照，没有继续访问 Example 做探针。
 
 图片是当前 C++ 的明确拒绝边界：2×2 PNG `<img>` / PNG background 均失败，无图和 inline SVG 可导出。像素问题已从源记录中隔离：同一 CERN SKP 交给 macOS Chromium 重放与普通参考逐像素误差为 0，CanvasKit 仍有 3/9 区域失败。CoreText/FreeType 行为不同，现有额外 CFF 校准未覆盖 TrueType Times；CSS smoothing 单开关仍未全部通过。macOS raster 只作独立诊断，未接生产截图回退。IANA bug 已修复：处理原先遗漏的标准 `ProcessReadyInBrowser`；歧义时补一份导航后 browser inventory，并要求 frame/URL/loader 稳定。真实复测在原 trace 中从 readiness 正确绑定新 renderer，随后仍因 frame-too-large 拒绝，不能说网站通过。浏览器 PID/category、精确主 frame 与 URL、歧义/伪 user timing 拒绝均保留。105 JS /16 Python /95 JS 语法及原生 smoke/pool 回归通过，无 C++ 重编。后续优先字体/字形外置与子集、图片资源、默认字体栅格匹配，再恢复通用网页验收；独立 GPU 问题保留。

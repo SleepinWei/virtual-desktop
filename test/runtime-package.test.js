@@ -70,7 +70,7 @@ test('monolithic packages bind the current profile and positive C++ evidence to 
     compiled: true, ccTestsPassed: true, vizTestsPassed: true, exitCode: 0, stage: 'engine-tests-complete',
     cppTestsEvidence: { version: 1, revision: source.revision, binarySha256: artifacts.headless_shell, profileSha256,
       testArtifacts: { cc_unittests: 'a'.repeat(64), viz_unittests: 'b'.repeat(64) },
-      results: { cc: { passed: true, count: 17, xmlSha256: 'c'.repeat(64) }, viz: { passed: true, count: 4, xmlSha256: 'd'.repeat(64) } } } };
+      results: { cc: { passed: true, count: 19, xmlSha256: 'c'.repeat(64) }, viz: { passed: true, count: 4, xmlSha256: 'd'.repeat(64) } } } };
   const path = join(root, 'chromium/virtual-desktop-build-state.json');
   await writeFile(path, JSON.stringify(state));
   assert.equal((await verifiedEngine(root, { requireStream: true })).binary, join(root, directory, 'headless_shell'));

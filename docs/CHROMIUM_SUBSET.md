@@ -1,5 +1,9 @@
 # Chromium 最小运行子集
 
+
+2026-10-30 字体资源版见 [验收记录](chromium-font-runtime-2026-10-30.json)：新包 `/Volumes/Extreme-APFS/Runtimes/virtual-desktop-fonts-156-20261030` payload **504.77 MiB**，其中 8 份常用字体/测试字形子集约 9.74 MiB。普通字体以 SFNT 二进制预置；Apple hvgl 字体用保留原 glyph ID 的原生轮廓子集，其他字形按需走私有二进制接口。客户端只加载当前帧所需资源，不将整套预置字体一次性装入 WASM。旧包不变，字体像素、图片和通用网站 gate 仍未完成。
+
+
 2026-10-29：lean monolithic 已完成同配置 C++、独立运行包及可信 fixture 的原生重放、视觉和接管测试。**所有成功的浏览器测试使用显式 macOS 进程内 GPU 模式；默认独立 GPU 启动仍未通过。** 结果见 [lean 验收](chromium-lean-acceptance-2026-10-29.json)。2026-10-28 的 component 包与历史结果保留，见 [旧包记录](chromium-subset-2026-10-28.json)。
 
 同日后续 [六站实测](chromium-sites-2026-10-29.json) 没有得到通用网站完整通过或等画质性能收益。CERN 可原生重放并操作，但严格局部像素失败；其他站点受超大帧、图片记录、来源绑定或 HTTP 失败限制。固定页的较低生产端耗时不能外推真实网站，详见 [性能解释](NATIVE_RUNTIME.md)。

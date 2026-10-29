@@ -1,3 +1,206 @@
+diff --git a/modules/canvaskit/canvaskit_bindings.cpp b/modules/canvaskit/canvaskit_bindings.cpp
+index 279ebb8..532e55f 100644
+--- a/modules/canvaskit/canvaskit_bindings.cpp
++++ b/modules/canvaskit/canvaskit_bindings.cpp
+@@ -62,6 +62,13 @@
+ #include "include/private/SkOnce.h"
+ #include "include/utils/SkParsePath.h"
+ #include "include/utils/SkShadowUtils.h"
++#include <map>
++#include <cmath>
++#include <set>
++#include "include/utils/SkNoDrawCanvas.h"
++#include "include/utils/SkCustomTypeface.h"
++#include <cstring>
++#include "src/core/SkFontDescriptor.h"
+ #include "src/core/SkFloatBits.h"
+ #include "src/core/SkPathPriv.h"
+ #include "src/core/SkPathRaw.h"
+@@ -1119,6 +1126,170 @@ private:
+     const SkMatrix*        fLM;
+ };
+ 
++
++#ifndef CK_NO_FONTS
++class RemoteGlyphVerifier : public SkNoDrawCanvas {
++public:
++    explicit RemoteGlyphVerifier(const std::map<SkTypefaceID, std::set<SkGlyphID>>& glyphs)
++        : SkNoDrawCanvas(SkIRect::MakeLTRB(-1048576, -1048576, 1048576, 1048576)), fGlyphs(glyphs) {}
++    bool failed = false;
++protected:
++    void onDrawTextBlob(const SkTextBlob* blob, SkScalar, SkScalar, const SkPaint&) override {
++        SkTextBlob::Iter iterator(*blob);
++        SkTextBlob::Iter::Run run;
++        while (iterator.next(&run)) {
++            auto found = fGlyphs.find(run.fTypeface->uniqueID());
++            if (found == fGlyphs.end()) continue;
++            for (int i = 0; i < run.fGlyphCount; ++i) {
++                if (!found->second.count(run.fGlyphIndices[i])) failed = true;
++            }
++        }
++    }
++    void onDrawPicture(const SkPicture* picture, const SkMatrix* matrix, const SkPaint* paint) override {
++        SkCanvas::onDrawPicture(picture, matrix, paint);
++    }
++private:
++    const std::map<SkTypefaceID, std::set<SkGlyphID>>& fGlyphs;
++};
++
++// One registry per viewer; font data is immutable and bounded. Picture-owned
++// typefaces retain their own streams when an inactive registry entry is evicted.
++class RemoteFontRegistry {
++public:
++    bool add(std::string id, WASMPointerU8 pointer, size_t bytes) {
++        auto data = SkData::MakeFromMalloc(reinterpret_cast<void*>(pointer), bytes);
++        if (id.size() != 64 || id.find_first_not_of("0123456789abcdef") != std::string::npos ||
++            bytes < 12 || bytes > 64 * 1024 * 1024) return false;
++        if (fFonts.count(id)) return fFonts[id]->size() == bytes;
++        if (fFonts.size() >= 1024 || fBytes + bytes > 128 * 1024 * 1024) return false;
++        fBytes += bytes;
++        fFonts.emplace(id, std::move(data));
++        return true;
++    }
++    void remove(std::string id) {
++        auto found = fFonts.find(id);
++        if (found == fFonts.end()) return;
++        fBytes -= found->second->size();
++        fFonts.erase(found);
++        for (auto it = fFaces.begin(); it != fFaces.end();) {
++            if (it->first.compare(0, 64, id) == 0) {
++                fCoverage.erase(it->second->uniqueID()); it = fFaces.erase(it);
++            }
++            else ++it;
++        }
++    }
++    sk_sp<SkPicture> picture(WASMPointerU8 pointer, size_t bytes) {
++        auto data = SkData::MakeFromMalloc(reinterpret_cast<void*>(pointer), bytes);
++        fFailed = false;
++        fUsedCoverage.clear();
++        SkDeserialProcs procs;
++        procs.fTypefaceCtx = this;
++        procs.fTypefaceStreamProc = [](SkStream& stream, void* ctx) -> sk_sp<SkTypeface> {
++            return static_cast<RemoteFontRegistry*>(ctx)->typeface(stream);
++        };
++        auto result = SkPicture::MakeFromData(data.get(), &procs);
++        if (result && !fFailed) {
++            RemoteGlyphVerifier verifier(fUsedCoverage);
++            result->playback(&verifier);
++            fFailed = verifier.failed;
++        }
++        return fFailed ? nullptr : result;
++    }
++private:
++    sk_sp<SkTypeface> outline(const sk_sp<SkData>& data, const sk_sp<SkData>& arguments,
++                                 const SkFontDescriptor& descriptor, std::set<SkGlyphID>* coverage) {
++        SkMemoryStream stream(data);
++        stream.skip(8);
++        uint32_t length = 0;
++        if (!stream.readU32(&length) || length != arguments->size()) return nullptr;
++        auto embedded = SkData::MakeFromStream(&stream, length);
++        if (!embedded || memcmp(embedded->data(), arguments->data(), length)) return nullptr;
++        SkFontMetrics metrics{};
++        if (!stream.readU32(&metrics.fFlags)) return nullptr;
++        for (SkScalar* value : {&metrics.fTop, &metrics.fAscent, &metrics.fDescent,
++              &metrics.fBottom, &metrics.fLeading, &metrics.fAvgCharWidth,
++              &metrics.fMaxCharWidth, &metrics.fXMin, &metrics.fXMax, &metrics.fXHeight,
++              &metrics.fCapHeight, &metrics.fUnderlineThickness, &metrics.fUnderlinePosition,
++              &metrics.fStrikeoutThickness, &metrics.fStrikeoutPosition}) {
++            if (!stream.readScalar(value) || !std::isfinite(*value) || std::abs(*value) > 64) return nullptr;
++        }
++        uint32_t count = 0, previous = 0;
++        if (!stream.readU32(&count) || count == 0 || count > 4096) return nullptr;
++        SkCustomTypefaceBuilder builder;
++        builder.setMetrics(metrics);
++        builder.setFontStyle(descriptor.getStyle());
++        for (uint32_t i = 0; i < count; ++i) {
++            uint32_t glyph = 0, bytes = 0;
++            SkScalar advance = 0;
++            if (!stream.readU32(&glyph) || glyph > 65535 || (i && glyph <= previous) ||
++                !stream.readScalar(&advance) || !std::isfinite(advance) || std::abs(advance) > 64 ||
++                !stream.readU32(&bytes) || bytes == 0 || bytes > 1024 * 1024) return nullptr;
++            auto pathData = SkData::MakeFromStream(&stream, bytes);
++            if (!pathData) return nullptr;
++            size_t consumed = 0;
++            auto path = SkPath::ReadFromMemory(pathData->data(), bytes, &consumed);
++            if (!path || consumed != bytes || !path->isFinite()) return nullptr;
++            builder.setGlyph(static_cast<SkGlyphID>(glyph), advance, *path);
++            coverage->insert(static_cast<SkGlyphID>(glyph));
++            previous = glyph;
++        }
++        if (!stream.isAtEnd()) return nullptr;
++        return builder.detach();
++    }
++    sk_sp<SkTypeface> typeface(SkStream& stream) {
++        const size_t start = stream.getPosition();
++        char magic[8];
++        if (stream.read(magic, sizeof(magic)) != sizeof(magic)) { fFailed = true; return nullptr; }
++        if (memcmp(magic, "vdfont01", 8) != 0) {
++            stream.seek(start);
++            auto face = SkTypeface::MakeDeserialize(&stream, fManager);
++            if (!face) fFailed = true;
++            return face;
++        }
++        char hash[64];
++        uint32_t length = 0;
++        if (stream.read(hash, sizeof(hash)) != sizeof(hash) || !stream.readU32(&length) ||
++            length == 0 || length > 16 * 1024) { fFailed = true; return nullptr; }
++        auto arguments = SkData::MakeFromStream(&stream, length);
++        std::string id(hash, sizeof(hash));
++        auto asset = fFonts.find(id);
++        if (!arguments || asset == fFonts.end()) { fFailed = true; return nullptr; }
++        std::string key = id + std::string(static_cast<const char*>(arguments->data()), length);
++        auto found = fFaces.find(key);
++        if (found != fFaces.end()) {
++            auto coverage = fCoverage.find(found->second->uniqueID());
++            if (coverage != fCoverage.end()) fUsedCoverage[coverage->first] = coverage->second;
++            return found->second;
++        }
++        SkMemoryStream descriptorStream(arguments);
++        SkFontDescriptor descriptor;
++        if (!SkFontDescriptor::Deserialize(&descriptorStream, &descriptor, nullptr) ||
++            descriptor.hasStream() || descriptorStream.getPosition() != length) {
++            fFailed = true; return nullptr;
++        }
++        const bool outlines = asset->second->size() >= 8 && !memcmp(asset->second->data(), "vdglyph1", 8);
++        std::set<SkGlyphID> coverage;
++        auto face = outlines ? this->outline(asset->second, arguments, descriptor, &coverage)
++            : fManager->makeFromStream(std::make_unique<SkMemoryStream>(asset->second), descriptor.getFontArguments());
++        if (!face) { fFailed = true; return nullptr; }
++        if (fFaces.size() >= 1024) { fFaces.clear(); fCoverage.clear(); }
++        if (outlines) {
++            fCoverage[face->uniqueID()] = coverage;
++            fUsedCoverage[face->uniqueID()] = std::move(coverage);
++        }
++        fFaces.emplace(std::move(key), face);
++        return face;
++    }
++    size_t fBytes = 0;
++    bool fFailed = false;
++    sk_sp<SkFontMgr> fManager = SkFontMgr_New_Custom_Empty();
++    std::map<std::string, sk_sp<SkData>> fFonts;
++    std::map<std::string, sk_sp<SkTypeface>> fFaces;
++    std::map<SkTypefaceID, std::set<SkGlyphID>> fCoverage;
++    std::map<SkTypefaceID, std::set<SkGlyphID>> fUsedCoverage;
++};
++#endif
++
+ EMSCRIPTEN_BINDINGS(Skia) {
+ #ifdef ENABLE_GPU
+     constant("gpu", true);
+@@ -1212,6 +1383,13 @@ EMSCRIPTEN_BINDINGS(Skia) {
+              }));
+ 
+ #ifdef CK_SERIALIZE_SKP
++#ifndef CK_NO_FONTS
++    class_<RemoteFontRegistry>("RemoteFontRegistry")
++        .constructor<>()
++        .function("_addFont", &RemoteFontRegistry::add)
++        .function("removeFont", &RemoteFontRegistry::remove)
++        .function("_makePicture", &RemoteFontRegistry::picture);
++#endif
+     function("_MakePicture",
+              optional_override([](WASMPointerU8 dPtr, size_t bytes) -> sk_sp<SkPicture> {
+                  uint8_t* d = reinterpret_cast<uint8_t*>(dPtr);
 diff --git a/src/ports/SkFontHost_FreeType.cpp b/src/ports/SkFontHost_FreeType.cpp
 index 1534ed3..0ea4b4a 100644
 --- a/src/ports/SkFontHost_FreeType.cpp

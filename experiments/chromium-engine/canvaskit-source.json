@@ -5,6 +5,20 @@
     "src/ports/SkFontHost_FreeType.cpp": {
       "upstreamSha256": "574c9f2664fcc212fc43773ab730fa881367a45e8855033c026b67d1374dd428",
       "patchedSha256": "f7648de34cc9f685822e42ae589f8c3ad6399f400e7d91fd7d931cf6236a7aee"
+    },
+    "modules/canvaskit/canvaskit_bindings.cpp": {
+      "upstreamSha256": "807cae4d50425fb51160dac958bb7291a295751ab2d60471c20964568d13a9a6",
+      "patchedSha256": "40a2b4a9735fc31522b536e3241d63c78ffa9e7cab009e5dd040e77c4e1ba674"
     }
+  },
+  "fontRegistry": {
+    "version": 1,
+    "reference": "vdfont01-sha256-font-descriptor",
+    "missingFont": "reject-picture",
+    "maxFontBytes": 67108864,
+    "maxCacheBytes": 134217728,
+    "outlineFormat": "vdglyph1",
+    "outlineGlyphLimit": 4096,
+    "missingGlyph": "reject-picture"
   }
 }

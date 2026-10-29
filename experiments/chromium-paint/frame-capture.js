@@ -1,9 +1,10 @@
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile, copyFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { createHash, randomUUID } from 'node:crypto';
 import { chromium } from 'playwright';
 import { captureLaunchArgs, findPageProvenance, loopbackUrl, recordTrace, settlePage, analyzeTrace } from './capture.js';
 import { selectNativeFrame } from './native-frame.js';
+import { createNativeStream } from '../chromium-engine/native-stream.js';
 
 export const FRAME_STAGES = ['before', 'changed', 'scrolled', 'removed'];
 export async function frameFixtureFingerprint() {
@@ -40,9 +41,12 @@ export async function captureFrames({ url, executablePath, outputDir, viewport =
   if (new URL(fixtureUrl).pathname !== '/frames.html') throw new Error('Expected the trusted /frames.html fixture');
   if (!executablePath) throw new Error('Native frame capture requires an explicit patched executablePath');
   await mkdir(join(outputDir, 'pictures'), { recursive: true });
+  await mkdir(join(outputDir, 'fonts'), { recursive: true });
   const args = captureLaunchArgs({ remotePaint: true, noDisplay: true, producerBufferBytes: 33554432 });
-  const browser = await chromium.launch({ executablePath, headless: true, args });
+  const stream = await createNativeStream(() => {});
+  let browser;
   try {
+    browser = await chromium.launch({ executablePath, headless: true, args, env: { ...process.env, ...stream.environment } });
     const context = await browser.newContext({ viewport, deviceScaleFactor: 1 });
     const fixtureSha256 = await frameFixtureFingerprint();
     for (const [name, expected] of Object.entries(fixtureSha256)) {
@@ -78,6 +82,7 @@ export async function captureFrames({ url, executablePath, outputDir, viewport =
       const start = timestamp(marker.start), end = timestamp(marker.end);
       const selected = selectNativeFrame(trace.events, { rendererPids: provenance.rendererPids, start, end, viewport });
       for (const [id, data] of selected.bytes) await writeFile(join(outputDir, `pictures/${id}.skp`), data);
+      for (const resource of selected.fonts.values()) await copyFile(stream.fontResource(resource.id).filePath, join(outputDir, resource.path));
       stages.push({ name: marker.name, frame: selected.frame, evidence: {
         eventIndex: selected.eventIndex, observedFrames: selected.observedFrames, start, end,
       } });
@@ -92,5 +97,5 @@ export async function captureFrames({ url, executablePath, outputDir, viewport =
     if (JSON.stringify(fixtureSha256) !== JSON.stringify(await frameFixtureFingerprint())) throw new Error('Fixture source changed during capture');
     await writeFile(join(outputDir, 'frame-capture.json'), JSON.stringify(manifest, null, 2));
     return manifest;
-  } finally { await browser.close(); }
+  } finally { await browser?.close(); await stream.close(); }
 }

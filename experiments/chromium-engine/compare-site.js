@@ -2,6 +2,8 @@ import { mkdir, writeFile, readFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { performance, monitorEventLoopDelay } from 'node:perf_hooks';
 import { parseArgs } from 'node:util';
+import { createWriteStream } from 'node:fs';
+import { pipeline } from 'node:stream/promises';
 import { chromium } from 'playwright';
 import { verifiedEngine } from './verified.js';
 import { ChromiumSession } from './session.js';
@@ -23,6 +25,7 @@ if (!values.root || !values.canvaskit || !values.output || !Object.hasOwn(siteWo
     !Number.isInteger(iterations) || iterations < 4 || iterations > 12 || ![1, 2].includes(rounds)) throw new Error('Use a configured workload, 4..12 iterations and 1..2 rounds');
 const output = resolve(values.output), workload = siteWorkloads[values.site], policy = externalSites[values.site], viewport = { width: 960, height: 720 };
 await mkdir(join(output, 'pictures'), { recursive: true });
+await mkdir(join(output, 'fonts'), { recursive: true });
 const report = { version: 1, startedAt: new Date().toISOString(), status: 'initializing', site: values.site, url: policy.url,
   gpuProcessMode: process.env.VIRTUAL_DESKTOP_MAC_GPU_MODE ?? 'separate', viewport, workload, iterations, rounds: [], comparisons: [], visuals: [], errors: [],
   engineSplitGate: 'not-passed', serverRasterBypassed: false,
@@ -46,7 +49,9 @@ async function archive(hub, name, state) {
     if (stored.has(resource.id)) continue;
     const data = hub.resources.get(resource.id); check(data, 'Missing native archive resource');
     check(storedBytes + data.length <= 128 * 1024 ** 2, 'Site archive exceeds 128 MiB');
-    await writeFile(join(output, resource.path), data); stored.add(resource.id); storedBytes += data.length;
+    if (Buffer.isBuffer(data)) await writeFile(join(output, resource.path), data);
+    else await pipeline(data.stream(), createWriteStream(join(output, resource.path), { mode: 0o600 }));
+    stored.add(resource.id); storedBytes += data.length;
   }
   manifest.stages.push({ name, frame, state });
   await writeFile(join(output, 'frame-capture.json'), JSON.stringify(manifest, null, 2));
@@ -56,7 +61,7 @@ async function runMode(engine, mode, round) {
   let server, browser, native, page, audit, busy = false, loop, lastJpeg;
   const hub = new NativeFrames(() => ({ owner: 'agent', epoch: 1 }));
   const samples = [], faults = [], seen = new Set();
-  const produced = { frames: 0, resourceBytes: 0, metadataBytes: 0, uniqueResourceBytes: 0 };
+  const produced = { frames: 0, resourceBytes: 0, metadataBytes: 0, uniqueResourceBytes: 0, ipcBufferBytes: 0, referencedFontBytes: 0 };
   const start = await hostSample([process.pid]);
   const interval = setInterval(async () => {
     if (busy) return; busy = true;
@@ -70,9 +75,11 @@ async function runMode(engine, mode, round) {
         onFrame(payload) {
           try {
             hub.ingest(payload); produced.frames++; produced.metadataBytes += Buffer.byteLength(JSON.stringify(payload.frame));
-            for (const { id, data } of payload.resources) {
-              produced.resourceBytes += data.length;
-              if (!seen.has(id)) { seen.add(id); produced.uniqueResourceBytes += data.length; }
+            for (const resource of payload.frame.resources) {
+              produced.resourceBytes += resource.bytes;
+              if (resource.kind === 'font') produced.referencedFontBytes += resource.bytes;
+              else produced.ipcBufferBytes += resource.bytes;
+              if (!seen.has(resource.id)) { seen.add(resource.id); produced.uniqueResourceBytes += resource.bytes; }
             }
           } catch (error) { faults.push(error.message); hub.unsupported(error.message); }
         },

@@ -2,9 +2,23 @@ import { readFile } from 'node:fs/promises';
 import { resolve, join } from 'node:path';
 import { createHash } from 'node:crypto';
 import { sha256 } from '../chromium-engine/artifacts.js';
+import { FRAME_LIMITS, validateResource } from './frame-protocol.js';
+import { openNativeFont } from '../../src/native-font-file.js';
 
 const assetNames = ['canvaskit.js', 'canvaskit.wasm'];
 const bundled = new URL('../../node_modules/canvaskit-wasm/bin/full/', import.meta.url);
+
+export function validateFontCatalog(fonts = []) {
+  if (!Array.isArray(fonts) || fonts.length > FRAME_LIMITS.resources) throw new Error('Invalid runtime font catalog');
+  const ids = new Set(); let bytes = 0;
+  for (const font of fonts) {
+    validateResource(font);
+    if (font.kind !== 'font' || ids.has(font.id)) throw new Error('Invalid runtime font catalog');
+    ids.add(font.id); bytes += font.bytes;
+  }
+  if (bytes > FRAME_LIMITS.cacheBytes) throw new Error('Runtime font catalog exceeds its budget');
+  return fonts;
+}
 
 // Fingerprint the actual bytes served to the client, including custom builds.
 export async function loadReplayRuntime(directory) {
@@ -30,7 +44,11 @@ export async function loadReplayRuntime(directory) {
       throw new Error('CanvasKit runtime checksum differs: ' + name);
     }
   }
-  return { assets, metadata };
+  const fonts = new Map();
+  try {
+    for (const font of validateFontCatalog(metadata.fonts)) fonts.set(font.id, openNativeFont(join(root, font.path), font));
+  } catch (error) { for (const font of fonts.values()) font.close(); throw error; }
+  return { assets, metadata, fonts, close() { for (const font of fonts.values()) font.close(); fonts.clear(); } };
 }
 
 export async function verifyRuntimeBuild(runtime, directory, root, source) {

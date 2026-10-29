@@ -15,13 +15,14 @@ const STARTUP_TRACE = { recordMode: 'recordAsMuchAsPossible', traceBufferSizeInK
 const delay = milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds));
 
 export class ChromiumSession {
-  constructor({ onFrame, onFault, onBrowser, sharedHost, onPage, onStartupTrace }) {
+  constructor({ onFrame, onFault, onBrowser, onFontDirectory, sharedHost, onPage, onStartupTrace }) {
     this.onFrame = onFrame; this.onFault = onFault; this.onBrowser = onBrowser;
     this.candidates = new Map(); this.actions = new Map(); this.frames = 0; this.excluded = 0;
     this.latest = null; this.route = null; this.closed = false; this.traceActive = false;
     this.sharedHost = sharedHost; this.leaseId = randomUUID();
     this.onPage = onPage;
     this.onStartupTrace = onStartupTrace;
+    this.onFontDirectory = onFontDirectory;
   }
   async start({ root, expectedArtifactsSha256, expectedPatchSha256, url, viewport, saved, allowedPaths, site }) {
     const verified = this.sharedHost?.engine || await verifiedEngine(root, { requireStream: true });
@@ -40,6 +41,7 @@ export class ChromiumSession {
       url = unique.href; this.url = url;
     } else {
       this.stream = await createNativeStream(message => this.receive(message));
+      this.onFontDirectory?.(this.stream.directory);
       this.server = await chromium.launchServer({ executablePath: verified.binary, headless: true, host: '127.0.0.1', timeout: 15000,
         // Cross-site process launches serialize tracing shared memory through an
         // upstream switch capped at 8 MiB. Live frames do not use trace transport.
@@ -170,12 +172,13 @@ export class ChromiumSession {
       ensure(!message.error, 422, 'NATIVE_FRAME_UNSUPPORTED', message.error || 'Native producer error');
       const native = { name: 'VirtualDesktop.RemotePaintFrame', cat: 'cc', pid: message.pid, ts: message.ts,
         args: { snapshot: message.snapshot } };
-      const { frame, bytes } = normalizeNativeFrame(native);
+      const { frame, bytes, fonts } = normalizeNativeFrame(native);
       ensure(frame.viewport.width === this.viewport.width && frame.viewport.height === this.viewport.height,
         422, 'NATIVE_VIEWPORT_UNSUPPORTED', 'Native viewport changed outside the session configuration');
       this.frames++;
       this.latest = { frame, signature: visualSignature(frame) };
-      this.onFrame({ frame, resources: [...bytes].map(([id, data]) => ({ id, data })) });
+      this.onFrame({ frame, resources: [...fonts.keys()].map(id => this.stream.fontResource(id))
+        .concat([...bytes].map(([id, data]) => ({ id, data }))) });
     } catch (error) { this.latest = null; this.lastFault = error.message; this.onFault(error.message); }
   }
   async action({ actionId, action, expectedSignature }) {

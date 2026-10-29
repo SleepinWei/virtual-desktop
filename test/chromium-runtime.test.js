@@ -50,3 +50,29 @@ test('runtime acceptance rejects stale build success and changed compiler config
   await writeFile(join(directory, 'args.gn'), 'changed GN arguments');
   await assert.rejects(verifyRuntimeBuild({ metadata }, directory, root, metadata), /configuration or patch/);
 });
+
+test('runtime font catalogs verify independent binary assets and reject corrupt or escaping entries', async t => {
+  const directory = await mkdtemp(join(tmpdir(), 'canvaskit-font-catalog-'));
+  t.after(() => rm(directory, { force: true, recursive: true }));
+  const font = Buffer.from('synthetic binary runtime font for protocol test');
+  const { createHash } = await import('node:crypto');
+  const id = createHash('sha256').update(font).digest('hex');
+  const metadata = { schemaVersion: 1, id: 'synthetic font runtime', backend: 'software', skiaRevision: 'a'.repeat(40), assets: {},
+    fonts: [{ kind: 'font', id, bytes: font.length, path: `fonts/${id}.font` }] };
+  await mkdir(join(directory, 'fonts'));
+  await writeFile(join(directory, metadata.fonts[0].path), font);
+  for (const name of ['canvaskit.js', 'canvaskit.wasm']) {
+    await writeFile(join(directory, name), 'synthetic font runtime: ' + name); metadata.assets[name] = await sha256(join(directory, name));
+  }
+  const manifest = join(directory, 'runtime.json');
+  await writeFile(manifest, JSON.stringify(metadata));
+  const runtime = await loadReplayRuntime(directory);
+  assert.equal(runtime.fonts.get(id).length, font.length); assert.equal(runtime.assets.size, 2);
+  const stream = runtime.fonts.get(id).stream(); runtime.close();
+  const chunks = []; for await (const chunk of stream) chunks.push(chunk);
+  assert.deepEqual(Buffer.concat(chunks), font);
+  await writeFile(join(directory, metadata.fonts[0].path), Buffer.alloc(font.length));
+  await assert.rejects(loadReplayRuntime(directory), /SHA-256/);
+  metadata.fonts[0].path = '../outside.font'; await writeFile(manifest, JSON.stringify(metadata));
+  await assert.rejects(loadReplayRuntime(directory), /resource descriptor/);
+});

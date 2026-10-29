@@ -1,0 +1,894 @@
+{
+  "version": 1,
+  "recordedAt": "2026-10-29T18:49:22.773308+00:00",
+  "status": "font-resource-transport-verified",
+  "engineSplitGate": "not-passed",
+  "serverRasterBypassed": false,
+  "scope": "Native font programs are independent binary assets; no font programs in frame JSON/SKP or worker IPC. Nine controlled font cases and trusted live/pool flows passed transport/decoding. Strict generic-site text pixels remain unaccepted.",
+  "build": {
+    "chromiumRevision": "d0c02bfad08ec92a6ffcf989e53cd995e6381a4c",
+    "skiaRevision": "886e42fda11610a56dd1b22e8697e27f9d1e34f2",
+    "patchSha256": "d891ed5446b32f198c73fcdcba17f5d2cfc41bb8371edec8e3df9130a53d7f97",
+    "canvasKitPatchSha256": "f6381d50160473aad4f185a213ab4973ffcc1c768e158ad6455ebe860a8cb549",
+    "binarySha256": "b9daa4e24d7ab2642ceb639b1860c1aa041dee70cd0cdf8c284ee9e36c0ec068",
+    "profileSha256": "d8f52940ead346afedd9972fef103c491a28f639e756044e89a7a3443660f763",
+    "cppEvidence": {
+      "version": 1,
+      "revision": "d0c02bfad08ec92a6ffcf989e53cd995e6381a4c",
+      "binarySha256": "b9daa4e24d7ab2642ceb639b1860c1aa041dee70cd0cdf8c284ee9e36c0ec068",
+      "profileSha256": "d8f52940ead346afedd9972fef103c491a28f639e756044e89a7a3443660f763",
+      "testRoot": {
+        "path": "headless/virtual_desktop_lean_tests/BUILD.gn",
+        "sha256": "ceb93ecd4175bd7571c4e96217f94217e48173bd82fcf053ecaf4cc58549bf63"
+      },
+      "testArtifacts": {
+        "cc_unittests": "f266fc6feb1f312dc8a195b7f64310d258394ab5142d9dc6d882ce8b1c0cd1e4",
+        "viz_unittests": "ec5d9ba724f96a2182438d21002cf708e1ac07824f8255bb6082d78c4091de64"
+      },
+      "results": {
+        "cc": {
+          "passed": true,
+          "count": 19,
+          "xmlSha256": "d2b8bb235dd8e927ef42f6176cb744910254dec4eac2331cde932942d34acc32",
+          "names": [
+            "RemotePaintPictureLayerImplTest.PreservesRecordingWithoutTilings",
+            "RemotePaintPictureLayerImplTest.ActivatesSuccessiveRecordings",
+            "RemotePaintPictureLayerImplTest.RejectsEveryPictureDrawBackend",
+            "RemotePaintPictureLayerImplTest.ExportsAuthoritativeMembership",
+            "RemotePaintPictureLayerImplTest.RejectsUnknownDrawableLayer",
+            "LegacySWPictureLayerImplTest.UpdateTilesCreatesTilings",
+            "DisplayItemListTest.RemotePaintPreservesCoordinatesAndScroll",
+            "DisplayItemListTest.RemotePaintExternalFonts",
+            "DisplayItemListTest.RemotePaintOutlineFonts",
+            "PresentationTimeCallbackBufferTest.TestNoCallbacks",
+            "PresentationTimeCallbackBufferTest.TestMainThreadCallbackOnSuccess",
+            "PresentationTimeCallbackBufferTest.TestMainThreadCallbackOnFailure",
+            "PresentationTimeCallbackBufferTest.TestMainThreadSuccessfulCallback",
+            "PresentationTimeCallbackBufferTest.TestCompositorThreadSuccessfulCallback",
+            "PresentationTimeCallbackBufferTest.TestMixedCallbacksOnSuccess",
+            "PresentationTimeCallbackBufferTest.TestMixedCallbacksOnFailure",
+            "PresentationTimeCallbackBufferTest.TestCallbackBatching",
+            "PresentationTimeCallbackBufferTest.RemotePaintFailedPresentationsDoNotAccumulate",
+            "PresentationTimeCallbackBufferTest.RemotePaintFailureCancellationRequiresBothFeatures"
+          ]
+        },
+        "viz": {
+          "passed": true,
+          "count": 4,
+          "xmlSha256": "aaa42ef132569f2ee7073be94482cdbc46fc22c454e204edc9fc5f1f33544c71",
+          "names": [
+            "DisplayTest.RemotePaintNullDisplayPreservesFrameCallbacks",
+            "DisplayTest.RemotePaintNoDisplayRequiresPictureMode",
+            "DisplayTest.RemotePaintWithoutNoDisplayKeepsPixelBackend",
+            "DisplayTest.DisplayDamaged"
+          ]
+        }
+      }
+    },
+    "canvasKitAssets": {
+      "canvaskit.js": "3c3bfb0d2ac8cbe0cb0a4a1f031bf546bc8afc5181a90d8627a2b77cd98e90ab",
+      "canvaskit.wasm": "808e1063e536dbb8a76250d1a84a5f552e57d5f127f6501430471cf3bb8a8a9a"
+    }
+  },
+  "protocol": {
+    "version": 1,
+    "fontReference": "vdfont01",
+    "outlineFont": "vdglyph1",
+    "nativeJsonLimitBytes": 8388608,
+    "fontAssetLimitBytes": 67108864,
+    "fontCacheLimitBytes": 134217728,
+    "outlineGlyphsPerInstanceLimit": 4096,
+    "nativeWriter": "Immutable binary files flushed on the MayBlock writer before dependent socket frames are published.",
+    "gateway": "Verify SHA-256 with 64 KiB scratch space; pin original inode and duplicate its descriptor per response. No font Buffer in worker IPC.",
+    "viewer": "Load/hash fonts before SKP decode; reject missing fonts/glyphs before presentation and ACK; retire obsolete font subsets and dependent pictures.",
+    "outlineScope": "Only opaque hvgl fonts are converted to native outline subsets with original glyph IDs, instance identity and normalized metrics. Cumulative subsets grow when new glyphs appear; this is not a per-glyph delta protocol.",
+    "rawFontScope": "Portable SFNT fonts retain collection index, variation axes, palettes and synthetic flags.",
+    "privateFontScope": "Only explicitly packaged assets use the public runtime font path. Other fonts require the session viewer capability and an in-flight frame reference."
+  },
+  "package": {
+    "path": "/Volumes/Extreme-APFS/Runtimes/virtual-desktop-fonts-156-20261030",
+    "manifestSha256": "b982010fc8b3d3539f2b7ccfe714b5e811d07d27c71a45e0efd31429eee59209",
+    "payloadBytes": 529286772,
+    "payloadMiB": 504.77,
+    "engineFiles": 13,
+    "fontAssets": {
+      "count": 8,
+      "bytes": 10208879,
+      "scope": "Explicitly provisioned common fonts are immutable binary runtime assets. Other website fonts use the authorized session binary endpoint."
+    },
+    "catalog": [
+      {
+        "kind": "font",
+        "id": "6a0371fafef86d4c481a481a4b70bca57072a2e5483cba33e773229cfc3970b9",
+        "bytes": 21488,
+        "path": "fonts/6a0371fafef86d4c481a481a4b70bca57072a2e5483cba33e773229cfc3970b9.font"
+      },
+      {
+        "kind": "font",
+        "id": "19e14c0f25fe2d0566b85ab6f8f961863c8f2f5cb0704eed4fe679784b5e2498",
+        "bytes": 824920,
+        "path": "fonts/19e14c0f25fe2d0566b85ab6f8f961863c8f2f5cb0704eed4fe679784b5e2498.font"
+      },
+      {
+        "kind": "font",
+        "id": "1098bc29139b7120fdbe410509d0e97b8e3f9653949f2c76342aaf4c262e0454",
+        "bytes": 379520,
+        "path": "fonts/1098bc29139b7120fdbe410509d0e97b8e3f9653949f2c76342aaf4c262e0454.font"
+      },
+      {
+        "kind": "font",
+        "id": "58e221b242b33f3df1aeb167edd0f55965a7873668da9ce6a8837f842cb0df55",
+        "bytes": 376728,
+        "path": "fonts/58e221b242b33f3df1aeb167edd0f55965a7873668da9ce6a8837f842cb0df55.font"
+      },
+      {
+        "kind": "font",
+        "id": "c717b8075b6b9825549562eb394d21bcfbd32f0117233c6b8b8c4e3fb9265fbb",
+        "bytes": 7872432,
+        "path": "fonts/c717b8075b6b9825549562eb394d21bcfbd32f0117233c6b8b8c4e3fb9265fbb.font"
+      },
+      {
+        "kind": "font",
+        "id": "63bfc4f08c506a82f18b5c47f6c77543cf370d94d9a8cebd1876a50d25e6f6a4",
+        "bytes": 7952,
+        "path": "fonts/63bfc4f08c506a82f18b5c47f6c77543cf370d94d9a8cebd1876a50d25e6f6a4.font"
+      },
+      {
+        "kind": "font",
+        "id": "a16274010fee650122fca24268416f058259926ab15417ab216fdc9c161edc09",
+        "bytes": 5871,
+        "path": "fonts/a16274010fee650122fca24268416f058259926ab15417ab216fdc9c161edc09.font"
+      },
+      {
+        "kind": "font",
+        "id": "1b96cf32b1980bafee685b1f304fc183f375d8fdb7522380d1a0704139083b15",
+        "bytes": 719968,
+        "path": "fonts/1b96cf32b1980bafee685b1f304fc183f375d8fdb7522380d1a0704139083b15.font"
+      }
+    ],
+    "note": "Two outline resources are the controlled Chinese test glyph subsets, not complete Chinese fonts. Other glyphs are provided on demand as independent binary resources."
+  },
+  "fonts": {
+    "report": "test-results/font-runtime-20261030/fonts-hvgl/diagnostic-report.json",
+    "cases": [
+      {
+        "id": "fixture-latin",
+        "text": "Native font probe ABC abc 123",
+        "cssFamily": "Probe",
+        "platformFonts": [
+          {
+            "familyName": "Virtual Desktop Fixture Sans",
+            "postScriptName": "VirtualDesktopFixtureSans-Regular",
+            "isCustomFont": true,
+            "glyphCount": 29
+          }
+        ],
+        "nativeSupported": true,
+        "decoded": true,
+        "sanitizedNativeJsonBytes": 1655,
+        "skpBytes": 671,
+        "embeddedFontBytes": 0,
+        "fontAssets": [
+          {
+            "kind": "font",
+            "id": "6a0371fafef86d4c481a481a4b70bca57072a2e5483cba33e773229cfc3970b9",
+            "bytes": 21488,
+            "path": "fonts/6a0371fafef86d4c481a481a4b70bca57072a2e5483cba33e773229cfc3970b9.font"
+          }
+        ],
+        "fontFormats": [
+          {
+            "id": "6a0371fafef86d4c481a481a4b70bca57072a2e5483cba33e773229cfc3970b9",
+            "format": "sfnt"
+          }
+        ],
+        "denseTextRegion": {
+          "bounds": {
+            "x": 22,
+            "y": 22,
+            "width": 229,
+            "height": 28
+          },
+          "passed": false,
+          "meanAbsoluteChannelError": 5.347941359950093,
+          "pixelsOver32Fraction": 0.08655645664379288,
+          "limits": {
+            "maxMeanAbsoluteChannelError": 3,
+            "maxPixelsOver32Fraction": 0.02
+          },
+          "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+        }
+      },
+      {
+        "id": "serif-latin",
+        "text": "Native font probe ABC abc 123",
+        "cssFamily": "\"Times New Roman\"",
+        "platformFonts": [
+          {
+            "familyName": "Times New Roman",
+            "postScriptName": "TimesNewRomanPSMT",
+            "isCustomFont": false,
+            "glyphCount": 29
+          }
+        ],
+        "nativeSupported": true,
+        "decoded": true,
+        "sanitizedNativeJsonBytes": 1588,
+        "skpBytes": 621,
+        "embeddedFontBytes": 0,
+        "fontAssets": [
+          {
+            "kind": "font",
+            "id": "19e14c0f25fe2d0566b85ab6f8f961863c8f2f5cb0704eed4fe679784b5e2498",
+            "bytes": 824920,
+            "path": "fonts/19e14c0f25fe2d0566b85ab6f8f961863c8f2f5cb0704eed4fe679784b5e2498.font"
+          }
+        ],
+        "fontFormats": [
+          {
+            "id": "19e14c0f25fe2d0566b85ab6f8f961863c8f2f5cb0704eed4fe679784b5e2498",
+            "format": "sfnt"
+          }
+        ],
+        "denseTextRegion": {
+          "bounds": {
+            "x": 22,
+            "y": 22,
+            "width": 208,
+            "height": 21
+          },
+          "passed": false,
+          "meanAbsoluteChannelError": 6.468635531135531,
+          "pixelsOver32Fraction": 0.06707875457875458,
+          "limits": {
+            "maxMeanAbsoluteChannelError": 3,
+            "maxPixelsOver32Fraction": 0.02
+          },
+          "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+        }
+      },
+      {
+        "id": "default-serif",
+        "text": "Native font probe ABC abc 123",
+        "cssFamily": "serif",
+        "platformFonts": [
+          {
+            "familyName": "Times",
+            "postScriptName": "Times-Roman",
+            "isCustomFont": false,
+            "glyphCount": 29
+          }
+        ],
+        "nativeSupported": true,
+        "decoded": true,
+        "sanitizedNativeJsonBytes": 1564,
+        "skpBytes": 601,
+        "embeddedFontBytes": 0,
+        "fontAssets": [
+          {
+            "kind": "font",
+            "id": "1098bc29139b7120fdbe410509d0e97b8e3f9653949f2c76342aaf4c262e0454",
+            "bytes": 379520,
+            "path": "fonts/1098bc29139b7120fdbe410509d0e97b8e3f9653949f2c76342aaf4c262e0454.font"
+          }
+        ],
+        "fontFormats": [
+          {
+            "id": "1098bc29139b7120fdbe410509d0e97b8e3f9653949f2c76342aaf4c262e0454",
+            "format": "sfnt"
+          }
+        ],
+        "denseTextRegion": {
+          "bounds": {
+            "x": 22,
+            "y": 22,
+            "width": 208,
+            "height": 22
+          },
+          "passed": false,
+          "meanAbsoluteChannelError": 7.089816433566433,
+          "pixelsOver32Fraction": 0.06993006993006994,
+          "limits": {
+            "maxMeanAbsoluteChannelError": 3,
+            "maxPixelsOver32Fraction": 0.02
+          },
+          "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+        }
+      },
+      {
+        "id": "default-serif-bold",
+        "text": "Native font probe ABC abc 123",
+        "cssFamily": "serif",
+        "platformFonts": [
+          {
+            "familyName": "Times",
+            "postScriptName": "Times-Bold",
+            "isCustomFont": false,
+            "glyphCount": 29
+          }
+        ],
+        "nativeSupported": true,
+        "decoded": true,
+        "sanitizedNativeJsonBytes": 1560,
+        "skpBytes": 599,
+        "embeddedFontBytes": 0,
+        "fontAssets": [
+          {
+            "kind": "font",
+            "id": "58e221b242b33f3df1aeb167edd0f55965a7873668da9ce6a8837f842cb0df55",
+            "bytes": 376728,
+            "path": "fonts/58e221b242b33f3df1aeb167edd0f55965a7873668da9ce6a8837f842cb0df55.font"
+          }
+        ],
+        "fontFormats": [
+          {
+            "id": "58e221b242b33f3df1aeb167edd0f55965a7873668da9ce6a8837f842cb0df55",
+            "format": "sfnt"
+          }
+        ],
+        "denseTextRegion": {
+          "bounds": {
+            "x": 22,
+            "y": 22,
+            "width": 217,
+            "height": 22
+          },
+          "passed": false,
+          "meanAbsoluteChannelError": 4.275659824046921,
+          "pixelsOver32Fraction": 0.042312526183493925,
+          "limits": {
+            "maxMeanAbsoluteChannelError": 3,
+            "maxPixelsOver32Fraction": 0.02
+          },
+          "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+        }
+      },
+      {
+        "id": "system-latin",
+        "text": "Native font probe ABC abc 123",
+        "cssFamily": "system-ui",
+        "platformFonts": [
+          {
+            "familyName": ".SF NS",
+            "postScriptName": ".SFNS-Regular",
+            "isCustomFont": false,
+            "glyphCount": 29
+          }
+        ],
+        "nativeSupported": true,
+        "decoded": true,
+        "sanitizedNativeJsonBytes": 1641,
+        "skpBytes": 658,
+        "embeddedFontBytes": 0,
+        "fontAssets": [
+          {
+            "kind": "font",
+            "id": "c717b8075b6b9825549562eb394d21bcfbd32f0117233c6b8b8c4e3fb9265fbb",
+            "bytes": 7872432,
+            "path": "fonts/c717b8075b6b9825549562eb394d21bcfbd32f0117233c6b8b8c4e3fb9265fbb.font"
+          }
+        ],
+        "fontFormats": [
+          {
+            "id": "c717b8075b6b9825549562eb394d21bcfbd32f0117233c6b8b8c4e3fb9265fbb",
+            "format": "sfnt"
+          }
+        ],
+        "denseTextRegion": {
+          "bounds": {
+            "x": 22,
+            "y": 22,
+            "width": 227,
+            "height": 22
+          },
+          "passed": false,
+          "meanAbsoluteChannelError": 7.1649979975971165,
+          "pixelsOver32Fraction": 0.07028434120945135,
+          "limits": {
+            "maxMeanAbsoluteChannelError": 3,
+            "maxPixelsOver32Fraction": 0.02
+          },
+          "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+        }
+      },
+      {
+        "id": "system-cjk",
+        "text": "中文字体记录测试",
+        "cssFamily": "system-ui",
+        "platformFonts": [
+          {
+            "familyName": ".蘋方 UI-簡",
+            "postScriptName": ".PingFangUITextSC-Regular",
+            "isCustomFont": false,
+            "glyphCount": 8
+          }
+        ],
+        "nativeSupported": true,
+        "decoded": true,
+        "sanitizedNativeJsonBytes": 1486,
+        "skpBytes": 545,
+        "embeddedFontBytes": 0,
+        "fontAssets": [
+          {
+            "kind": "font",
+            "id": "63bfc4f08c506a82f18b5c47f6c77543cf370d94d9a8cebd1876a50d25e6f6a4",
+            "bytes": 7952,
+            "path": "fonts/63bfc4f08c506a82f18b5c47f6c77543cf370d94d9a8cebd1876a50d25e6f6a4.font"
+          }
+        ],
+        "fontFormats": [
+          {
+            "id": "63bfc4f08c506a82f18b5c47f6c77543cf370d94d9a8cebd1876a50d25e6f6a4",
+            "format": "native-outlines",
+            "glyphs": 8
+          }
+        ],
+        "denseTextRegion": {
+          "bounds": {
+            "x": 22,
+            "y": 22,
+            "width": 132,
+            "height": 22
+          },
+          "passed": false,
+          "meanAbsoluteChannelError": 20.205578512396695,
+          "pixelsOver32Fraction": 0.16425619834710745,
+          "limits": {
+            "maxMeanAbsoluteChannelError": 3,
+            "maxPixelsOver32Fraction": 0.02
+          },
+          "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+        },
+        "missingGlyphProbe": {
+          "applicable": true,
+          "rejected": true,
+          "replacements": 1,
+          "removedGlyph": 289,
+          "before": 8,
+          "after": 7
+        }
+      },
+      {
+        "id": "fixture-cjk-fallback",
+        "text": "中文字体记录测试",
+        "cssFamily": "Probe",
+        "platformFonts": [
+          {
+            "familyName": "蘋方-簡",
+            "postScriptName": "PingFangSC-Regular",
+            "isCustomFont": false,
+            "glyphCount": 6
+          },
+          {
+            "familyName": "Virtual Desktop Fixture Sans",
+            "postScriptName": "VirtualDesktopFixtureSans-Regular",
+            "isCustomFont": true,
+            "glyphCount": 2
+          }
+        ],
+        "nativeSupported": true,
+        "decoded": true,
+        "sanitizedNativeJsonBytes": 1910,
+        "skpBytes": 798,
+        "embeddedFontBytes": 0,
+        "fontAssets": [
+          {
+            "kind": "font",
+            "id": "6a0371fafef86d4c481a481a4b70bca57072a2e5483cba33e773229cfc3970b9",
+            "bytes": 21488,
+            "path": "fonts/6a0371fafef86d4c481a481a4b70bca57072a2e5483cba33e773229cfc3970b9.font"
+          },
+          {
+            "kind": "font",
+            "id": "a16274010fee650122fca24268416f058259926ab15417ab216fdc9c161edc09",
+            "bytes": 5871,
+            "path": "fonts/a16274010fee650122fca24268416f058259926ab15417ab216fdc9c161edc09.font"
+          }
+        ],
+        "fontFormats": [
+          {
+            "id": "6a0371fafef86d4c481a481a4b70bca57072a2e5483cba33e773229cfc3970b9",
+            "format": "sfnt"
+          },
+          {
+            "id": "a16274010fee650122fca24268416f058259926ab15417ab216fdc9c161edc09",
+            "format": "native-outlines",
+            "glyphs": 6
+          }
+        ],
+        "denseTextRegion": {
+          "bounds": {
+            "x": 22,
+            "y": 22,
+            "width": 134,
+            "height": 28
+          },
+          "passed": false,
+          "meanAbsoluteChannelError": 10.122867803837954,
+          "pixelsOver32Fraction": 0.1111407249466951,
+          "limits": {
+            "maxMeanAbsoluteChannelError": 3,
+            "maxPixelsOver32Fraction": 0.02
+          },
+          "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+        }
+      },
+      {
+        "id": "system-arabic",
+        "text": "اختبار الخط العربي",
+        "cssFamily": "system-ui",
+        "platformFonts": [
+          {
+            "familyName": ".SF NS",
+            "postScriptName": ".SFNS-Regular",
+            "isCustomFont": false,
+            "glyphCount": 2
+          },
+          {
+            "familyName": ".SF Arabic",
+            "postScriptName": ".SFArabic-Regular",
+            "isCustomFont": false,
+            "glyphCount": 22
+          }
+        ],
+        "nativeSupported": true,
+        "decoded": true,
+        "sanitizedNativeJsonBytes": 2234,
+        "skpBytes": 1038,
+        "embeddedFontBytes": 0,
+        "fontAssets": [
+          {
+            "kind": "font",
+            "id": "1b96cf32b1980bafee685b1f304fc183f375d8fdb7522380d1a0704139083b15",
+            "bytes": 719968,
+            "path": "fonts/1b96cf32b1980bafee685b1f304fc183f375d8fdb7522380d1a0704139083b15.font"
+          },
+          {
+            "kind": "font",
+            "id": "c717b8075b6b9825549562eb394d21bcfbd32f0117233c6b8b8c4e3fb9265fbb",
+            "bytes": 7872432,
+            "path": "fonts/c717b8075b6b9825549562eb394d21bcfbd32f0117233c6b8b8c4e3fb9265fbb.font"
+          }
+        ],
+        "fontFormats": [
+          {
+            "id": "1b96cf32b1980bafee685b1f304fc183f375d8fdb7522380d1a0704139083b15",
+            "format": "sfnt"
+          },
+          {
+            "id": "c717b8075b6b9825549562eb394d21bcfbd32f0117233c6b8b8c4e3fb9265fbb",
+            "format": "sfnt"
+          }
+        ],
+        "denseTextRegion": {
+          "bounds": {
+            "x": 22,
+            "y": 23,
+            "width": 119,
+            "height": 22
+          },
+          "passed": true,
+          "meanAbsoluteChannelError": 0.7711993888464477,
+          "pixelsOver32Fraction": 0.0015278838808250573,
+          "limits": {
+            "maxMeanAbsoluteChannelError": 3,
+            "maxPixelsOver32Fraction": 0.02
+          },
+          "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+        }
+      },
+      {
+        "id": "system-variable",
+        "text": "Native font probe ABC abc 123",
+        "cssFamily": "system-ui",
+        "platformFonts": [
+          {
+            "familyName": ".SF NS",
+            "postScriptName": ".SFNS-Regular_wdth_opsz180000_GRAD_wght28A0000",
+            "isCustomFont": false,
+            "glyphCount": 29
+          }
+        ],
+        "nativeSupported": true,
+        "decoded": true,
+        "sanitizedNativeJsonBytes": 1661,
+        "skpBytes": 674,
+        "embeddedFontBytes": 0,
+        "fontAssets": [
+          {
+            "kind": "font",
+            "id": "c717b8075b6b9825549562eb394d21bcfbd32f0117233c6b8b8c4e3fb9265fbb",
+            "bytes": 7872432,
+            "path": "fonts/c717b8075b6b9825549562eb394d21bcfbd32f0117233c6b8b8c4e3fb9265fbb.font"
+          }
+        ],
+        "fontFormats": [
+          {
+            "id": "c717b8075b6b9825549562eb394d21bcfbd32f0117233c6b8b8c4e3fb9265fbb",
+            "format": "sfnt"
+          }
+        ],
+        "denseTextRegion": {
+          "bounds": {
+            "x": 22,
+            "y": 22,
+            "width": 218,
+            "height": 22
+          },
+          "passed": false,
+          "meanAbsoluteChannelError": 7.865929941618015,
+          "pixelsOver32Fraction": 0.07673060884070058,
+          "limits": {
+            "maxMeanAbsoluteChannelError": 3,
+            "maxPixelsOver32Fraction": 0.02
+          },
+          "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+        }
+      }
+    ],
+    "transportPassed": 9,
+    "denseTextRegionsPassed": 1,
+    "denseTextRegionsTotal": 9,
+    "pixelNote": "Dense-region thresholds were not relaxed. Whole-page white space is not used to certify font pixel compatibility.",
+    "nativeJsonByteNote": "Sanitized authenticated message JSON, including small SKP base64, after capability redaction; not HTTP/TLS/compressed wire bytes."
+  },
+  "causalFindings": {
+    "preFixHvglReport": "test-results/font-runtime-20261030/fonts-final/diagnostic-report.json",
+    "hvglTableBytes": 58687296,
+    "rawPingFangUiBytes": 59430408,
+    "outlinePingFangUiBytes": 7952,
+    "firstProbeCorrection": "Wait for native frames after the font-ready timing marker on the proven renderer/tree; never accept an earlier empty FOIT frame as a text replay.",
+    "httpStreamFix": "Explicit ReadStream.destroy() closed an autoClose:false shared FD. Per-request duplicates now survive completion, abort, reconnect and cache eviction."
+  },
+  "live": {
+    "dynamicReport": "test-results/font-runtime-20261030/live-dynamic-fixed/live-report.json",
+    "preinstalledReport": "test-results/font-runtime-20261030/live-preinstalled/live-report.json",
+    "fontRuntime": {
+      "catalogFonts": 8,
+      "firstClientDownloads": {
+        "resources": 4,
+        "bytes": 30105,
+        "preinstalledFonts": 1,
+        "fonts": 1,
+        "fontBytes": 21488
+      },
+      "offeredFonts": [
+        {
+          "kind": "font",
+          "id": "6a0371fafef86d4c481a481a4b70bca57072a2e5483cba33e773229cfc3970b9",
+          "bytes": 21488,
+          "path": "fonts/6a0371fafef86d4c481a481a4b70bca57072a2e5483cba33e773229cfc3970b9.font"
+        }
+      ],
+      "preinstalledOffered": [
+        "6a0371fafef86d4c481a481a4b70bca57072a2e5483cba33e773229cfc3970b9"
+      ]
+    },
+    "autonomousFontDownloads": {
+      "before": {
+        "resources": 13,
+        "bytes": 56932,
+        "preinstalledFonts": 1,
+        "fonts": 1,
+        "fontBytes": 21488
+      },
+      "after": {
+        "resources": 18,
+        "bytes": 65367,
+        "preinstalledFonts": 1,
+        "fonts": 1,
+        "fontBytes": 21488
+      }
+    },
+    "steps": [
+      "Agent executes in a persistent Chromium page before any viewer connects",
+      "Human takeover rejects the old agent, read-only mutation and stale displayed coordinates",
+      "Human coordinate focus, native text insertion and wheel scrolling reach the real page and local pixels",
+      "Direct typing, shortcuts, paste and committed composition reach Chromium without a separate text bar; Escape releases local focus",
+      "Native Tab/Enter starts page-owned timers; multiple new frames and pixels arrive while trace is stopped",
+      "Offline viewer and full viewer reload restore fresh epochs while the same browser/page keeps advancing",
+      "A corrupt resource triggers a fresh snapshot/retry while preserving the same execution session",
+      "Live diagnostic trace preserves the candidate zero-raster/zero-renderer-draw evidence; updates continue after trace ends",
+      "Killing the execution worker reaps its browser/renderer group and frees session capacity"
+    ],
+    "visuals": [
+      {
+        "name": "agent-before-viewer",
+        "passed": true
+      },
+      {
+        "name": "human-input-scroll",
+        "passed": true
+      }
+    ],
+    "scope": "One active native session. Direct input/paste/composition/scroll, timer-driven frames, offline/reload and corrupt-resource recovery. Physical OS IME candidate UI and dual-session cold restore are not revalidated."
+  },
+  "pool": {
+    "report": "test-results/font-runtime-20261030/pool/pool-report.json",
+    "status": "shared-native-host-candidate",
+    "scope": "Two trusted local contexts in one host; not public multi-tenant isolation."
+  },
+  "cern": {
+    "report": "test-results/font-runtime-20261030/cern/site-report.json",
+    "status": "public-site-comparison-incomplete",
+    "producerStatuses": [
+      {
+        "mode": "traditional-jpeg",
+        "status": "passed"
+      },
+      {
+        "mode": "native-records",
+        "status": "passed"
+      }
+    ],
+    "previousSkpBytes": 769855,
+    "newSkpBytes": 13751,
+    "skpReductionPercent": 98.214,
+    "fontProgramBytes": 756248,
+    "firstReferencedAssetBytes": 769999,
+    "note": "SKP shrinkage is not a cold-network saving: uninstalled fonts still require their initial binary transfer. No equal-quality performance ratio is accepted because strict text pixels fail.",
+    "comparisons": [
+      {
+        "round": 0,
+        "eligible": false,
+        "reason": "Both producers, equal state, fresh native frames, native replay and JPEG80 control must pass the strict visual stages",
+        "nativeOverOrdinary": null
+      }
+    ]
+  },
+  "validation": {
+    "jsTests": 117,
+    "pythonTests": 16,
+    "jsSyntaxFiles": 98,
+    "cppCcTests": 19,
+    "cppVizTests": 4,
+    "reports": [
+      {
+        "report": "test-results/font-runtime-20261030/fonts-hvgl/guard-report.json",
+        "status": "passed",
+        "stop": null,
+        "policy": {
+          "minFreePercent": 35,
+          "maxSwapoutBytes": 67108864,
+          "maxTreeRssBytes": 1610612736,
+          "maxHeartbeatMs": 4000,
+          "maxDurationMs": 180000,
+          "enforceSystemLoad": true,
+          "systemLoadStopAbove": 8
+        },
+        "maxRssMiB": 789.7,
+        "minFreePercent": 71,
+        "hostSwapoutDeltaBytes": 0
+      },
+      {
+        "report": "test-results/font-runtime-20261030/live-dynamic-fixed/guard-report.json",
+        "status": "passed",
+        "stop": null,
+        "policy": {
+          "minFreePercent": 35,
+          "maxSwapoutBytes": 67108864,
+          "maxTreeRssBytes": 2147483648,
+          "maxHeartbeatMs": 4000,
+          "maxDurationMs": 180000,
+          "enforceSystemLoad": true,
+          "systemLoadStopAbove": 8
+        },
+        "maxRssMiB": 1562.7,
+        "minFreePercent": 71,
+        "hostSwapoutDeltaBytes": 0
+      },
+      {
+        "report": "test-results/font-runtime-20261030/live-preinstalled/guard-report.json",
+        "status": "passed",
+        "stop": null,
+        "policy": {
+          "minFreePercent": 35,
+          "maxSwapoutBytes": 67108864,
+          "maxTreeRssBytes": 2147483648,
+          "maxHeartbeatMs": 4000,
+          "maxDurationMs": 180000,
+          "enforceSystemLoad": true,
+          "systemLoadStopAbove": 8
+        },
+        "maxRssMiB": 1541.7,
+        "minFreePercent": 75,
+        "hostSwapoutDeltaBytes": 0
+      },
+      {
+        "report": "test-results/font-runtime-20261030/pool/guard-report.json",
+        "status": "passed",
+        "stop": null,
+        "policy": {
+          "minFreePercent": 35,
+          "maxSwapoutBytes": 67108864,
+          "maxTreeRssBytes": 1610612736,
+          "maxHeartbeatMs": 4000,
+          "maxDurationMs": 180000,
+          "enforceSystemLoad": true,
+          "systemLoadStopAbove": 8
+        },
+        "maxRssMiB": 966.4,
+        "minFreePercent": 76,
+        "hostSwapoutDeltaBytes": 0
+      },
+      {
+        "report": "test-results/font-runtime-20261030/cern/guard-report.json",
+        "status": "test-failed",
+        "stop": null,
+        "policy": {
+          "minFreePercent": 35,
+          "maxSwapoutBytes": 67108864,
+          "maxTreeRssBytes": 1610612736,
+          "maxHeartbeatMs": 4000,
+          "maxDurationMs": 180000,
+          "enforceSystemLoad": true,
+          "systemLoadStopAbove": 8
+        },
+        "maxRssMiB": 722.3,
+        "minFreePercent": 76,
+        "hostSwapoutDeltaBytes": 0
+      }
+    ]
+  },
+  "buildSafety": {
+    "compilerDefaultRssMiB": 6144,
+    "finalLinkRssMiB": 8192,
+    "maxJobs": 8,
+    "linkJustification": "Dry-run confirmed the final main link was the only remaining step. Single-job link crossed 6 GiB RSS at 71% host headroom with no swapouts; only that bounded link phase used an 8 GiB cap. Incremental outline rebuilds use one compile task plus the same final link; regular C++/WASM builds use 6 GiB.",
+    "linkReports": [
+      {
+        "report": "test-results/font-runtime-20261030/link/guard-report.json",
+        "status": "compiled-candidate",
+        "stop": null,
+        "policy": {
+          "minFreePercent": 35,
+          "maxSwapoutBytes": 67108864,
+          "maxTreeRssBytes": 8589934592,
+          "maxHeartbeatMs": 4000,
+          "maxDurationMs": null,
+          "enforceSystemLoad": false,
+          "systemLoadStopAbove": null
+        },
+        "maxRssMiB": 6391.1,
+        "minFreePercent": 71,
+        "hostSwapoutDeltaBytes": 0
+      },
+      {
+        "report": "test-results/font-runtime-20261030/hvgl-static-build/guard-report.json",
+        "status": "compiled-candidate",
+        "stop": null,
+        "policy": {
+          "minFreePercent": 35,
+          "maxSwapoutBytes": 67108864,
+          "maxTreeRssBytes": 8589934592,
+          "maxHeartbeatMs": 4000,
+          "maxDurationMs": null,
+          "enforceSystemLoad": false,
+          "systemLoadStopAbove": null
+        },
+        "maxRssMiB": 6275.0,
+        "minFreePercent": 70,
+        "hostSwapoutDeltaBytes": 0
+      }
+    ],
+    "hostSafety": "Free >=35%, recent swapout <=64 MiB, heartbeat <=4 s; compiler utility QoS/nice 10/I/O throttle. Native browsers default 1.5 GiB; only explicit combined live tests use 2 GiB.",
+    "gpuMode": "All successful native/browser runs explicitly used --in-process-gpu. Separate GPU startup remains unresolved.",
+    "emulators": "User approved closing unused simulators, then paused another task that kept relaunching them. No physical Android device was touched."
+  },
+  "remaining": [
+    "Strict CoreText/FreeType and outline text pixel matching",
+    "Discardable image resource protocol",
+    "General website acceptance, iframe/media/IME/DPR coverage",
+    "Bounded long-session glyph delta/resource lifecycle optimization",
+    "Default separate GPU startup"
+  ],
+  "localService": {
+    "url": "http://127.0.0.1:8082/native",
+    "runtime": "/Volumes/Extreme-APFS/Runtimes/virtual-desktop-fonts-156-20261030",
+    "dataDirectory": ".data/native-fonts-20261030",
+    "maxActiveSessions": 1,
+    "gpuMode": "in-process",
+    "resourceGuard": "persistent default 1.5 GiB",
+    "httpFontCheck": "Two successive SHA-256 verified immutable runtime font downloads succeeded"
+  }
+}

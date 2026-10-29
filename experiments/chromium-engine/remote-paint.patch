@@ -241,40 +241,336 @@ index 4072fcfaf8..6ab469f8e7 100644
  // Legacy PictureLayerImplTest which forces SW rasterization. New tests should
  // default to the more common GPU rasterization path.
  class LegacySWPictureLayerImplTest : public PictureLayerImplTest {
+diff --git a/cc/paint/BUILD.gn b/cc/paint/BUILD.gn
+index f4628a9e40..685a2e90b4 100644
+--- a/cc/paint/BUILD.gn
++++ b/cc/paint/BUILD.gn
+@@ -147,6 +147,7 @@ cc_component("paint") {
+   deps = [
+     "//base",
+     "//components/crash/core/common:crash_key",
++    "//crypto",
+     "//gpu/command_buffer/common:mailbox",
+     "//ui/gfx:gfx_skia",
+     "//ui/gfx/animation",
 diff --git a/cc/paint/display_item_list.cc b/cc/paint/display_item_list.cc
-index 6f828b07a4..fa4a3e33e8 100644
+index 6f828b07a4..e6997bb01e 100644
 --- a/cc/paint/display_item_list.cc
 +++ b/cc/paint/display_item_list.cc
-@@ -240,6 +240,21 @@ void DisplayItemList::EmitTraceSnapshot() const {
+@@ -6,8 +6,29 @@
+ 
+ #include <limits>
+ #include <map>
++#include <set>
++#include <algorithm>
+ #include <string>
+ 
++#include "base/compiler_specific.h"
++#include "base/base64.h"
++#include "base/containers/span.h"
++#include "base/environment.h"
++#include "base/files/file_util.h"
++#include "base/no_destructor.h"
++#include "base/memory/raw_ptr.h"
++#include "base/strings/string_number_conversions.h"
++#include "base/synchronization/lock.h"
++#include "crypto/hash.h"
++#include "skia/ext/skia_utils_base.h"
++#include "third_party/skia/include/core/SkFont.h"
++#include "third_party/skia/include/core/SkFontMetrics.h"
++#include "third_party/skia/include/core/SkTextBlob.h"
++#include "third_party/skia/include/utils/SkNoDrawCanvas.h"
++#include "third_party/skia/include/core/SkSerialProcs.h"
++#include "third_party/skia/include/core/SkStream.h"
++#include "third_party/skia/include/core/SkTypeface.h"
++#include "third_party/skia/src/core/SkFontDescriptor.h"
+ #include "base/trace_event/trace_event.h"
+ #include "base/trace_event/traced_value.h"
+ #include "cc/base/math_util.h"
+@@ -26,6 +47,248 @@ namespace cc {
+ 
+ namespace {
+ 
++
++// Remote SKPs carry exact font references, never font programs. A private
++// per-browser directory owns immutable binary assets; the transport authorizes
++// them per session. Only small instance descriptors remain in this cache.
++struct RemoteFontContext {
++  bool failed = false;
++  std::map<std::string, size_t> fonts;
++  std::map<SkTypefaceID, std::set<SkGlyphID>> glyphs;
++};
++
++class RemoteGlyphCollector : public SkNoDrawCanvas {
++ public:
++  explicit RemoteGlyphCollector(RemoteFontContext* context)
++      : SkNoDrawCanvas(SkIRect::MakeLTRB(-1048576, -1048576, 1048576, 1048576)),
++        context_(context) {}
++ protected:
++  void onDrawTextBlob(const SkTextBlob* blob, SkScalar, SkScalar,
++                      const SkPaint&) override {
++    SkTextBlob::Iter iterator(*blob);
++    SkTextBlob::Iter::Run run;
++    while (iterator.next(&run)) {
++      auto& glyphs = context_->glyphs[run.fTypeface->uniqueID()];
++      // SkTextBlob's iterator guarantees fGlyphCount owned glyph IDs.
++      const auto indices = UNSAFE_BUFFERS(base::span(
++          run.fGlyphIndices, static_cast<size_t>(run.fGlyphCount)));
++      glyphs.insert(indices.begin(), indices.end());
++    }
++  }
++  void onDrawPicture(const SkPicture* picture, const SkMatrix* matrix,
++                     const SkPaint* paint) override {
++    SkCanvas::onDrawPicture(picture, matrix, paint);
++  }
++ private:
++  raw_ptr<RemoteFontContext> context_;
++};
++
++sk_sp<SkData> RemoteOutlineFont(SkTypeface* face,
++                               const std::set<SkGlyphID>& glyphs,
++                               SkFontDescriptor* descriptor) {
++  if (glyphs.empty() || glyphs.size() > 4096) return nullptr;
++  // hvgl is an Apple-specific outline table, unreadable by FreeType. Bake
++  // only used glyph outlines from the native typeface, preserving their IDs.
++  auto description = face->serialize(SkTypeface::SerializeBehavior::kDontIncludeData);
++  if (!description) return nullptr;
++  SkMemoryStream input(description);
++  if (!SkFontDescriptor::Deserialize(&input, descriptor, nullptr) ||
++      descriptor->hasStream()) return nullptr;
++  const int axes = face->getVariationDesignPosition({});
++  if (axes > 16) return nullptr;
++  if (axes > 0) {
++    auto* coordinates = descriptor->setVariationCoordinates(axes);
++    // The descriptor allocates exactly axes coordinates for this Skia API.
++    auto position = UNSAFE_BUFFERS(SkSpan(coordinates, static_cast<size_t>(axes)));
++    if (face->getVariationDesignPosition(position) != axes) return nullptr;
++  }
++  SkDynamicMemoryWStream instance;
++  if (!descriptor->serialize(&instance) || instance.bytesWritten() > 16384) return nullptr;
++  auto arguments = instance.detachAsData();
++  SkDynamicMemoryWStream output;
++  output.write("vdglyph1", 8);
++  output.write32(arguments->size());
++  output.write(arguments->data(), arguments->size());
++  SkFont font(sk_ref_sp(face), 64);
++  font.setHinting(SkFontHinting::kNone);
++  font.setLinearMetrics(true);
++  font.setSubpixel(true);
++  SkFontMetrics metrics{};
++  font.getMetrics(&metrics);
++  output.write32(metrics.fFlags);
++  for (SkScalar value : {metrics.fTop, metrics.fAscent, metrics.fDescent,
++        metrics.fBottom, metrics.fLeading, metrics.fAvgCharWidth,
++        metrics.fMaxCharWidth, metrics.fXMin, metrics.fXMax, metrics.fXHeight,
++        metrics.fCapHeight, metrics.fUnderlineThickness, metrics.fUnderlinePosition,
++        metrics.fStrikeoutThickness, metrics.fStrikeoutPosition}) {
++    output.writeScalar(value / 64);
++  }
++  output.write32(glyphs.size());
++  for (SkGlyphID glyph : glyphs) {
++    auto path = font.getPath(glyph);
++    if (!path && !font.getBounds(glyph, nullptr).isEmpty()) return nullptr;
++    SkPath normalized = path.value_or(SkPath()).makeScale(1.0f / 64, 1.0f / 64);
++    if (!normalized.isFinite()) return nullptr;
++    auto data = normalized.serialize();
++    if (!data || data->size() > 1024 * 1024) return nullptr;
++    output.write32(glyph);
++    output.writeScalar(font.getWidth(glyph) / 64);
++    output.write32(data->size());
++    output.write(data->data(), data->size());
++    if (output.bytesWritten() > 64 * 1024 * 1024) return nullptr;
++  }
++  return output.detachAsData();
++}
++
++class RemoteFontCache {
++ public:
++  sk_sp<const SkData> Serialize(SkTypeface* face, RemoteFontContext* context) {
++    auto directory = base::Environment::Create()->GetVar(
++        "VIRTUAL_DESKTOP_REMOTE_FONT_DIRECTORY");
++    if (!directory || !base::FilePath(*directory).IsAbsolute()) {
++      context->failed = true;
++      return SkData::MakeEmpty();  // Never fall through to embedded serialization.
++    }
++    base::AutoLock lock(lock_);
++    const auto key = std::make_pair(*directory, face->uniqueID());
++    auto found = instances_.find(key);
++    bool outlines = found != instances_.end() && !found->second.glyphs.empty();
++    if (found == instances_.end()) {
++      // Inspect table tags without opening/copying the large hvgl table.
++      const int count = face->countTables();
++      if (count > 0 && count <= 256) {
++        std::vector<SkFontTableTag> tags(count);
++        if (face->readTableTags(SkSpan(tags)) == count) {
++          outlines = std::find(tags.begin(), tags.end(), SkSetFourByteTag('h','v','g','l')) != tags.end();
++        }
++      }
++      outlines |= base::Environment::Create()->GetVar("VIRTUAL_DESKTOP_TEST_OUTLINE_FONTS") == "1";
++    }
++    std::set<SkGlyphID> glyphs;
++    if (outlines) glyphs = context->glyphs[face->uniqueID()];
++    if (found != instances_.end()) {
++      if (!outlines || std::includes(found->second.glyphs.begin(), found->second.glyphs.end(),
++                                    glyphs.begin(), glyphs.end())) {
++        context->fonts[found->second.id] = found->second.bytes;
++        return found->second.reference;
++      }
++      glyphs.insert(found->second.glyphs.begin(), found->second.glyphs.end());
++    }
++    auto fail = [&]() -> sk_sp<const SkData> {
++      context->failed = true;
++      return SkData::MakeEmpty();
++    };
++    if (instances_.size() >= 1024) return fail();
++    SkFontDescriptor descriptor;
++    sk_sp<SkData> data;
++    if (outlines) {
++      data = RemoteOutlineFont(face, glyphs, &descriptor);
++    } else {
++      // Preserve collection index, axes, palette and synthetic style for
++      // portable SFNT fonts. Only this first export opens the full program.
++      auto serialized = face->serialize(SkTypeface::SerializeBehavior::kDoIncludeData);
++      if (!serialized || serialized->size() > 64 * 1024 * 1024) return fail();
++      SkMemoryStream input(serialized);
++      if (!SkFontDescriptor::Deserialize(&input, &descriptor, nullptr) ||
++          !descriptor.hasStream()) return fail();
++      auto font = descriptor.detachStream();
++      data = SkData::MakeFromStream(font.get(), font->getLength());
++    }
++    if (!data || data->size() < 12 || data->size() > 64 * 1024 * 1024)
++      return fail();
++    const std::string id = base::HexEncodeLower(crypto::hash::Sha256(
++        skia::as_byte_span(*data)));
++    const auto asset_key = std::make_pair(*directory, id);
++    if (!assets_.contains(asset_key)) {
++      if (asset_bytes_ + data->size() > 128 * 1024 * 1024) return fail();
++      // Only enqueue on the impl thread. The MayBlock stream writer flushes
++      // these immutable binary assets before publishing any dependent frame.
++      pending_[asset_key] = data;
++      assets_[asset_key] = data->size();
++      asset_bytes_ += data->size();
++    }
++    SkDynamicMemoryWStream instance;
++    if (!descriptor.serialize(&instance) || instance.bytesWritten() > 16 * 1024)
++      return fail();
++    auto arguments = instance.detachAsData();
++    SkDynamicMemoryWStream reference;
++    reference.write("vdfont01", 8);
++    reference.write(id.data(), id.size());
++    reference.write32(arguments->size());
++    reference.write(arguments->data(), arguments->size());
++    auto result = reference.detachAsData();
++    instances_[key] = {id, data->size(), result, std::move(glyphs)};
++    context->fonts[id] = data->size();
++    return result;
++  }
++
++  bool WritePending() {
++    std::map<std::pair<std::string, std::string>, sk_sp<SkData>> pending;
++    {
++      base::AutoLock lock(lock_);
++      if (write_failed_) return false;
++      pending.swap(pending_);
++    }
++    bool success = true;
++    for (const auto& [key, data] : pending) {
++      base::FilePath temporary;
++      const base::FilePath parent(key.first);
++      if (!base::CreateTemporaryFileInDir(parent, &temporary)) {
++        success = false;
++        continue;
++      }
++      const bool written = base::WriteFile(temporary, skia::as_byte_span(*data));
++      if (!written || !base::Move(temporary, parent.AppendASCII(key.second + ".font"))) {
++        base::DeleteFile(temporary);
++        success = false;
++      }
++    }
++    base::AutoLock lock(lock_);
++    write_failed_ |= !success;
++    return !write_failed_;
++  }
++
++ private:
++  struct Instance { std::string id; size_t bytes; sk_sp<const SkData> reference; std::set<SkGlyphID> glyphs; };
++  base::Lock lock_;
++  size_t asset_bytes_ = 0;
++  bool write_failed_ = false;
++  std::map<std::pair<std::string, std::string>, sk_sp<SkData>> pending_;
++  std::map<std::pair<std::string, SkTypefaceID>, Instance> instances_;
++  std::map<std::pair<std::string, std::string>, size_t> assets_;
++};
++
++RemoteFontCache& RemoteFonts() {
++  static base::NoDestructor<RemoteFontCache> cache;
++  return *cache;
++}
++
++void SerializeRemotePicture(SkPicture* picture,
++                            base::trace_event::TracedValue* state) {
++  RemoteFontContext context;
++  RemoteGlyphCollector collector(&context);
++  picture->playback(&collector);
++  SkSerialProcs procs;
++  procs.fTypefaceCtx = &context;
++  procs.fTypefaceProc = [](SkTypeface* face, void* ctx) -> sk_sp<const SkData> {
++    return RemoteFonts().Serialize(face, static_cast<RemoteFontContext*>(ctx));
++  };
++  auto data = picture->serialize(&procs);
++  state->SetBoolean("font_error", context.failed || !data);
++  state->SetInteger("font_count", context.fonts.size());
++  state->BeginArray("fonts");
++  for (const auto& [id, bytes] : context.fonts) {
++    state->BeginDictionary();
++    state->SetString("id", id);
++    state->SetInteger("bytes", bytes);
++    state->EndDictionary();
++  }
++  state->EndArray();
++  if (!context.failed && data) {
++    state->SetString("skp64", base::Base64Encode(skia::as_byte_span(*data)));
++  }
++}
++
+ bool GetCanvasClipBounds(SkCanvas* canvas, gfx::Rect* clip_bounds) {
+   SkRect canvas_clip_bounds;
+   if (!canvas->getLocalClipBounds(&canvas_clip_bounds))
+@@ -240,6 +503,25 @@ void DisplayItemList::EmitTraceSnapshot() const {
        "snapshot", CreateTracedValue(include_items));
  }
  
++bool DisplayItemList::WriteRemoteFontAssets() {
++  return RemoteFonts().WritePending();
++}
++
 +std::unique_ptr<base::trace_event::TracedValue>
 +DisplayItemList::CreateTracedValueForRemotePaint(
 +    const ScrollOffsetMap* scroll_offsets,
 +    bool preserve_coordinates) const {
 +  auto state = std::make_unique<base::trace_event::TracedValue>();
-+  AddToValue(state.get(), false, scroll_offsets, preserve_coordinates);
++  AddToValue(state.get(), false, scroll_offsets, preserve_coordinates, true);
 +  return state;
 +}
 +
 +void DisplayItemList::AsRemotePaintValueInto(
 +    base::trace_event::TracedValue* state,
 +    const ScrollOffsetMap& scroll_offsets) const {
-+  AddToValue(state, false, &scroll_offsets, true);
++  AddToValue(state, false, &scroll_offsets, true, true);
 +}
 +
  std::string DisplayItemList::ToString() const {
    base::trace_event::TracedValueJSON value;
    AddToValue(&value, true);
-@@ -254,14 +269,20 @@ DisplayItemList::CreateTracedValue(bool include_items) const {
+@@ -254,14 +536,21 @@ DisplayItemList::CreateTracedValue(bool include_items) const {
  }
  
  void DisplayItemList::AddToValue(base::trace_event::TracedValue* state,
 -                                 bool include_items) const {
 +                                 bool include_items,
 +                                 const ScrollOffsetMap* scroll_offsets,
-+                                 bool preserve_coordinates) const {
++                                 bool preserve_coordinates,
++                                 bool external_fonts) const {
    state->BeginDictionary("params");
  
 -  // DisplayItemList doesn't know the current scroll offsets, so use zero.
@@ -290,7 +586,7 @@ index 6f828b07a4..fa4a3e33e8 100644
  
    // For tracing code, just use the entire positive quadrant if the |rtree_|
    // has invalid bounds.
-@@ -270,7 +291,7 @@ void DisplayItemList::AddToValue(base::trace_event::TracedValue* state,
+@@ -270,7 +559,7 @@ void DisplayItemList::AddToValue(base::trace_event::TracedValue* state,
      state->BeginArray("items");
  
      PlaybackParams params(nullptr, SkM44());
@@ -299,7 +595,7 @@ index 6f828b07a4..fa4a3e33e8 100644
      std::map<size_t, gfx::Rect> visual_rects = rtree_.GetAllBoundsForTracing();
      for (const PaintOp& op : paint_op_buffer_) {
        state->BeginDictionary();
-@@ -303,9 +324,11 @@ void DisplayItemList::AddToValue(base::trace_event::TracedValue* state,
+@@ -303,14 +592,20 @@ void DisplayItemList::AddToValue(base::trace_event::TracedValue* state,
    {
      SkPictureRecorder recorder;
      SkCanvas* canvas = recorder.beginRecording(gfx::RectToSkRect(bounds));
@@ -312,15 +608,31 @@ index 6f828b07a4..fa4a3e33e8 100644
 +    Raster(canvas, /*image_provider=*/nullptr, scroll_offsets);
      sk_sp<SkPicture> picture = recorder.finishRecordingAsPicture();
  
-     std::string b64_picture;
+-    std::string b64_picture;
+-    PictureDebugUtil::SerializeAsBase64(picture.get(), &b64_picture);
+-    state->SetString("skp64", b64_picture);
++    if (external_fonts) {
++      SerializeRemotePicture(picture.get(), state);
++    } else {
++      std::string b64_picture;
++      PictureDebugUtil::SerializeAsBase64(picture.get(), &b64_picture);
++      state->SetString("skp64", b64_picture);
++    }
+   }
+ }
+ 
 diff --git a/cc/paint/display_item_list.h b/cc/paint/display_item_list.h
-index 42ef9d4363..9014562caa 100644
+index 42ef9d4363..39033e3814 100644
 --- a/cc/paint/display_item_list.h
 +++ b/cc/paint/display_item_list.h
-@@ -167,6 +167,17 @@ class CC_PAINT_EXPORT DisplayItemList
+@@ -167,6 +167,21 @@ class CC_PAINT_EXPORT DisplayItemList
  
    void EmitTraceSnapshot() const;
  
++  // Called only by the MayBlock transport writer before a dependent frame.
++  // Font programs never enter the frame JSON or a worker IPC message.
++  static bool WriteRemoteFontAssets();
++
 +  // A complete recording-only snapshot for experimental remote-paint tracing.
 +  // Omits per-item debug snapshots and never creates a pixel surface.
 +  std::unique_ptr<base::trace_event::TracedValue>
@@ -335,7 +647,7 @@ index 42ef9d4363..9014562caa 100644
    gfx::Rect VisualRectForTesting(int index) const {
      return visual_rects_[static_cast<size_t>(index)];
    }
-@@ -233,7 +244,10 @@ class CC_PAINT_EXPORT DisplayItemList
+@@ -233,7 +248,11 @@ class CC_PAINT_EXPORT DisplayItemList
  
    std::unique_ptr<base::trace_event::TracedValue> CreateTracedValue(
        bool include_items) const;
@@ -343,26 +655,31 @@ index 42ef9d4363..9014562caa 100644
 +  void AddToValue(base::trace_event::TracedValue*,
 +                  bool include_items,
 +                  const ScrollOffsetMap* scroll_offsets = nullptr,
-+                  bool preserve_coordinates = false) const;
++                  bool preserve_coordinates = false,
++                  bool external_fonts = false) const;
  
    // If we're currently within a paired display item block, unions the
    // given visual rect with the begin display item's visual rect.
 diff --git a/cc/paint/display_item_list_unittest.cc b/cc/paint/display_item_list_unittest.cc
-index 846f16fbe0..8851b8221c 100644
+index 846f16fbe0..c771463ef5 100644
 --- a/cc/paint/display_item_list_unittest.cc
 +++ b/cc/paint/display_item_list_unittest.cc
-@@ -10,8 +10,10 @@
+@@ -10,8 +10,14 @@
  #include <vector>
  
  #include "base/compiler_specific.h"
 +#include "base/base64.h"
  #include "base/containers/span.h"
++#include "base/environment.h"
++#include "base/files/file_util.h"
++#include "base/files/scoped_temp_dir.h"
++#include "base/memory/raw_ptr.h"
  #include "base/logging.h"
 +#include "base/json/json_reader.h"
  #include "base/trace_event/traced_value.h"
  #include "base/values.h"
  #include "cc/paint/filter_operation.h"
-@@ -31,6 +33,7 @@
+@@ -31,6 +37,7 @@
  #include "third_party/skia/include/core/SkBitmap.h"
  #include "third_party/skia/include/core/SkColor.h"
  #include "third_party/skia/include/core/SkFont.h"
@@ -370,7 +687,7 @@ index 846f16fbe0..8851b8221c 100644
  #include "third_party/skia/include/core/SkSurface.h"
  #include "third_party/skia/include/core/SkTextBlob.h"
  #include "ui/gfx/geometry/rect.h"
-@@ -145,6 +148,45 @@ TEST_F(DisplayItemListTest, TraceEmptyVisualRect) {
+@@ -145,6 +152,111 @@ TEST_F(DisplayItemListTest, TraceEmptyVisualRect) {
    EXPECT_EQ("DrawRectOp", *name);
  }
  
@@ -413,6 +730,72 @@ index 846f16fbe0..8851b8221c 100644
 +  }
 +}
 +
++
++void VerifyRemoteFonts(bool outlines) {
++  base::ScopedTempDir directory;
++  ASSERT_TRUE(directory.CreateUniqueTempDir());
++  auto environment = base::Environment::Create();
++  constexpr char variable[] = "VIRTUAL_DESKTOP_REMOTE_FONT_DIRECTORY";
++  auto previous = environment->GetVar(variable);
++  auto previous_outlines = environment->GetVar("VIRTUAL_DESKTOP_TEST_OUTLINE_FONTS");
++  environment->SetVar("VIRTUAL_DESKTOP_TEST_OUTLINE_FONTS", outlines ? "1" : "0");
++  struct Restore {
++    raw_ptr<base::Environment> environment;
++    std::optional<std::string> previous;
++    std::optional<std::string> previous_outlines;
++    ~Restore() {
++      if (previous_outlines) environment->SetVar("VIRTUAL_DESKTOP_TEST_OUTLINE_FONTS", *previous_outlines);
++      else environment->UnSetVar("VIRTUAL_DESKTOP_TEST_OUTLINE_FONTS");
++      if (previous) environment->SetVar("VIRTUAL_DESKTOP_REMOTE_FONT_DIRECTORY", *previous);
++      else environment->UnSetVar("VIRTUAL_DESKTOP_REMOTE_FONT_DIRECTORY");
++    }
++  } restore{environment.get(), previous, previous_outlines};
++  auto list = base::MakeRefCounted<DisplayItemList>();
++  list->StartPaint();
++  list->push<DrawTextBlobOp>(SkTextBlob::MakeFromString("Remote font", skia::DefaultFont()),
++                            0.0f, 20.0f, PaintFlags());
++  list->EndPaintOfUnpaired(gfx::Rect(0, 0, 200, 40));
++  list->Finalize();
++  auto snapshot = [&]() {
++    std::string json;
++    list->CreateTracedValueForRemotePaint()->AppendAsTraceFormat(&json);
++    return base::JSONReader::Read(json, base::JSON_PARSE_RFC);
++  };
++  environment->UnSetVar(variable);
++  auto missing = snapshot();
++  ASSERT_TRUE(missing);
++  EXPECT_TRUE(missing->GetDict().FindBool("font_error").value_or(false));
++  EXPECT_FALSE(missing->GetDict().FindString("skp64"));
++  environment->SetVar(variable, directory.GetPath().value());
++  auto first = snapshot();
++  ASSERT_TRUE(first);
++  EXPECT_FALSE(first->GetDict().FindBool("font_error").value_or(true));
++  const auto* fonts = first->GetDict().FindList("fonts");
++  ASSERT_TRUE(fonts);
++  ASSERT_EQ(1u, fonts->size());
++  const auto* id = (*fonts)[0].GetDict().FindString("id");
++  ASSERT_TRUE(id);
++  EXPECT_EQ(64u, id->size());
++  ASSERT_TRUE(DisplayItemList::WriteRemoteFontAssets());
++  std::string font_bytes;
++  ASSERT_TRUE(base::ReadFileToString(directory.GetPath().AppendASCII(*id + ".font"),
++                                   &font_bytes));
++  EXPECT_EQ(font_bytes.size(), (*fonts)[0].GetDict().FindInt("bytes").value_or(0));
++  if (outlines) EXPECT_EQ("vdglyph1", font_bytes.substr(0, 8));
++  const auto* encoded = first->GetDict().FindString("skp64");
++  ASSERT_TRUE(encoded);
++  std::string picture;
++  ASSERT_TRUE(base::Base64Decode(*encoded, &picture));
++  EXPECT_LT(picture.size(), 8192u);
++  EXPECT_NE(std::string::npos, picture.find("vdfont01"));
++  auto second = snapshot();
++  ASSERT_TRUE(second);
++  EXPECT_EQ(first->GetDict(), second->GetDict());
++}
++
++TEST_F(DisplayItemListTest, RemotePaintExternalFonts) { VerifyRemoteFonts(false); }
++TEST_F(DisplayItemListTest, RemotePaintOutlineFonts) { VerifyRemoteFonts(true); }
++
  TEST_F(DisplayItemListTest, SingleUnpairedRange) {
    gfx::Rect layer_rect(100, 100);
    PaintFlags blue_flags;
@@ -437,7 +820,7 @@ index ba702d1093..707683dcb4 100644
      // This will cause NotifyTileStateChanged() to be called for any tiles that
      // completed, which will add damage for visible tiles to the frame for them
 diff --git a/cc/trees/layer_tree_impl.cc b/cc/trees/layer_tree_impl.cc
-index aae25d05ab..e9ceeb82d3 100644
+index aae25d05ab..5fa4fe83bc 100644
 --- a/cc/trees/layer_tree_impl.cc
 +++ b/cc/trees/layer_tree_impl.cc
 @@ -13,22 +13,31 @@
@@ -481,7 +864,7 @@ index aae25d05ab..e9ceeb82d3 100644
  #include "cc/resources/ui_resource_request.h"
  #include "cc/trees/clip_node.h"
  #include "cc/trees/draw_property_utils.h"
-@@ -70,8 +81,182 @@
+@@ -70,8 +81,190 @@
  #include "ui/gfx/geometry/size_conversions.h"
  #include "ui/gfx/geometry/vector2d_conversions.h"
  
@@ -633,6 +1016,14 @@ index aae25d05ab..e9ceeb82d3 100644
 +      message = std::move(*latest_);
 +      latest_.reset();
 +    }
++    if (!DisplayItemList::WriteRemoteFontAssets()) {
++      message = base::StringPrintf(
++          "{\"version\":1,\"token\":\"%s\",\"pid\":%d,\"ts\":%lld,"
++          "\"error\":\"font-export-failed\"}\n",
++          token_.c_str(), static_cast<int>(base::GetCurrentProcId()),
++          static_cast<long long>(
++              base::TimeTicks::Now().since_origin().InMicroseconds()));
++    }
 +    bool success = Write(message);
 +    if (!success) {
 +      socket_.reset();  // A partial message is discarded with this connection.
@@ -664,7 +1055,7 @@ index aae25d05ab..e9ceeb82d3 100644
  // Small helper class that saves the current viewport location as the user sees
  // it and resets to the same location.
  class ViewportAnchor {
-@@ -2306,6 +2491,152 @@ void LayerTreeImpl::AsValueInto(base::trace_event::TracedValue* state) const {
+@@ -2306,6 +2499,152 @@ void LayerTreeImpl::AsValueInto(base::trace_event::TracedValue* state) const {
    state->EndArray();
  }
  

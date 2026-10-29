@@ -53,6 +53,15 @@ export function createService({ adminToken = 'dev-local', chromium: nativeOption
         ensure(replayRuntime, 503, 'NATIVE_NOT_CONFIGURED', 'A verified native runtime is not configured');
         const name = url.pathname.slice('/native-runtime/'.length);
         if (name === 'runtime.json') { json(200, replayRuntime.metadata); return; }
+        const fontId = /^fonts\/([a-f0-9]{64})\.font$/.exec(name)?.[1];
+        if (fontId) {
+          const font = replayRuntime.fonts?.get(fontId);
+          ensure(font, 404, 'NOT_FOUND', 'Unknown runtime font asset');
+          response.writeHead(200, { 'Content-Type': 'application/octet-stream', 'Content-Length': font.length,
+            'Cache-Control': 'public, max-age=31536000, immutable' });
+          const stream = font.stream(); response.once('close', () => stream.destroy());
+          stream.on('error', error => response.destroy(error)).pipe(response); return;
+        }
         ensure(['canvaskit.js', 'canvaskit.wasm'].includes(name), 404, 'NOT_FOUND', 'Unknown runtime asset');
         response.writeHead(200, { 'Content-Type': name.endsWith('.wasm') ? 'application/wasm' : 'text/javascript; charset=utf-8' });
         response.end(replayRuntime.assets.get(name)); return;
@@ -87,7 +96,14 @@ export function createService({ adminToken = 'dev-local', chromium: nativeOption
         }
         if (request.method === 'GET' && resourceId) {
           const bytes = frames.resource(url.searchParams.get('epoch'), role, resourceId);
-          response.writeHead(200, { 'Content-Type': 'application/octet-stream' }); response.end(bytes); return;
+          response.writeHead(200, { 'Content-Type': 'application/octet-stream', 'Content-Length': bytes.length });
+          if (Buffer.isBuffer(bytes)) response.end(bytes);
+          else {
+            const stream = bytes.stream();
+            response.once('close', () => stream.destroy());
+            stream.on('error', error => response.destroy(error)).pipe(response);
+          }
+          return;
         }
         if (request.method === 'GET' && operation === 'stream') {
           const epoch = url.searchParams.get('epoch'), connection = frames.get(epoch, role);
@@ -160,6 +176,7 @@ export function createService({ adminToken = 'dev-local', chromium: nativeOption
       if (server.listening) server.closeAllConnections();
       await manager.close();
       if (server.listening) await new Promise(resolve => server.close(resolve));
+      replayRuntime?.close?.();
     },
   };
 }

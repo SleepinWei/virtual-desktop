@@ -6,7 +6,7 @@ import { pathToFileURL } from 'node:url';
 import { randomUUID } from 'node:crypto';
 import { verifiedEngine } from './verified.js';
 import { sha256, artifactLayout, MONOLITHIC_FORMAT } from './artifacts.js';
-import { loadReplayRuntime, verifyRuntimeBuild } from '../chromium-paint/runtime.js';
+import { loadReplayRuntime, verifyRuntimeBuild, validateFontCatalog } from '../chromium-paint/runtime.js';
 
 const exec = promisify(execFile);
 const ENGINE_DIRECTORY = 'chromium/src/out/VirtualDesktop';
@@ -73,7 +73,7 @@ export function selectRuntimeFiles(dependencies) {
   return { included: [...included].sort(), excluded: [...new Set(excluded)].sort() };
 }
 
-export async function packageRuntime({ root, canvasKitDirectory, output, layout = 'component' }) {
+export async function packageRuntime({ root, canvasKitDirectory, output, layout = 'component', fontAssetsDirectory }) {
   root = resolve(root); canvasKitDirectory = resolve(canvasKitDirectory); output = resolve(output);
   const engine = await verifiedEngine(root, { requireStream: true, layout });
   if (engine.state.distributionFormat) throw new Error('Package from the tested build, not an existing distribution');
@@ -108,6 +108,14 @@ export async function packageRuntime({ root, canvasKitDirectory, output, layout 
     return hash;
   }
   try {
+    let fonts = runtime.metadata.fonts || [], fontSource = canvasKitDirectory;
+    if (fontAssetsDirectory) {
+      fontSource = resolve(fontAssetsDirectory);
+      const catalog = JSON.parse(await readFile(join(fontSource, 'fonts/catalog.json'), 'utf8'));
+      if (catalog.version !== 1) throw new Error('Unsupported runtime font catalog');
+      fonts = validateFontCatalog(catalog.fonts);
+    }
+    for (const font of fonts) await copy(join(fontSource, font.path), 'canvaskit/out/' + font.path, font.id);
     const artifacts = {};
     for (const name of selection.included) {
       if (name !== 'vk_swiftshader_icd.json' && !engine.state.artifacts[name]) throw new Error('Unfingerprinted engine artifact: ' + name);
@@ -121,6 +129,11 @@ export async function packageRuntime({ root, canvasKitDirectory, output, layout 
     for (const name of ['canvaskit.js', 'canvaskit.wasm', 'runtime.json', 'args.gn']) {
       await copy(join(canvasKitDirectory, name), 'canvaskit/out/' + name, runtime.metadata.assets[name]);
     }
+    if (fonts.length) {
+      const metadataPath = 'canvaskit/out/runtime.json';
+      await writeFile(join(staging, metadataPath), JSON.stringify({ ...runtime.metadata, fonts }, null, 2) + '\n');
+      files[metadataPath] = { bytes: (await stat(join(staging, metadataPath))).size, sha256: await sha256(join(staging, metadataPath)) };
+    }
     const canvasState = JSON.parse(await readFile(join(root, 'canvaskit/build-state.json'), 'utf8'));
     await writeFile(join(staging, 'canvaskit/build-state.json'), JSON.stringify({ ...canvasState,
       distributionFormat: 'native-runtime-v1', output: 'canvaskit/out' }, null, 2) + '\n');
@@ -133,21 +146,28 @@ export async function packageRuntime({ root, canvasKitDirectory, output, layout 
       engineSplitGate: 'not-passed', serverRasterBypassed: false, files, totalBytes, nativeDependencyAudit,
       selection: { method: 'Pinned GN runtime closure; omit generated DevTools frontend, Python helpers and ANGLE validation metadata',
         originalDependencyFiles: new Set(dependencies).size, engineFiles: selection.included.length, excludedFiles: selection.excluded.length, excludedBytes },
-      scope: 'Local CDP/native-records runtime. OS frameworks, system fonts, Node.js and this app are external. No source, compiler, test executables or build logs. No claim of minimal Chromium features, lower RSS, general web or video compatibility.' };
+      fontAssets: { count: fonts.length, bytes: fonts.reduce((sum, font) => sum + font.bytes, 0),
+        scope: 'Explicitly provisioned common fonts are immutable binary runtime assets. Other website fonts use the authorized session binary endpoint.' },
+      scope: 'Local CDP/native-records runtime. OS frameworks, producer system fonts, Node.js and this app are external. No source, compiler, test executables or build logs. No claim of minimal Chromium features, lower RSS, general web or video compatibility.' };
     await writeFile(join(staging, 'runtime-package.json'), JSON.stringify(manifest, null, 2) + '\n');
     // Verify from the new root before publishing the directory. Relative state
     // paths also permit moving this package without editing build provenance.
     await verifiedEngine(staging, { requireStream: true });
-    await verifyRuntimeBuild(await loadReplayRuntime(join(staging, 'canvaskit/out')), join(staging, 'canvaskit/out'), staging, engine.source);
+    const packagedRuntime = await loadReplayRuntime(join(staging, 'canvaskit/out'));
+    try { await verifyRuntimeBuild(packagedRuntime, join(staging, 'canvaskit/out'), staging, engine.source); }
+    finally { packagedRuntime.close?.(); }
     await rename(staging, output);
     return { output, totalBytes, files: Object.keys(files).length, engineFiles: selection.included.length,
       excludedBytes, excludedFiles: selection.excluded.length, engineSplitGate: 'not-passed' };
   } catch (error) { await rm(staging, { recursive: true, force: true }); throw error; }
+  finally { runtime.close?.(); }
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
   const { values } = parseArgs({ options: { root: { type: 'string', default: process.env.CHROMIUM_BUILD_ROOT },
-    canvaskit: { type: 'string', default: process.env.CANVASKIT_DIRECTORY }, output: { type: 'string' }, layout: { type: 'string', default: 'component' } } });
+    canvaskit: { type: 'string', default: process.env.CANVASKIT_DIRECTORY }, output: { type: 'string' }, layout: { type: 'string', default: 'component' },
+    'font-assets': { type: 'string' } } });
   if (!values.root || !values.canvaskit || !values.output) throw new Error('Pass --root, --canvaskit and a new --output directory');
-  console.log(JSON.stringify(await packageRuntime({ root: values.root, canvasKitDirectory: values.canvaskit, output: values.output, layout: values.layout }), null, 2));
+  console.log(JSON.stringify(await packageRuntime({ root: values.root, canvasKitDirectory: values.canvaskit, output: values.output, layout: values.layout,
+    fontAssetsDirectory: values['font-assets'] }), null, 2));
 }

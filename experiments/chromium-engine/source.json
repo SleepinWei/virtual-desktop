@@ -38,11 +38,11 @@
     },
     "cc/paint/display_item_list.h": {
       "upstreamSha256": "8796e36b51876a6a715e53939181a115fe9fbbc439e71600c311a3e9d73b3a35",
-      "patchedSha256": "333a0d9c5f7b4d8112df1c36ae4f67915392519138131f6825f5b2b00d4b8aaf"
+      "patchedSha256": "89b02c77e4b1a71466c7be790667676303422d182904f0408dfc5cded9648ecf"
     },
     "cc/paint/display_item_list.cc": {
       "upstreamSha256": "e88babbfb156dfd3d2e0cce4734ee08ac6431daaa6b1a428c77e120a184cb181",
-      "patchedSha256": "bc7a3de51567730b53ee465758a793145a1fe8c5d3835591991b907e8a97f33d"
+      "patchedSha256": "7c13d070f4060c223dc812e042381bca962d4e74c7d01f62e8e29c63b6cf5b3a"
     },
     "components/viz/service/BUILD.gn": {
       "upstreamSha256": "15c828cd6a1bf5552b480b5574827359f8a3377ae4e9e8f7f1860511f827f875",
@@ -62,7 +62,7 @@
     },
     "cc/paint/display_item_list_unittest.cc": {
       "upstreamSha256": "42673400361b98333520503067a618f2b1d9c559c1e8d0552f4460d19a0638ed",
-      "patchedSha256": "a5b0c2b28b08cbd62ab6c983835f3002613d95cc788f41e3c1bd0fd6df13979c"
+      "patchedSha256": "ea327189f6b77b4305a5e0a4b5a6a2a21b29f9764529887de5475c739724dd8e"
     },
     "cc/trees/layer_tree_host_impl.cc": {
       "upstreamSha256": "d96b905bf5e63dcd9e76707df8c119294651540d671bfc5b0ff14b03ad740efd",
@@ -70,7 +70,7 @@
     },
     "cc/trees/layer_tree_impl.cc": {
       "upstreamSha256": "16ec1ac875aa36b063faecf1dde840db8a0f17cdb92c100f6f4720ed0b605924",
-      "patchedSha256": "bdf75a19c1a8877097bec78dfc4aca4b860ef08ea05eceea229f108de9364dd9"
+      "patchedSha256": "68ac762680bd5f216933ab7db47c2478126a8182fc1d918d9cdbae963f3337ed"
     },
     "cc/trees/layer_tree_impl.h": {
       "upstreamSha256": "0d8014fa6b7af4e744e7911163f5e80de20b9799433d4681e0ef1bd3326faeba",
@@ -87,6 +87,10 @@
     "third_party/blink/renderer/platform/widget/compositing/layer_tree_view.cc": {
       "upstreamSha256": "45e099ee3a249118873bbad0828dee1aac08cbae709952c242e0e6b81529ec92",
       "patchedSha256": "2fa1b61a804983a2b240a71b8f38eea4e4b4bb66b8e811105a117dda23085f23"
+    },
+    "cc/paint/BUILD.gn": {
+      "upstreamSha256": "54d1bb9a4680a13b141903cf3d85921d17c873bfc1a222b2ed8a8a4e7132cf2e",
+      "patchedSha256": "1216bf01f8cc720d081611a9c8e1e7d875e4c148f5462dce22d929b0d5d72bb6"
     }
   },
   "skiaRevision": "886e42fda11610a56dd1b22e8697e27f9d1e34f2",
@@ -98,6 +102,15 @@
     "maxMessageBytes": 8388608,
     "socketEnvironment": "VIRTUAL_DESKTOP_REMOTE_PAINT_SOCKET",
     "tokenEnvironment": "VIRTUAL_DESKTOP_REMOTE_PAINT_TOKEN",
-    "queue": "one-writing-plus-one-latest"
+    "queue": "one-writing-plus-one-latest",
+    "fontResources": {
+      "version": 1,
+      "directoryEnvironment": "VIRTUAL_DESKTOP_REMOTE_FONT_DIRECTORY",
+      "format": "raw-sfnt-or-vdglyph1-binary",
+      "maxFontBytes": 67108864,
+      "maxCacheBytes": 134217728,
+      "reference": "vdfont01-sha256-font-descriptor",
+      "outlineGlyphLimit": 4096
+    }
   }
 }

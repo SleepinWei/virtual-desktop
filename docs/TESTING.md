@@ -1,5 +1,27 @@
 # 测试与本地复现
 
+
+## 字体 runtime（2026-10-30）
+
+[字体验收记录](chromium-font-runtime-2026-10-30.json) 覆盖 117 JS、16 Python、23 C++、9 组真实字体、动态与预置字体 live 流程和共享 host 回归。字体探针收集/解码成功不等于严格画质通过；密集文字比较及 CERN 网站比较的失败明确保留。
+
+```bash
+# CanvasKit 与原生引擎使用同一固定 Skia；常规编译保留资源 watchdog。
+node experiments/chromium-engine/guarded-lean-build.js --root /Volumes/Extreme-APFS/Builds --task canvaskit --jobs 1
+
+# 在已完成 C++ gate 的独立包上收集字体二进制及原生重放证据。
+node experiments/chromium-engine/guarded-native-tests.js --root <候选包> --canvaskit <候选包>/canvaskit/out --task fonts --output test-results/font-runtime --in-process-gpu
+
+# 预置 fonts/catalog.json 指定的字体/字形资源，必须使用新输出目录。
+node experiments/chromium-engine/package-runtime.js --root /Volumes/Extreme-APFS/Builds --canvaskit /Volumes/Extreme-APFS/Builds/canvaskit/out --layout lean --font-assets test-results/font-runtime --output <新运行包目录>
+
+# 完整 viewer/执行浏览器组合：显式 2 GiB，其余 native 测试仍 1.5 GiB。
+node experiments/chromium-engine/guarded-native-tests.js --root <新运行包目录> --canvaskit <新运行包目录>/canvaskit/out --task live --max-rss-mib 2048 --output test-results/font-live --in-process-gpu
+```
+
+字体探针等待 font-ready 原生时间标记之后、正确 renderer/tree 的完整非空字体帧。中文 hvgl 使用独立矢量子集；缺字形故障注入会重新计算正确哈希，确保验证的是解码覆盖，而非仅在哈希阶段失败。HTTP 字体流测试覆盖完成、取消、重连与缓存淘汰后的独立句柄生命周期。
+
+
 ## 环境
 
 Node.js >=22；本项目使用 ESM。`npm ci` 根据 lockfile 安装依赖。

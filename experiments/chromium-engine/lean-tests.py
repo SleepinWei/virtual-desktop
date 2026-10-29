@@ -20,7 +20,7 @@ SPEC.loader.exec_module(lean)
 TEST_ROOT = 'headless/virtual_desktop_lean_tests/BUILD.gn'
 TEST_LABEL = '//headless/virtual_desktop_lean_tests:all'
 CASES = {
-    'cc': {'binary': 'cc_unittests', 'count': 17,
+    'cc': {'binary': 'cc_unittests', 'count': 19,
            'filter': 'RemotePaintPictureLayerImplTest.*:DisplayItemListTest.RemotePaint*:'
                      'PresentationTimeCallbackBufferTest.*:LegacySWPictureLayerImplTest.UpdateTilesCreatesTilings'},
     'viz': {'binary': 'viz_unittests', 'count': 4,

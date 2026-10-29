@@ -6,6 +6,7 @@ import { parseArgs } from 'node:util';
 import { startLoadGuard, terminateProcessTree } from './load-guard.js';
 import { browserProcessArgs } from './browser-runtime.js';
 import { siteWorkloads } from './site-metrics.js';
+import { cleanupNativeDirectories } from './native-stream.js';
 
 const { values } = parseArgs({ options: { root: { type: 'string' }, task: { type: 'string' },
   canvaskit: { type: 'string' }, output: { type: 'string' }, 'in-process-gpu': { type: 'boolean', default: false },
@@ -80,6 +81,11 @@ finally {
     report.safety = { stopped: guard.stopped, policy: guard.policy, baseline: guard.baseline, samples: guard.samples };
     if (guard.stopped) report.status = 'safety-stopped';
     await guard.close();
+  }
+  if (child?.pid) {
+    try { report.cleanedNativeDirectories = await cleanupNativeDirectories([child.pid,
+      ...(guard?.samples || []).flatMap(sample => sample.processes.map(row => row.pid))]); }
+    catch (error) { report.errors.push('Native temporary directory cleanup failed: ' + error.code); }
   }
   if (report.interrupted) report.status = 'interrupted';
   report.finishedAt = new Date().toISOString();

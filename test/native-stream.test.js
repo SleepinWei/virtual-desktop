@@ -35,3 +35,22 @@ test('private native socket rejects an unrelated sender and accepts complete aut
     assert.equal(stream.stats.rejected, 1); assert.equal(stream.stats.messages, 1); socket.destroy();
   } finally { await stream.close(); }
 });
+
+test('native directory cleanup is limited to recorded worker PIDs and exact private temporary names', async () => {
+  const { nativeStreamDirectory, cleanupNativeDirectories } = await import('../experiments/chromium-engine/native-stream.js');
+  const { mkdtemp, access, rm } = await import('node:fs/promises');
+  const { tmpdir } = await import('node:os');
+  const { join } = await import('node:path');
+  const root = process.platform === 'darwin' ? '/private/tmp' : tmpdir();
+  const owner = 123456789, foreign = 123456788;
+  const owned = await mkdtemp(join(root, `vd-native-${owner}-`));
+  const unrelated = await mkdtemp(join(root, `vd-native-${foreign}-`));
+  try {
+    assert.equal(nativeStreamDirectory(owned, owner), true);
+    assert.equal(nativeStreamDirectory(owned, foreign), false);
+    assert.equal(nativeStreamDirectory(root, owner), false);
+    assert.equal(nativeStreamDirectory('/tmp/../arbitrary', owner), false);
+    assert.equal(await cleanupNativeDirectories([owner]), 1);
+    await assert.rejects(access(owned)); await access(unrelated);
+  } finally { await rm(owned, { recursive: true, force: true }); await rm(unrelated, { recursive: true, force: true }); }
+});

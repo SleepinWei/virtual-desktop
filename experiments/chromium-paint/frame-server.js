@@ -7,7 +7,7 @@ import { FrameChannel, validateFrame } from './frame-protocol.js';
 
 const assets = new Map([
   ['/', ['frame-index.html', 'text/html; charset=utf-8']],
-  ...['frame-replay.js', 'frame-protocol.js', 'frame-renderer.js', 'frames.js'].map(name => ['/' + name, [name, 'text/javascript; charset=utf-8']]),
+  ...['frame-replay.js', 'frame-protocol.js', 'frame-renderer.js', 'font-runtime.js', 'frames.js'].map(name => ['/' + name, [name, 'text/javascript; charset=utf-8']]),
   ...['frames.css', 'lab.css'].map(name => ['/' + name, [name, 'text/css; charset=utf-8']]),
   ['/frames.html', ['frames.html', 'text/html; charset=utf-8']],
   ['/fonts/fixture-sans.otf', ['fonts/fixture-sans.otf', 'font/otf']],
@@ -79,7 +79,7 @@ export function createFrameLab({ outputDir, canvasKitDirectory }) {
         bytes = runtime.assets.get(path.slice(1)); type = path.endsWith('.wasm') ? 'application/wasm' : 'text/javascript; charset=utf-8';
       } else if (assets.has(path)) {
         const asset = assets.get(path); bytes = await readFile(new URL(asset[0], import.meta.url)); type = asset[1];
-      } else if (/^\/pictures\/[a-f0-9]{64}\.skp$/.test(path)) {
+      } else if (/^\/(pictures\/[a-f0-9]{64}\.skp|fonts\/[a-f0-9]{64}\.font)$/.test(path)) {
         const manifest = await capture(), descriptor = manifest.stages.flatMap(stage => stage.frame.resources).find(resource => '/' + resource.path === path);
         if (!descriptor) return json(404, { error: 'Unknown frame resource' });
         bytes = await readFile(join(directory, descriptor.path)); type = 'application/octet-stream';
@@ -97,6 +97,7 @@ export function createFrameLab({ outputDir, canvasKitDirectory }) {
     async close() {
       if (!server.listening) return;
       server.closeAllConnections(); await new Promise(done => server.close(done));
+      runtime?.close?.();
     },
     get stats() { return { ...stats, sessions: [...sessions.values()].map(channel => channel.state) }; },
   };

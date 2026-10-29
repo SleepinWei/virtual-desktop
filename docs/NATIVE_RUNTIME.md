@@ -1,5 +1,26 @@
 # 直接输入、后端调度与有限压测
 
+
+## 2026-10-30 字体 runtime 改造与验收
+
+字体已改为独立二进制 runtime 资源，见 [本轮证据](chromium-font-runtime-2026-10-30.json)。本机入口为 `http://127.0.0.1:8082/native`，使用独立 profile、单活跃会话与原资源保护。新包位于 `/Volumes/Extreme-APFS/Runtimes/virtual-desktop-fonts-156-20261030`，payload **504.77 MiB**，包含 8 份预置字体/测试字形子集，合计 10,208,879 bytes。旧的 2026-10-28 component 和 2026-10-29 lean 包保留。
+
+原生 SKP 使用 `vdfont01` 引用，保存字体文件 SHA-256 与不带字体流的 SkFontDescriptor。普通 SFNT 字体保留 collection index、可变轴、palette 与 synthetic style；字体程序不再进入帧 JSON、Base64 或 worker IPC。后台 MayBlock writer 先将独立 `.font` 文件原子写入 browser 的 0700 私有目录，再发布依赖它的帧。网关用 64 KiB 缓冲校验文件，保留已校验 inode；每个 HTTP 下载持有独立文件描述符，正常结束、取消和缓存淘汰都不会关闭其他下载或重连所需的句柄。worker 异常退出时，父进程清理其私有目录。
+
+实测发现当前 macOS 苹方采用 Apple `hvgl` 表，FreeType 无法读取这份约 59.43 MB 的字体程序。此类字体改用 `vdglyph1` 二进制轮廓资源：从原生 typeface 提取用到的矢量字形，保留原 glyph ID、实例身份与规范化 metrics；**没有生成服务端像素，也没有换用另一套字体**。8 个中文字符的轮廓资源为 **7,952 bytes**。子集在出现新字形时累计扩展；这不是细粒度 glyph delta 协议。每实例最多 4,096 个字形，单资源 64 MiB、资源缓存 128 MiB；超限明确拒绝。客户端及时释放不再使用的字体版本及其 picture，避免小型稀疏子集积累成大量解码内存。
+
+CanvasKit 的 viewer 独享 `RemoteFontRegistry` 负责解析字体引用。客户端先检查资源长度与 SHA-256、加载依赖字体，再解码 SKP；缺失字体或字形时不呈现、不发 ACK。故意从中文字体移除一个中间 glyph、重新计算字体哈希并改写 SKP 引用后，客户端仍正确拒绝。仅预加载 CSS 字体或创建普通 FontMgr 无法替代这条解析路径。
+
+运行包通过 `package:native -- --font-assets <目录>` 预置 `fonts/catalog.json` 指定的资源。客户端从 `/native-runtime/fonts/<sha>.font` 加载并使用不可变 HTTP 缓存；其他网站字体仍走带 session capability 与 in-flight frame 约束的二进制接口。预置的两个中文资源是测试字形子集，不能当作完整中文字库。稳定字体在后续帧中复用：真实 viewer 的计时器测试增加了 5 次 picture 资源下载，字体下载次数仍为 1。
+
+验收结果：**117 JS、16 Python、98 JS 语法、19 cc + 4 Viz** 通过；9/9 字体探针完成原生导出与本地解码重放；动态字体与预置字体的完整接管、中文输入、滚动、离线重连、reload、损坏资源恢复均通过，两处独立 fixture 画面对比通过；共享 host 的两个可信 context 回归通过。字体探针最大进程树 RSS 789.7 MiB，两个组合 live 测试约 1,542/1,563 MiB，均无新增换页。默认浏览器预算仍为 1.5 GiB，只有显式组合 live 测试使用 2 GiB。所有成功浏览器测试仍使用显式进程内 GPU 模式。
+
+CERN 的 SKP 从 769,855 降到 **13,751 bytes（减少 98.21%）**；756,248 bytes 字体程序成为独立资源。未预置字体的首次冷加载仍要传这些二进制，首次全部引用资源为 769,999 bytes，不能把 SKP 缩小直接当作冷网络流量或端到端速度收益。两种生产端均运行成功，但严格局部文字像素仍失败，性能比值保持不采纳。9 个字体探针的密集文字区域也只有 1 个通过，不能用整页白色背景稀释误差来声称画质通过。`engineSplitGate=not-passed`、`serverRasterBypassed=false` 保持不变。
+
+后续优先处理字体像素匹配、图片资源、长会话 glyph delta 与生命周期，再扩大真实网站/iframe/媒体/IME/DPR 覆盖。默认独立 GPU 启动仍未解决。编译默认 6 GiB RSS；实际只剩单个最终链接时，在主机 free 71%、零新增换页条件下单独使用过 8 GiB 上限，实际峰值约 6.24 GiB。35% free、最近换页和心跳保护均保留。
+
+以下是改造前的原因诊断，历史状态以本节的新结果为准。
+
 2026-10-30 已完成本轮失败原因的因果诊断，见 [原始证据索引与结果](chromium-native-diagnosis-2026-10-30.json)。本轮没有重编 Chromium、提高资源上限或用截图替代原生输出。
 
 | 失败点 | 已确认的原因与对照 | 当前处理 |
