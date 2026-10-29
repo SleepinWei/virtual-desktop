@@ -77,6 +77,27 @@ flowchart LR
 
 **仍处实验阶段：**通用网站、Canvas/WebGL/video、生产多租户隔离与大规模调度尚未通过；原生实验关闭 Chromium sandbox。`engineSplitGate: not-passed`、`serverRasterBypassed: false` 保留。视觉 agent 需要在线绘制端生成截图，不能在所有绘制端离线时继续提供纯视觉观察。
 
+## 页面与效果
+
+以下为 2026-10-28 本地固定测试页面的实截图。
+
+**原生会话与直接输入：**用户接管后，在本地 CanvasKit 绘制的画面中点击输入框，直接输入英文和已覆盖字形的中文。[输入实测](docs/NATIVE_RUNTIME.md)
+
+![原生 Chromium 会话：人工接管与中英文直接输入](docs/screenshots/native-direct-input.jpg)
+
+<details>
+<summary>更多截图：图层合成效果与 v0 多工作区界面</summary>
+
+**原生多层合成：**客户端重放图层顺序、7° 旋转、矩形裁剪和组透明度；图为 changed 阶段。[完整帧实验](docs/CHROMIUM_FRAMES.md)
+
+![CanvasKit 原生帧重放：旋转图层、裁剪、透明度与滚动区域](docs/screenshots/native-composition.png)
+
+**v0 协议 PoC：**两个工作区，以及 agent/人工控制切换、任务列表和保存恢复界面；此图使用 LinkeDOM/Yoga 与 Canvas 2D 后端。
+
+![v0 多工作区界面：会话列表、控制权与本地 Canvas 绘制](docs/screenshots/v0-workspaces.png)
+
+</details>
+
 ## 运行
 
 Node.js 22+；默认入口是 LinkeDOM + Yoga → Canvas 2D 的受限协议 PoC：
