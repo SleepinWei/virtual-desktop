@@ -78,6 +78,17 @@ CHROMIUM_EXECUTABLE_PATH='/Applications/Google Chrome.app/Contents/MacOS/Google 
 
 `npm test` 另外覆盖 trace 原生字节提取、来源和阶段分类、损坏记录拒绝、空数据/错误像素拒绝、实验服务资源白名单及 headless 能力失败报告。这些纯分析测试不启动 Chromium，不能代替实际 SKP 解码与视觉验证。
 
+真实站点对照通过同一守护入口执行：
+
+```bash
+# 可选 example、iana、cern、python、bilibili、hackernews，每次一个站点。
+npm run test:native-acceptance -- --task site --site cern --in-process-gpu \
+  --root /Volumes/Extreme-APFS/Runtimes/virtual-desktop-lean-156-20261029 \
+  --iterations 8 --rounds 2 --output test-results/sites-cern
+```
+
+新入口固定默认 1.5 GiB，限制 4–12 次操作、1–2 轮，不接受没有对应 workload 的站点；CERN 两轮用 AB/BA 运行顺序。只做本地输入/焦点，不导航或提交表单。普通模式每动作产生 JPEG80，原生模式只产生真实 SKP 与元数据。生产端全部关闭后，用独立本地 browser 重放保存的资源，检查 ACK 与原始帧，再将原生结果和 JPEG80 各自与普通无损 PNG 对照：整图和 9 个固定区域均使用原阈值。两者功能、状态、原生新帧及两种画质均通过才输出比值；失败返回非零并写入 `site-report.json` 与 `guard-report.json`。原生无帧、网站 HTTP 失败、来源缺失、像素不一致或资源保护停止不能成为性能成功。当前六站均未获得完整资格，见 [网站实测](chromium-sites-2026-10-29.json)。
+
 运行 `npm run experiment:paint` 验证本机浏览器的原生 SKP 捕获和客户端 CanvasKit 重放；`npm run experiment:headless` 配合显式 headless shell 二进制路径检测受控帧能力。版本耦合、输出和失败状态见 [CHROMIUM_PAINT.md](CHROMIUM_PAINT.md)。实验未作为当前 v0 CI 的兼容性保证，实际结果应记录浏览器版本和能力限制。
 
 ## 当前受限云端环境的结果

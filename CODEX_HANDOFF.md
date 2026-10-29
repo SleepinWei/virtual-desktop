@@ -6,6 +6,10 @@
 
 ## 当前实现
 
+**2026-10-29 网站测试更新：六站均没有取得严格画质/功能的完整资格，不能称为通用网页性能通过。** 最新证据 [网站与性能](docs/chromium-sites-2026-10-29.json)，解释与数表见 [NATIVE_RUNTIME.md](docs/NATIVE_RUNTIME.md)。普通模式在 Example、IANA、CERN、Python 文档、哔哩哔哩加载/操作通过，HN HTTP 503；原生 Example/Bili 超 8 MiB JSON 帧上限、Python 图片记录不支持、IANA 主 frame 来源未能证明。CERN 在修复主 widget 绑定后完成两轮 16 次操作与 4 次解码/ACK，但局部文字比较失败；JPEG80 对照本身也未过严格局部阈值，工具拒绝输出收益比值。原生直接生产端 p95 33.2/35.3 ms、普通 JPEG80 51.0/51.0 ms 只能作为非等画质探索性数据，不能冒充验收。
+
+`page-route.js` 用当前 CDP frame id、URL/renderer commit、`SetLayerTreeId` 绑定主 widget，避免同 PID 的 about:blank 旧 widget 被误选；只忽略元数据证明退役的 widget，未知新增 widget 仍拒绝。没有 C++/二进制改变、截图替代或阈值放宽。测试入口 `test:native-acceptance -- --task site --site cern ...`，4–12 次、1–2 轮，单 browser、1.5 GiB；原生归档后关闭 producer，再单独重放。所有站点尝试峰值 1,411.7 MiB、最低 free 70%、新增 swapout 0，无安全停止；ToDesk 结束时存在，无遗留 headless/Ninja。100 JS、16 Python、91 JS 语法通过；原生 fixture 冒烟和双 context pool 回归通过。原有 worker fixture 对照 12 次点击 p95 原生68.4 / JPEG80 87.8 ms，RSS831.2 /772.1 MiB；这与公开网站直接生产端范围不同，也没有 JPEG 等画质结论。当前新增网站与 Example 都是 probe only；下一步优先字体/字形和原始图片资源、默认字体像素及 IANA 来源，之后再测等画质性能；独立 GPU 仍待修复。
+
 **2026-10-29：lean monolithic 的同配置 C++、运行包、原生帧/视觉、人工接管与共享 host fixture 测试已完成。成功的浏览器测试均显式使用 macOS `--in-process-gpu`，默认独立 GPU 路径尚未通过，不替换现有服务。** 当前准确证据见 [lean 验收](docs/chromium-lean-acceptance-2026-10-29.json)，复现见 [CHROMIUM_SUBSET.md](docs/CHROMIUM_SUBSET.md)。通用关卡仍为 `engineSplitGate:not-passed` / `serverRasterBypassed:false`。
 
 同一 `out/VirtualDesktopLeanNinja` / 原 args.gn 增编测试程序，17 cc + 4 Viz 全部实际执行通过，无跳过；主程序 SHA 未变。独立测试状态 `chromium/virtual-desktop-lean-tests-state.json`，主状态为 `lean-engine-tests-complete`，正向 XML/测试程序/配置/主程序指纹互相绑定。构建任务 `--task cpp-build` 和执行任务 `--task cpp-test` 复用构建锁及保护；不要把独立测试状态里的 `compiled:false` 当主引擎未编译。最新 detach 元数据指向已完成的 C++ 增编任务，不是仍在编译。

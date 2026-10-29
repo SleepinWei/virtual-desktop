@@ -7,6 +7,7 @@ import { createService } from '../../src/server.js';
 import { verifiedEngine } from './verified.js';
 import { startLoadGuard } from './load-guard.js';
 import { allowedSiteRequest, externalSites } from './sites.js';
+import { browserProcessArgs } from './browser-runtime.js';
 
 const { values } = parseArgs({ options: { root: { type: 'string', default: process.env.CHROMIUM_BUILD_ROOT },
   canvaskit: { type: 'string', default: process.env.CANVASKIT_DIRECTORY }, output: { type: 'string' },
@@ -22,7 +23,7 @@ const report = { version: 1, startedAt: new Date().toISOString(), site: values.s
 let guard, service, browserServer, temporary;
 
 async function referenceBrowser(engine) {
-  browserServer = await chromium.launchServer({ executablePath: engine.binary, headless: true, chromiumSandbox: false });
+  browserServer = await chromium.launchServer({ executablePath: engine.binary, headless: true, chromiumSandbox: false, args: browserProcessArgs(), timeout: 15000 });
   const pid = browserServer.process().pid;
   guard.add(pid); browserServer.process().once('exit', () => guard.remove(pid));
   let diagnosticBytes = 0; report.ordinaryDiagnostics = '';

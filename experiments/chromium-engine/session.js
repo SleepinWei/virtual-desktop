@@ -8,17 +8,19 @@ import { normalizeNativeFrame } from '../chromium-paint/native-frame.js';
 import { visualSignature } from '../../src/native-frames.js';
 import { ensure } from '../../src/errors.js';
 import { randomUUID } from 'node:crypto';
+import { nativePageRoute } from './page-route.js';
 
 const STARTUP_TRACE = { recordMode: 'recordAsMuchAsPossible', traceBufferSizeInKb: 4096,
   includedCategories: ['disabled-by-default-devtools.timeline'], excludedCategories: ['*'] };
 const delay = milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds));
 
 export class ChromiumSession {
-  constructor({ onFrame, onFault, onBrowser, sharedHost }) {
+  constructor({ onFrame, onFault, onBrowser, sharedHost, onPage }) {
     this.onFrame = onFrame; this.onFault = onFault; this.onBrowser = onBrowser;
     this.candidates = new Map(); this.actions = new Map(); this.frames = 0; this.excluded = 0;
     this.latest = null; this.route = null; this.closed = false; this.traceActive = false;
     this.sharedHost = sharedHost; this.leaseId = randomUUID();
+    this.onPage = onPage;
   }
   async start({ root, expectedArtifactsSha256, expectedPatchSha256, url, viewport, saved, allowedPaths, site }) {
     const verified = this.sharedHost?.engine || await verifiedEngine(root, { requireStream: true });
@@ -71,6 +73,7 @@ export class ChromiumSession {
     this.page.on('crash', () => { if (!this.closed) this.onFault('Native renderer crashed; session stopped', true); });
     this.context.on('page', page => { if (page !== this.page) page.close().catch(() => {}); });
     this.cdp = await this.context.newCDPSession(this.page);
+    await this.onPage?.(this.page, this.cdp);
     this.traceActive = true;
     let trace;
     try {
@@ -84,20 +87,31 @@ export class ChromiumSession {
       trace = await (this.sharedHost ? this.sharedHost.trace(capture) : capture());
     } finally { this.traceActive = false; }
     ensure(trace.dataLossOccurred === false, 502, 'NATIVE_PROVENANCE_INCOMPLETE', 'Startup process metadata was incomplete');
-    const provenance = findPageProvenance(trace.events, this.url);
+    const { frameTree } = await this.cdp.send('Page.getFrameTree');
+    this.startupProvenance = findPageProvenance(trace.events, this.url);
+    const provenance = site ? nativePageRoute(trace.events, this.url, frameTree.frame.id) : this.startupProvenance;
+    this.startupProvenance = provenance;
     ensure(provenance.rendererPids.length === 1, 502, 'NATIVE_PROVENANCE_MISSING', 'Expected one renderer for the exact trusted page URL');
     this.provenance = { ...provenance, scope: 'One short metadata-only startup trace; frame delivery uses the authenticated native socket.' };
     this.rendererPid = provenance.rendererPids[0];
-    // Force an initial complete draw after fonts load, even with no viewer.
-    await this.page.setViewportSize({ width: viewport.width + 1, height: viewport.height });
-    await settlePage(this.page);
-    await this.page.setViewportSize(viewport); await settlePage(this.page);
+    this.retiredStartupTrees = new Set(provenance.retiredTreeIds || []);
+    // Local fixtures force a draw. Public pages bind the proven destination
+    // widget without resizing through a possibly retired about:blank widget.
+    if (!site) {
+      await this.page.setViewportSize({ width: viewport.width + 1, height: viewport.height });
+      await settlePage(this.page);
+      await this.page.setViewportSize(viewport); await settlePage(this.page);
+    }
     const deadline = Date.now() + 5000;
     while (!this.latest && Date.now() < deadline) {
       const candidates = [...this.candidates.values()].filter(message => message.pid === this.rendererPid &&
+        (!provenance.route || message.snapshot?.tree_id === provenance.route.treeId) &&
         message.snapshot?.viewport?.[2] === viewport.width && message.snapshot?.viewport?.[3] === viewport.height)
         .sort((a, b) => a.ts - b.ts);
       const current = candidates.at(-1);
+      const error = [...this.candidates.values()].filter(message => message.pid === this.rendererPid && message.error)
+        .sort((a, b) => b.ts - a.ts)[0];
+      if (error && (!current || error.ts >= current.ts)) { this.lastFault = error.error; break; }
       if (current) {
         this.route = { pid: current.pid, treeId: current.snapshot.tree_id };
         this.sharedHost?.router.bind(this.leaseId, this.route);
@@ -108,6 +122,7 @@ export class ChromiumSession {
     ensure(this.latest, this.lastFault ? 422 : 504, this.lastFault ? 'NATIVE_FRAME_UNSUPPORTED' : 'NATIVE_FRAME_TIMEOUT',
       this.lastFault || 'Native producer did not deliver a supported complete frame');
     this.candidates.clear();
+    if (site) await settlePage(this.page);
     this.page.on('framenavigated', frame => {
       if (frame === this.page.mainFrame() && frame.url() !== this.url) this.onFault('Navigation outside the bound native page is unsupported');
     });
@@ -123,6 +138,7 @@ export class ChromiumSession {
     }
     if (message.pid !== this.route.pid) { this.excluded++; return; }
     if (message.snapshot && message.snapshot.tree_id !== this.route.treeId) {
+      if (this.retiredStartupTrees?.has(message.snapshot.tree_id)) { this.excluded++; return; }
       this.onFault('Additional native widget in this renderer is unsupported'); return;
     }
     this.accept(message);

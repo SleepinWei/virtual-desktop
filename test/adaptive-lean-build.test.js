@@ -15,6 +15,13 @@ test('the combined viewer budget cannot be used for producer smoke or arbitrary 
       '--output', '/must-not-write', '--max-rss-mib', limit]), /Only the combined live producer/);
 });
 
+test('public site runs reject unbounded sample counts before touching the filesystem or browser', async () => {
+  const command = fileURLToPath(new URL('../experiments/chromium-engine/guarded-native-tests.js', import.meta.url));
+  for (const [site, iterations, rounds] of [['example', '13', '1'], ['example', '8', '3'], ['xiaohongshu', '8', '1']])
+    await assert.rejects(promisify(execFile)(process.execPath, [command, '--task', 'site', '--site', site, '--root', '/must-not-read',
+      '--output', '/must-not-write', '--iterations', iterations, '--rounds', rounds]), /configured --site/);
+});
+
 test('C++ build/run tasks cannot overwrite the candidate executable state', () => {
   assert.notEqual(leanTask('cpp-build').state, leanTask().state);
   assert.equal(leanTask('cpp-build').state, leanTask('cpp-test').state);

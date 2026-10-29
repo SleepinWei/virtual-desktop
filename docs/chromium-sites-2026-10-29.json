@@ -1,0 +1,1720 @@
+{
+  "version": 1,
+  "recordedAt": "2026-10-29T15:58:30.904489+00:00",
+  "status": "public-sites-not-accepted-no-equal-quality-performance-ratio",
+  "engineSplitGate": "not-passed",
+  "serverRasterBypassed": false,
+  "build": {
+    "revision": "d0c02bfad08ec92a6ffcf989e53cd995e6381a4c",
+    "binarySha256": "d016a91338184e4e14ecc98c7fe8dc24a24d275a89ccce32c6fe0ad0d7c86557",
+    "artifactsSha256": "ced5e3501ed4ea7fb5430f4d6be645cbcf30398e2f9656a8110d4a0a5e9c7d0a",
+    "patchSha256": "9a8c986d9bf7a34fb6f296e09eddb78e60f487c76059f51491d98d923b823437"
+  },
+  "method": {
+    "runtimeRoot": "/Volumes/Extreme-APFS/Runtimes/virtual-desktop-lean-156-20261029",
+    "gpuProcessMode": "Explicit macOS in-process GPU for both modes; default separate-GPU path remains unaccepted.",
+    "viewport": {
+      "width": 960,
+      "height": 720,
+      "deviceScaleFactor": 1
+    },
+    "siteWorkload": "Local search-box edits or Tab/Shift+Tab only; no form submissions, login or deliberate playback.",
+    "siteMeasurement": "Direct producer harness; fresh context/browser, common HTTPS policy, 750 ms network settling plus fonts/two rAF; 2 warmups then 8 operations per mode. CERN has AB/BA order, two fresh rounds.",
+    "startupDifference": "Native additionally performs the required short provenance trace and first supported complete native frame; ordinary ends at first JPEG80.",
+    "quality": "Close all producers, replay archived genuine SKPs in an independent local CanvasKit browser, then compare to ordinary lossless PNG. Whole image + nine fixed 320x240 regions use the unchanged MAE<=3 and fraction(abs channel error>32)<=0.02. JPEG80 control is also checked against PNG in the final CERN run.",
+    "eligibility": "Report ratios only after both producers, equal DOM text/input/scroll state, fresh native frames per action and both modes strict visual checks pass. No public-site pair passed.",
+    "performanceExclusions": [
+      "Client decode/raster CPU and full viewer latency are excluded.",
+      "Native producer data is raw SKP/metadata; deduplicated resource counts are potential cache reuse, not measured HTTP/TLS wire bandwidth.",
+      "RSS is a sum with duplicated shared pages, not unique physical memory.",
+      "Main-page CDP response byte counts may miss out-of-process frames and TLS overhead.",
+      "Live remote content/network timing and small samples prevent general throughput/capacity claims."
+    ]
+  },
+  "sites": [
+    {
+      "site": "example",
+      "url": "https://example.com/",
+      "status": "public-site-comparison-incomplete",
+      "evidence": {
+        "path": "test-results/public-sites-20261029/example-bound/site-report.json",
+        "sha256": "5f71f215f6a3df327645fef3a51dd2063e853f1982d60829bd7cb8105aa9a321"
+      },
+      "guard": {
+        "path": "test-results/public-sites-20261029/example-bound/guard-report.json",
+        "sha256": "b415d68fd86941f01d00052719bcb7b2620c17ec2c58719972ebd89742eb5b14",
+        "status": "test-failed",
+        "innerStatus": "public-site-comparison-incomplete",
+        "stopped": null,
+        "budgetMiB": 1536,
+        "peakSummedRssMiB": 924.9,
+        "minFreePercent": 73,
+        "newSwapoutBytes": 0
+      },
+      "rounds": [
+        {
+          "mode": "traditional-jpeg",
+          "round": 0,
+          "status": "passed",
+          "httpStatus": 200,
+          "startup": {
+            "readyMs": 1562.017208,
+            "processCpuSeconds": 0.44,
+            "peakSummedRssBytes": 627490816,
+            "newHostSwapoutBytes": 0,
+            "minHostFreePercent": 73
+          },
+          "operations": 8,
+          "elapsedMs": 404.39041700000007,
+          "operationsPerSecond": 19.782862460857963,
+          "latencyMs": {
+            "p50": 48.8542910000001,
+            "p95": 51.700041000000056,
+            "max": 51.700041000000056
+          },
+          "measurement": {
+            "processCpuSeconds": 0.19999999999999993,
+            "peakSummedRssBytes": 644661248,
+            "newHostSwapoutBytes": 0,
+            "minHostFreePercent": 73
+          },
+          "freshNativeFrames": null,
+          "producer": {
+            "frames": 8,
+            "jpegBytes": 456548
+          },
+          "maxCoordinatorLoopDelayMs": 22.085631,
+          "network": {
+            "requests": 2,
+            "failedRequests": 0,
+            "encodedResponseBytes": 2001,
+            "responseHosts": {
+              "example.com": 2
+            },
+            "failedHosts": {},
+            "pageErrors": []
+          },
+          "pageState": {
+            "title": "Example Domain",
+            "url": "https://example.com/",
+            "textSha256": "aa8c4320fabb468930b605f5f365b1beaf2ac42b081eed50083e26d26cb3c159",
+            "textLength": 917,
+            "images": {
+              "total": 0,
+              "loaded": 0
+            },
+            "frames": 0
+          }
+        },
+        {
+          "mode": "native-records",
+          "round": 0,
+          "status": "failed",
+          "error": "frame-too-large",
+          "failureElapsedMs": 1713.9543750000003,
+          "resourcesUntilFailure": {
+            "processCpuSeconds": 1.8800000000000001,
+            "peakSummedRssBytes": 909737984,
+            "newHostSwapoutBytes": 0,
+            "minHostFreePercent": 73
+          },
+          "network": {
+            "requests": 2,
+            "failedRequests": 0,
+            "encodedResponseBytes": 2000,
+            "responseHosts": {
+              "example.com": 2
+            },
+            "failedHosts": {},
+            "pageErrors": []
+          },
+          "pageState": {
+            "title": "Example Domain",
+            "url": "https://example.com/",
+            "textSha256": "aa8c4320fabb468930b605f5f365b1beaf2ac42b081eed50083e26d26cb3c159",
+            "textLength": 917,
+            "images": {
+              "total": 0,
+              "loaded": 0
+            },
+            "frames": 0
+          },
+          "nativeStartup": {
+            "gpuProcessMode": "in-process",
+            "acceptedFrames": 0,
+            "lastFault": "frame-too-large",
+            "boundRoute": {
+              "pid": 10275,
+              "treeId": 2
+            },
+            "retiredTreeIds": [
+              1
+            ],
+            "candidateErrors": [
+              "frame-too-large"
+            ]
+          }
+        }
+      ],
+      "visuals": [],
+      "comparisons": [
+        {
+          "round": 0,
+          "eligible": false,
+          "reason": "Both producers, equal state, fresh native frames and both strict visual stages must pass",
+          "nativeOverOrdinary": null
+        },
+        {
+          "round": 1,
+          "eligible": false,
+          "reason": "Both producers, equal state, fresh native frames and both strict visual stages must pass",
+          "nativeOverOrdinary": null
+        }
+      ]
+    },
+    {
+      "site": "iana",
+      "url": "https://www.iana.org/help/example-domains",
+      "status": "public-site-comparison-incomplete",
+      "evidence": {
+        "path": "test-results/public-sites-20261029/iana-bound/site-report.json",
+        "sha256": "09ab7a62cbde55a9ff5aca8e9f25a9ee3632468bd2906f3e578f54330a0625a2"
+      },
+      "guard": {
+        "path": "test-results/public-sites-20261029/iana-bound/guard-report.json",
+        "sha256": "f56484b2b99ae7d177b556677d1e153f37638cef2152893b1bbf610f0cf30429",
+        "status": "test-failed",
+        "innerStatus": "public-site-comparison-incomplete",
+        "stopped": null,
+        "budgetMiB": 1536,
+        "peakSummedRssMiB": 865.6,
+        "minFreePercent": 71,
+        "newSwapoutBytes": 0
+      },
+      "rounds": [
+        {
+          "mode": "traditional-jpeg",
+          "round": 0,
+          "status": "passed",
+          "httpStatus": 200,
+          "startup": {
+            "readyMs": 1931.0851659999998,
+            "processCpuSeconds": 0.98,
+            "peakSummedRssBytes": 661520384,
+            "newHostSwapoutBytes": 0,
+            "minHostFreePercent": 71
+          },
+          "operations": 8,
+          "elapsedMs": 435.86791600000015,
+          "operationsPerSecond": 18.354184160689627,
+          "latencyMs": {
+            "p50": 50.280666999999994,
+            "p95": 62.12954200000013,
+            "max": 62.12954200000013
+          },
+          "measurement": {
+            "processCpuSeconds": 0.26000000000000006,
+            "peakSummedRssBytes": 679002112,
+            "newHostSwapoutBytes": 0,
+            "minHostFreePercent": 71
+          },
+          "freshNativeFrames": null,
+          "producer": {
+            "frames": 8,
+            "jpegBytes": 597804
+          },
+          "maxCoordinatorLoopDelayMs": 21.905407,
+          "network": {
+            "requests": 8,
+            "failedRequests": 0,
+            "encodedResponseBytes": 1235640,
+            "responseHosts": {
+              "www.iana.org": 8
+            },
+            "failedHosts": {},
+            "pageErrors": []
+          },
+          "pageState": {
+            "title": "Example Domains",
+            "url": "https://www.iana.org/help/example-domains",
+            "textSha256": "483f14bf64ab0809edf5168e1e47c7f770ac39c128b216e0f25fc55b4ac844a6",
+            "textLength": 1256,
+            "images": {
+              "total": 1,
+              "loaded": 1
+            },
+            "frames": 0
+          }
+        },
+        {
+          "mode": "native-records",
+          "round": 0,
+          "status": "failed",
+          "error": "Main-frame renderer provenance is missing or ambiguous",
+          "failureElapsedMs": 1946.4972500000003,
+          "resourcesUntilFailure": {
+            "processCpuSeconds": 1.79,
+            "peakSummedRssBytes": 794591232,
+            "newHostSwapoutBytes": 0,
+            "minHostFreePercent": 71
+          },
+          "network": {
+            "requests": 8,
+            "failedRequests": 0,
+            "encodedResponseBytes": 1235557,
+            "responseHosts": {
+              "www.iana.org": 8
+            },
+            "failedHosts": {},
+            "pageErrors": []
+          },
+          "pageState": {
+            "title": "Example Domains",
+            "url": "https://www.iana.org/help/example-domains",
+            "textSha256": "483f14bf64ab0809edf5168e1e47c7f770ac39c128b216e0f25fc55b4ac844a6",
+            "textLength": 1256,
+            "images": {
+              "total": 1,
+              "loaded": 1
+            },
+            "frames": 0
+          },
+          "nativeStartup": {
+            "gpuProcessMode": "in-process",
+            "acceptedFrames": 0,
+            "lastFault": null,
+            "boundRoute": null,
+            "retiredTreeIds": null,
+            "candidateErrors": [
+              "frame-too-large"
+            ]
+          }
+        }
+      ],
+      "visuals": [],
+      "comparisons": [
+        {
+          "round": 0,
+          "eligible": false,
+          "reason": "Both producers, equal state, fresh native frames and both strict visual stages must pass",
+          "nativeOverOrdinary": null
+        }
+      ]
+    },
+    {
+      "site": "python",
+      "url": "https://www.python.org/doc/",
+      "status": "public-site-comparison-incomplete",
+      "evidence": {
+        "path": "test-results/public-sites-20261029/python-bound/site-report.json",
+        "sha256": "be6252b047681c3cea0d0c83c11ac008d9dd3f5eaf4cd5609df1341f4bf0ac3b"
+      },
+      "guard": {
+        "path": "test-results/public-sites-20261029/python-bound/guard-report.json",
+        "sha256": "73b97e8380ddd9f53efd3e28c60beda184db98ff089a0f4fd8d4c7fe3b708e18",
+        "status": "test-failed",
+        "innerStatus": "public-site-comparison-incomplete",
+        "stopped": null,
+        "budgetMiB": 1536,
+        "peakSummedRssMiB": 811.3,
+        "minFreePercent": 71,
+        "newSwapoutBytes": 0
+      },
+      "rounds": [
+        {
+          "mode": "traditional-jpeg",
+          "round": 0,
+          "status": "passed",
+          "httpStatus": 200,
+          "startup": {
+            "readyMs": 1988.5561669999997,
+            "processCpuSeconds": 1.01,
+            "peakSummedRssBytes": 676888576,
+            "newHostSwapoutBytes": 0,
+            "minHostFreePercent": 71
+          },
+          "operations": 8,
+          "elapsedMs": 537.419375,
+          "operationsPerSecond": 14.885953823306055,
+          "latencyMs": {
+            "p50": 65.01400000000012,
+            "p95": 68.84037500000022,
+            "max": 68.84037500000022
+          },
+          "measurement": {
+            "processCpuSeconds": 0.3899999999999999,
+            "peakSummedRssBytes": 712294400,
+            "newHostSwapoutBytes": 0,
+            "minHostFreePercent": 71
+          },
+          "freshNativeFrames": null,
+          "producer": {
+            "frames": 8,
+            "jpegBytes": 651103
+          },
+          "maxCoordinatorLoopDelayMs": 21.250047,
+          "network": {
+            "requests": 28,
+            "failedRequests": 1,
+            "encodedResponseBytes": 666968,
+            "responseHosts": {
+              "www.python.org": 23,
+              "ajax.googleapis.com": 3,
+              "analytics.python.org": 1
+            },
+            "failedHosts": {
+              "2p66nmmycsj3.statuspage.io": 1
+            },
+            "pageErrors": []
+          },
+          "pageState": {
+            "title": "Our Documentation | Python.org",
+            "url": "https://www.python.org/doc/",
+            "textSha256": "8f667feb95a7c061b5b3950790eb2881e4f4b77793e4041829b459f25ae81012",
+            "textLength": 2648,
+            "images": {
+              "total": 1,
+              "loaded": 1
+            },
+            "frames": 0
+          }
+        },
+        {
+          "mode": "native-records",
+          "round": 0,
+          "status": "failed",
+          "error": "Unsupported native frame: picture-images-or-missing-record",
+          "failureElapsedMs": 7251.616917,
+          "resourcesUntilFailure": {
+            "processCpuSeconds": 1.79,
+            "peakSummedRssBytes": 749486080,
+            "newHostSwapoutBytes": 0,
+            "minHostFreePercent": 71
+          },
+          "network": {
+            "requests": 28,
+            "failedRequests": 1,
+            "encodedResponseBytes": 667027,
+            "responseHosts": {
+              "www.python.org": 23,
+              "ajax.googleapis.com": 3,
+              "analytics.python.org": 1
+            },
+            "failedHosts": {
+              "2p66nmmycsj3.statuspage.io": 1
+            },
+            "pageErrors": []
+          },
+          "pageState": {
+            "title": "Our Documentation | Python.org",
+            "url": "https://www.python.org/doc/",
+            "textSha256": "8f667feb95a7c061b5b3950790eb2881e4f4b77793e4041829b459f25ae81012",
+            "textLength": 2648,
+            "images": {
+              "total": 1,
+              "loaded": 1
+            },
+            "frames": 0
+          },
+          "nativeStartup": {
+            "gpuProcessMode": "in-process",
+            "acceptedFrames": 0,
+            "lastFault": "Unsupported native frame: picture-images-or-missing-record",
+            "boundRoute": {
+              "pid": 11109,
+              "treeId": 2
+            },
+            "retiredTreeIds": [
+              1
+            ],
+            "candidateErrors": []
+          }
+        }
+      ],
+      "visuals": [],
+      "comparisons": [
+        {
+          "round": 0,
+          "eligible": false,
+          "reason": "Both producers, equal state, fresh native frames and both strict visual stages must pass",
+          "nativeOverOrdinary": null
+        }
+      ]
+    },
+    {
+      "site": "cern",
+      "url": "https://info.cern.ch/hypertext/WWW/TheProject.html",
+      "status": "public-site-comparison-incomplete",
+      "evidence": {
+        "path": "test-results/public-sites-20261029/cern-final/site-report.json",
+        "sha256": "4b22277f20e82347600f599d59b2df2791af6fa7e64da0d9e811ceabdd5e93a1"
+      },
+      "guard": {
+        "path": "test-results/public-sites-20261029/cern-final/guard-report.json",
+        "sha256": "90af92b365155ad81ed272a52207f2c02e36aeb21b83f280c693f773cd7afa72",
+        "status": "test-failed",
+        "innerStatus": "public-site-comparison-incomplete",
+        "stopped": null,
+        "budgetMiB": 1536,
+        "peakSummedRssMiB": 855.5,
+        "minFreePercent": 70,
+        "newSwapoutBytes": 0
+      },
+      "rounds": [
+        {
+          "mode": "traditional-jpeg",
+          "round": 0,
+          "status": "passed",
+          "httpStatus": 200,
+          "startup": {
+            "readyMs": 2121.424875,
+            "processCpuSeconds": 0.47,
+            "peakSummedRssBytes": 611975168,
+            "newHostSwapoutBytes": 0,
+            "minHostFreePercent": 71
+          },
+          "operations": 8,
+          "elapsedMs": 404.27370900000005,
+          "operationsPerSecond": 19.788573488462983,
+          "latencyMs": {
+            "p50": 48.75624999999991,
+            "p95": 50.96929200000022,
+            "max": 50.96929200000022
+          },
+          "measurement": {
+            "processCpuSeconds": 0.24000000000000007,
+            "peakSummedRssBytes": 630947840,
+            "newHostSwapoutBytes": 0,
+            "minHostFreePercent": 71
+          },
+          "freshNativeFrames": null,
+          "producer": {
+            "frames": 8,
+            "jpegBytes": 579264
+          },
+          "maxCoordinatorLoopDelayMs": 21.790719,
+          "network": {
+            "requests": 1,
+            "failedRequests": 0,
+            "encodedResponseBytes": 2450,
+            "responseHosts": {
+              "info.cern.ch": 1
+            },
+            "failedHosts": {},
+            "pageErrors": []
+          },
+          "pageState": {
+            "title": "The World Wide Web project",
+            "url": "https://info.cern.ch/hypertext/WWW/TheProject.html",
+            "textSha256": "e269ace0a3c88bd8cfbbbc3f836cf4a3100f7fc4da2ebd45f8226b712f3f065f",
+            "textLength": 983,
+            "images": {
+              "total": 0,
+              "loaded": 0
+            },
+            "frames": 0
+          }
+        },
+        {
+          "mode": "native-records",
+          "round": 0,
+          "status": "passed",
+          "startup": {
+            "readyMs": 2395.0341660000004,
+            "processCpuSeconds": 1.1300000000000001,
+            "peakSummedRssBytes": 692109312,
+            "newHostSwapoutBytes": 0,
+            "minHostFreePercent": 71
+          },
+          "operations": 8,
+          "elapsedMs": 253.9435000000003,
+          "operationsPerSecond": 31.503070564909088,
+          "latencyMs": {
+            "p50": 31.94537500000024,
+            "p95": 33.150416999999834,
+            "max": 33.150416999999834
+          },
+          "measurement": {
+            "processCpuSeconds": 0.2300000000000001,
+            "peakSummedRssBytes": 708771840,
+            "newHostSwapoutBytes": 0,
+            "minHostFreePercent": 71
+          },
+          "freshNativeFrames": 8,
+          "producer": {
+            "frames": 8,
+            "resourceBytes": 6159512,
+            "metadataBytes": 5823,
+            "uniqueResourceBytes": 0
+          },
+          "maxCoordinatorLoopDelayMs": 21.528575,
+          "network": {
+            "requests": 1,
+            "failedRequests": 0,
+            "encodedResponseBytes": 2450,
+            "responseHosts": {
+              "info.cern.ch": 1
+            },
+            "failedHosts": {},
+            "pageErrors": []
+          },
+          "pageState": {
+            "title": "The World Wide Web project",
+            "url": "https://info.cern.ch/hypertext/WWW/TheProject.html",
+            "textSha256": "e269ace0a3c88bd8cfbbbc3f836cf4a3100f7fc4da2ebd45f8226b712f3f065f",
+            "textLength": 983,
+            "images": {
+              "total": 0,
+              "loaded": 0
+            },
+            "frames": 0
+          }
+        },
+        {
+          "mode": "native-records",
+          "round": 1,
+          "status": "passed",
+          "startup": {
+            "readyMs": 2350.1346249999997,
+            "processCpuSeconds": 0.99,
+            "peakSummedRssBytes": 695140352,
+            "newHostSwapoutBytes": 0,
+            "minHostFreePercent": 71
+          },
+          "operations": 8,
+          "elapsedMs": 270.0848330000008,
+          "operationsPerSecond": 29.620323033837213,
+          "latencyMs": {
+            "p50": 31.7510829999992,
+            "p95": 35.27229099999931,
+            "max": 35.27229099999931
+          },
+          "measurement": {
+            "processCpuSeconds": 0.2400000000000001,
+            "peakSummedRssBytes": 709083136,
+            "newHostSwapoutBytes": 0,
+            "minHostFreePercent": 71
+          },
+          "freshNativeFrames": 8,
+          "producer": {
+            "frames": 8,
+            "resourceBytes": 6159512,
+            "metadataBytes": 5823,
+            "uniqueResourceBytes": 0
+          },
+          "maxCoordinatorLoopDelayMs": 21.610495,
+          "network": {
+            "requests": 1,
+            "failedRequests": 0,
+            "encodedResponseBytes": 2450,
+            "responseHosts": {
+              "info.cern.ch": 1
+            },
+            "failedHosts": {},
+            "pageErrors": []
+          },
+          "pageState": {
+            "title": "The World Wide Web project",
+            "url": "https://info.cern.ch/hypertext/WWW/TheProject.html",
+            "textSha256": "e269ace0a3c88bd8cfbbbc3f836cf4a3100f7fc4da2ebd45f8226b712f3f065f",
+            "textLength": 983,
+            "images": {
+              "total": 0,
+              "loaded": 0
+            },
+            "frames": 0
+          }
+        },
+        {
+          "mode": "traditional-jpeg",
+          "round": 1,
+          "status": "passed",
+          "httpStatus": 200,
+          "startup": {
+            "readyMs": 2083.696333,
+            "processCpuSeconds": 0.4400000000000003,
+            "peakSummedRssBytes": 633733120,
+            "newHostSwapoutBytes": 0,
+            "minHostFreePercent": 71
+          },
+          "operations": 8,
+          "elapsedMs": 403.4025839999995,
+          "operationsPerSecond": 19.831305790544988,
+          "latencyMs": {
+            "p50": 48.810333000001265,
+            "p95": 50.981292000000394,
+            "max": 50.981292000000394
+          },
+          "measurement": {
+            "processCpuSeconds": 0.21000000000000005,
+            "peakSummedRssBytes": 648069120,
+            "newHostSwapoutBytes": 0,
+            "minHostFreePercent": 71
+          },
+          "freshNativeFrames": null,
+          "producer": {
+            "frames": 8,
+            "jpegBytes": 579264
+          },
+          "maxCoordinatorLoopDelayMs": 21.938175,
+          "network": {
+            "requests": 1,
+            "failedRequests": 0,
+            "encodedResponseBytes": 2450,
+            "responseHosts": {
+              "info.cern.ch": 1
+            },
+            "failedHosts": {},
+            "pageErrors": []
+          },
+          "pageState": {
+            "title": "The World Wide Web project",
+            "url": "https://info.cern.ch/hypertext/WWW/TheProject.html",
+            "textSha256": "e269ace0a3c88bd8cfbbbc3f836cf4a3100f7fc4da2ebd45f8226b712f3f065f",
+            "textLength": 983,
+            "images": {
+              "total": 0,
+              "loaded": 0
+            },
+            "frames": 0
+          }
+        }
+      ],
+      "visuals": [
+        {
+          "stage": "r0-before",
+          "nativePassed": false,
+          "sameTextAndState": true,
+          "decodedAndAcked": true,
+          "nativeWholeImage": {
+            "passed": true,
+            "meanAbsoluteChannelError": 1.6582581018518519,
+            "pixelsOver32Fraction": 0.018504050925925927,
+            "limits": {
+              "maxMeanAbsoluteChannelError": 3,
+              "maxPixelsOver32Fraction": 0.02
+            },
+            "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+          },
+          "nativeFailedRegions": [
+            {
+              "bounds": {
+                "x": 0,
+                "y": 0,
+                "width": 320,
+                "height": 240
+              },
+              "passed": false,
+              "meanAbsoluteChannelError": 4.971362847222222,
+              "pixelsOver32Fraction": 0.054140625,
+              "limits": {
+                "maxMeanAbsoluteChannelError": 3,
+                "maxPixelsOver32Fraction": 0.02
+              },
+              "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+            },
+            {
+              "bounds": {
+                "x": 320,
+                "y": 0,
+                "width": 320,
+                "height": 240
+              },
+              "passed": false,
+              "meanAbsoluteChannelError": 1.9914453125,
+              "pixelsOver32Fraction": 0.021822916666666668,
+              "limits": {
+                "maxMeanAbsoluteChannelError": 3,
+                "maxPixelsOver32Fraction": 0.02
+              },
+              "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+            },
+            {
+              "bounds": {
+                "x": 0,
+                "y": 240,
+                "width": 320,
+                "height": 240
+              },
+              "passed": false,
+              "meanAbsoluteChannelError": 4.920993923611111,
+              "pixelsOver32Fraction": 0.055078125,
+              "limits": {
+                "maxMeanAbsoluteChannelError": 3,
+                "maxPixelsOver32Fraction": 0.02
+              },
+              "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+            }
+          ],
+          "jpeg80Passed": false,
+          "jpeg80WholeImage": {
+            "passed": true,
+            "meanAbsoluteChannelError": 1.1207923418209877,
+            "pixelsOver32Fraction": 0.010746527777777778,
+            "limits": {
+              "maxMeanAbsoluteChannelError": 3,
+              "maxPixelsOver32Fraction": 0.02
+            },
+            "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+          },
+          "jpeg80FailedRegions": [
+            {
+              "bounds": {
+                "x": 0,
+                "y": 0,
+                "width": 320,
+                "height": 240
+              },
+              "passed": false,
+              "meanAbsoluteChannelError": 2.6113237847222224,
+              "pixelsOver32Fraction": 0.020481770833333333,
+              "limits": {
+                "maxMeanAbsoluteChannelError": 3,
+                "maxPixelsOver32Fraction": 0.02
+              },
+              "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+            },
+            {
+              "bounds": {
+                "x": 0,
+                "y": 240,
+                "width": 320,
+                "height": 240
+              },
+              "passed": false,
+              "meanAbsoluteChannelError": 3.2553645833333333,
+              "pixelsOver32Fraction": 0.028958333333333332,
+              "limits": {
+                "maxMeanAbsoluteChannelError": 3,
+                "maxPixelsOver32Fraction": 0.02
+              },
+              "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+            }
+          ],
+          "error": null
+        },
+        {
+          "stage": "r0-after",
+          "nativePassed": false,
+          "sameTextAndState": true,
+          "decodedAndAcked": true,
+          "nativeWholeImage": {
+            "passed": true,
+            "meanAbsoluteChannelError": 1.6582581018518519,
+            "pixelsOver32Fraction": 0.018504050925925927,
+            "limits": {
+              "maxMeanAbsoluteChannelError": 3,
+              "maxPixelsOver32Fraction": 0.02
+            },
+            "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+          },
+          "nativeFailedRegions": [
+            {
+              "bounds": {
+                "x": 0,
+                "y": 0,
+                "width": 320,
+                "height": 240
+              },
+              "passed": false,
+              "meanAbsoluteChannelError": 4.971362847222222,
+              "pixelsOver32Fraction": 0.054140625,
+              "limits": {
+                "maxMeanAbsoluteChannelError": 3,
+                "maxPixelsOver32Fraction": 0.02
+              },
+              "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+            },
+            {
+              "bounds": {
+                "x": 320,
+                "y": 0,
+                "width": 320,
+                "height": 240
+              },
+              "passed": false,
+              "meanAbsoluteChannelError": 1.9914453125,
+              "pixelsOver32Fraction": 0.021822916666666668,
+              "limits": {
+                "maxMeanAbsoluteChannelError": 3,
+                "maxPixelsOver32Fraction": 0.02
+              },
+              "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+            },
+            {
+              "bounds": {
+                "x": 0,
+                "y": 240,
+                "width": 320,
+                "height": 240
+              },
+              "passed": false,
+              "meanAbsoluteChannelError": 4.920993923611111,
+              "pixelsOver32Fraction": 0.055078125,
+              "limits": {
+                "maxMeanAbsoluteChannelError": 3,
+                "maxPixelsOver32Fraction": 0.02
+              },
+              "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+            }
+          ],
+          "jpeg80Passed": false,
+          "jpeg80WholeImage": {
+            "passed": true,
+            "meanAbsoluteChannelError": 1.1207923418209877,
+            "pixelsOver32Fraction": 0.010746527777777778,
+            "limits": {
+              "maxMeanAbsoluteChannelError": 3,
+              "maxPixelsOver32Fraction": 0.02
+            },
+            "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+          },
+          "jpeg80FailedRegions": [
+            {
+              "bounds": {
+                "x": 0,
+                "y": 0,
+                "width": 320,
+                "height": 240
+              },
+              "passed": false,
+              "meanAbsoluteChannelError": 2.6113237847222224,
+              "pixelsOver32Fraction": 0.020481770833333333,
+              "limits": {
+                "maxMeanAbsoluteChannelError": 3,
+                "maxPixelsOver32Fraction": 0.02
+              },
+              "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+            },
+            {
+              "bounds": {
+                "x": 0,
+                "y": 240,
+                "width": 320,
+                "height": 240
+              },
+              "passed": false,
+              "meanAbsoluteChannelError": 3.2553645833333333,
+              "pixelsOver32Fraction": 0.028958333333333332,
+              "limits": {
+                "maxMeanAbsoluteChannelError": 3,
+                "maxPixelsOver32Fraction": 0.02
+              },
+              "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+            }
+          ],
+          "error": null
+        },
+        {
+          "stage": "r1-before",
+          "nativePassed": false,
+          "sameTextAndState": true,
+          "decodedAndAcked": true,
+          "nativeWholeImage": {
+            "passed": true,
+            "meanAbsoluteChannelError": 1.6582581018518519,
+            "pixelsOver32Fraction": 0.018504050925925927,
+            "limits": {
+              "maxMeanAbsoluteChannelError": 3,
+              "maxPixelsOver32Fraction": 0.02
+            },
+            "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+          },
+          "nativeFailedRegions": [
+            {
+              "bounds": {
+                "x": 0,
+                "y": 0,
+                "width": 320,
+                "height": 240
+              },
+              "passed": false,
+              "meanAbsoluteChannelError": 4.971362847222222,
+              "pixelsOver32Fraction": 0.054140625,
+              "limits": {
+                "maxMeanAbsoluteChannelError": 3,
+                "maxPixelsOver32Fraction": 0.02
+              },
+              "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+            },
+            {
+              "bounds": {
+                "x": 320,
+                "y": 0,
+                "width": 320,
+                "height": 240
+              },
+              "passed": false,
+              "meanAbsoluteChannelError": 1.9914453125,
+              "pixelsOver32Fraction": 0.021822916666666668,
+              "limits": {
+                "maxMeanAbsoluteChannelError": 3,
+                "maxPixelsOver32Fraction": 0.02
+              },
+              "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+            },
+            {
+              "bounds": {
+                "x": 0,
+                "y": 240,
+                "width": 320,
+                "height": 240
+              },
+              "passed": false,
+              "meanAbsoluteChannelError": 4.920993923611111,
+              "pixelsOver32Fraction": 0.055078125,
+              "limits": {
+                "maxMeanAbsoluteChannelError": 3,
+                "maxPixelsOver32Fraction": 0.02
+              },
+              "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+            }
+          ],
+          "jpeg80Passed": false,
+          "jpeg80WholeImage": {
+            "passed": true,
+            "meanAbsoluteChannelError": 1.1207923418209877,
+            "pixelsOver32Fraction": 0.010746527777777778,
+            "limits": {
+              "maxMeanAbsoluteChannelError": 3,
+              "maxPixelsOver32Fraction": 0.02
+            },
+            "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+          },
+          "jpeg80FailedRegions": [
+            {
+              "bounds": {
+                "x": 0,
+                "y": 0,
+                "width": 320,
+                "height": 240
+              },
+              "passed": false,
+              "meanAbsoluteChannelError": 2.6113237847222224,
+              "pixelsOver32Fraction": 0.020481770833333333,
+              "limits": {
+                "maxMeanAbsoluteChannelError": 3,
+                "maxPixelsOver32Fraction": 0.02
+              },
+              "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+            },
+            {
+              "bounds": {
+                "x": 0,
+                "y": 240,
+                "width": 320,
+                "height": 240
+              },
+              "passed": false,
+              "meanAbsoluteChannelError": 3.2553645833333333,
+              "pixelsOver32Fraction": 0.028958333333333332,
+              "limits": {
+                "maxMeanAbsoluteChannelError": 3,
+                "maxPixelsOver32Fraction": 0.02
+              },
+              "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+            }
+          ],
+          "error": null
+        },
+        {
+          "stage": "r1-after",
+          "nativePassed": false,
+          "sameTextAndState": true,
+          "decodedAndAcked": true,
+          "nativeWholeImage": {
+            "passed": true,
+            "meanAbsoluteChannelError": 1.6582581018518519,
+            "pixelsOver32Fraction": 0.018504050925925927,
+            "limits": {
+              "maxMeanAbsoluteChannelError": 3,
+              "maxPixelsOver32Fraction": 0.02
+            },
+            "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+          },
+          "nativeFailedRegions": [
+            {
+              "bounds": {
+                "x": 0,
+                "y": 0,
+                "width": 320,
+                "height": 240
+              },
+              "passed": false,
+              "meanAbsoluteChannelError": 4.971362847222222,
+              "pixelsOver32Fraction": 0.054140625,
+              "limits": {
+                "maxMeanAbsoluteChannelError": 3,
+                "maxPixelsOver32Fraction": 0.02
+              },
+              "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+            },
+            {
+              "bounds": {
+                "x": 320,
+                "y": 0,
+                "width": 320,
+                "height": 240
+              },
+              "passed": false,
+              "meanAbsoluteChannelError": 1.9914453125,
+              "pixelsOver32Fraction": 0.021822916666666668,
+              "limits": {
+                "maxMeanAbsoluteChannelError": 3,
+                "maxPixelsOver32Fraction": 0.02
+              },
+              "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+            },
+            {
+              "bounds": {
+                "x": 0,
+                "y": 240,
+                "width": 320,
+                "height": 240
+              },
+              "passed": false,
+              "meanAbsoluteChannelError": 4.920993923611111,
+              "pixelsOver32Fraction": 0.055078125,
+              "limits": {
+                "maxMeanAbsoluteChannelError": 3,
+                "maxPixelsOver32Fraction": 0.02
+              },
+              "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+            }
+          ],
+          "jpeg80Passed": false,
+          "jpeg80WholeImage": {
+            "passed": true,
+            "meanAbsoluteChannelError": 1.1207923418209877,
+            "pixelsOver32Fraction": 0.010746527777777778,
+            "limits": {
+              "maxMeanAbsoluteChannelError": 3,
+              "maxPixelsOver32Fraction": 0.02
+            },
+            "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+          },
+          "jpeg80FailedRegions": [
+            {
+              "bounds": {
+                "x": 0,
+                "y": 0,
+                "width": 320,
+                "height": 240
+              },
+              "passed": false,
+              "meanAbsoluteChannelError": 2.6113237847222224,
+              "pixelsOver32Fraction": 0.020481770833333333,
+              "limits": {
+                "maxMeanAbsoluteChannelError": 3,
+                "maxPixelsOver32Fraction": 0.02
+              },
+              "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+            },
+            {
+              "bounds": {
+                "x": 0,
+                "y": 240,
+                "width": 320,
+                "height": 240
+              },
+              "passed": false,
+              "meanAbsoluteChannelError": 3.2553645833333333,
+              "pixelsOver32Fraction": 0.028958333333333332,
+              "limits": {
+                "maxMeanAbsoluteChannelError": 3,
+                "maxPixelsOver32Fraction": 0.02
+              },
+              "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+            }
+          ],
+          "error": null
+        }
+      ],
+      "comparisons": [
+        {
+          "round": 0,
+          "eligible": false,
+          "reason": "Both producers, equal state, fresh native frames, native replay and JPEG80 control must pass the strict visual stages",
+          "nativeOverOrdinary": null
+        },
+        {
+          "round": 1,
+          "eligible": false,
+          "reason": "Both producers, equal state, fresh native frames, native replay and JPEG80 control must pass the strict visual stages",
+          "nativeOverOrdinary": null
+        }
+      ]
+    },
+    {
+      "site": "bilibili",
+      "url": "https://www.bilibili.com/",
+      "status": "public-site-comparison-incomplete",
+      "evidence": {
+        "path": "test-results/public-sites-20261029/bilibili-bound/site-report.json",
+        "sha256": "5d068ff301b47cbfcd771d9c1968613aec7322e47aecc6d7faf32d2bf0511670"
+      },
+      "guard": {
+        "path": "test-results/public-sites-20261029/bilibili-bound/guard-report.json",
+        "sha256": "def3d6fbaccefe502c28d8b43b67b663fd8094568535a7c11cae20c6ca32d746",
+        "status": "test-failed",
+        "innerStatus": "public-site-comparison-incomplete",
+        "stopped": null,
+        "budgetMiB": 1536,
+        "peakSummedRssMiB": 1407.5,
+        "minFreePercent": 70,
+        "newSwapoutBytes": 0
+      },
+      "rounds": [
+        {
+          "mode": "traditional-jpeg",
+          "round": 0,
+          "status": "passed",
+          "httpStatus": 200,
+          "startup": {
+            "readyMs": 1653.112583,
+            "processCpuSeconds": 3.22,
+            "peakSummedRssBytes": 1220132864,
+            "newHostSwapoutBytes": 0,
+            "minHostFreePercent": 70
+          },
+          "operations": 8,
+          "elapsedMs": 729.384583,
+          "operationsPerSecond": 10.968150666272033,
+          "latencyMs": {
+            "p50": 78.0600830000003,
+            "p95": 135.95941600000015,
+            "max": 135.95941600000015
+          },
+          "measurement": {
+            "processCpuSeconds": 0.71,
+            "peakSummedRssBytes": 1233453056,
+            "newHostSwapoutBytes": 0,
+            "minHostFreePercent": 70
+          },
+          "freshNativeFrames": null,
+          "producer": {
+            "frames": 8,
+            "jpegBytes": 1134224
+          },
+          "maxCoordinatorLoopDelayMs": 21.463039,
+          "network": {
+            "requests": 151,
+            "failedRequests": 2,
+            "encodedResponseBytes": 2468881,
+            "responseHosts": {
+              "www.bilibili.com": 2,
+              "s1.hdslb.com": 13,
+              "i0.hdslb.com": 84,
+              "i2.hdslb.com": 3,
+              "i1.hdslb.com": 4,
+              "api.bilibili.com": 27,
+              "cm.bilibili.com": 4,
+              "api.live.bilibili.com": 1,
+              "data.bilibili.com": 11
+            },
+            "failedHosts": {
+              "s1.hdslb.com": 2
+            },
+            "pageErrors": [
+              "COLS: response timeout",
+              "COLS: response timeout",
+              "COLS: response timeout",
+              "COLS: response timeout",
+              "COLS: response timeout",
+              "COLS: response timeout",
+              "COLS: response timeout",
+              "COLS: response timeout"
+            ]
+          },
+          "pageState": {
+            "title": "哔哩哔哩 (゜-゜)つロ 干杯~-bilibili",
+            "url": "https://www.bilibili.com/",
+            "textSha256": "2cb3050937481170c597640188885b7baea2da2d1cafd48970d2f6b2bc740f97",
+            "textLength": 662,
+            "images": {
+              "total": 55,
+              "loaded": 55
+            },
+            "frames": 2
+          }
+        },
+        {
+          "mode": "native-records",
+          "round": 0,
+          "status": "failed",
+          "error": "frame-too-large",
+          "failureElapsedMs": 3391.2721250000004,
+          "resourcesUntilFailure": {
+            "processCpuSeconds": 5.430000000000001,
+            "peakSummedRssBytes": 1422295040,
+            "newHostSwapoutBytes": 0,
+            "minHostFreePercent": 70
+          },
+          "network": {
+            "requests": 130,
+            "failedRequests": 2,
+            "encodedResponseBytes": 2394531,
+            "responseHosts": {
+              "www.bilibili.com": 2,
+              "i0.hdslb.com": 81,
+              "s1.hdslb.com": 13,
+              "i2.hdslb.com": 3,
+              "i1.hdslb.com": 4,
+              "api.bilibili.com": 14,
+              "cm.bilibili.com": 2,
+              "data.bilibili.com": 5,
+              "api.live.bilibili.com": 1
+            },
+            "failedHosts": {
+              "s1.hdslb.com": 2
+            },
+            "pageErrors": [
+              "COLS: response timeout",
+              "COLS: response timeout",
+              "COLS: response timeout",
+              "COLS: response timeout"
+            ]
+          },
+          "pageState": {
+            "title": "哔哩哔哩 (゜-゜)つロ 干杯~-bilibili",
+            "url": "https://www.bilibili.com/",
+            "textSha256": "58335b2d3a5c3887e3d72fdadbe1503b9b29b08a7c48a3539e2bcf56e77d3e0c",
+            "textLength": 649,
+            "images": {
+              "total": 55,
+              "loaded": 52
+            },
+            "frames": 2
+          },
+          "nativeStartup": {
+            "gpuProcessMode": "in-process",
+            "acceptedFrames": 0,
+            "lastFault": "frame-too-large",
+            "boundRoute": {
+              "pid": 11795,
+              "treeId": 2
+            },
+            "retiredTreeIds": [
+              1
+            ],
+            "candidateErrors": [
+              "frame-too-large"
+            ]
+          }
+        }
+      ],
+      "visuals": [],
+      "comparisons": [
+        {
+          "round": 0,
+          "eligible": false,
+          "reason": "Both producers, equal state, fresh native frames and both strict visual stages must pass",
+          "nativeOverOrdinary": null
+        }
+      ]
+    },
+    {
+      "site": "hackernews",
+      "url": "https://news.ycombinator.com/",
+      "status": "public-site-comparison-incomplete",
+      "evidence": {
+        "path": "test-results/public-sites-20261029/hackernews-final/site-report.json",
+        "sha256": "d0dd3a9bc5e8dc530ccfca98b03e6b3ebeadf75f98ab375ae7533f23f474a72d"
+      },
+      "guard": {
+        "path": "test-results/public-sites-20261029/hackernews-final/guard-report.json",
+        "sha256": "6c3e01c4f20810d21c0a15c580134a40cf4eafae9d2213c34b8d37263b3736eb",
+        "status": "test-failed",
+        "innerStatus": "public-site-comparison-incomplete",
+        "stopped": null,
+        "budgetMiB": 1536,
+        "peakSummedRssMiB": 696.4,
+        "minFreePercent": 72,
+        "newSwapoutBytes": 0
+      },
+      "rounds": [
+        {
+          "mode": "traditional-jpeg",
+          "round": 0,
+          "status": "failed",
+          "httpStatus": 503,
+          "error": "Ordinary navigation failed: HTTP 503",
+          "failureElapsedMs": 1061.594333,
+          "resourcesUntilFailure": {
+            "processCpuSeconds": 0.35,
+            "peakSummedRssBytes": 579108864,
+            "newHostSwapoutBytes": 0,
+            "minHostFreePercent": 72
+          },
+          "network": {
+            "requests": 4,
+            "failedRequests": 0,
+            "encodedResponseBytes": 1691,
+            "responseHosts": {
+              "news.ycombinator.com": 1
+            },
+            "failedHosts": {},
+            "pageErrors": []
+          },
+          "pageState": {
+            "title": "Hacker News",
+            "url": "https://news.ycombinator.com/",
+            "textSha256": "807c7eada8c0ad72b8415eb6b34caf1127583f0e661385f2146d8f99d23d0e38",
+            "textLength": 85,
+            "images": {
+              "total": 2,
+              "loaded": 0
+            },
+            "frames": 0
+          }
+        },
+        {
+          "mode": "native-records",
+          "round": 0,
+          "status": "failed",
+          "error": "Native page did not load within its configured site policy",
+          "failureElapsedMs": 1178.566,
+          "resourcesUntilFailure": {
+            "processCpuSeconds": 0.95,
+            "peakSummedRssBytes": 664879104,
+            "newHostSwapoutBytes": 0,
+            "minHostFreePercent": 72
+          },
+          "network": {
+            "requests": 4,
+            "failedRequests": 0,
+            "encodedResponseBytes": 1691,
+            "responseHosts": {
+              "news.ycombinator.com": 1
+            },
+            "failedHosts": {},
+            "pageErrors": []
+          },
+          "pageState": {
+            "title": "Hacker News",
+            "url": "https://news.ycombinator.com/",
+            "textSha256": "807c7eada8c0ad72b8415eb6b34caf1127583f0e661385f2146d8f99d23d0e38",
+            "textLength": 85,
+            "images": {
+              "total": 2,
+              "loaded": 0
+            },
+            "frames": 0
+          },
+          "nativeStartup": {
+            "gpuProcessMode": "in-process",
+            "acceptedFrames": 0,
+            "lastFault": null,
+            "boundRoute": null,
+            "retiredTreeIds": null,
+            "candidateErrors": []
+          }
+        }
+      ],
+      "visuals": [],
+      "comparisons": [
+        {
+          "round": 0,
+          "eligible": false,
+          "reason": "Both producers, equal state, fresh native frames, native replay and JPEG80 control must pass the strict visual stages",
+          "nativeOverOrdinary": null
+        }
+      ]
+    }
+  ],
+  "fixApplied": {
+    "kind": "Main-document compositor widget binding in JS; no C++ or runtime binary changes.",
+    "identity": "Exact current Page.getFrameTree frame id + URL/renderer commit + SetLayerTreeId; select newest unambiguous main widget. Ignore only trace-proven retired startup widgets; reject unknown additional widgets.",
+    "sourceBasis": [
+      "third_party/blink/renderer/core/inspector/inspector_trace_events.cc: inspector_set_layer_tree_id::Data",
+      "third_party/blink/renderer/core/frame/local_frame_view.cc: SetLayerTreeId trace",
+      "cc/trees/layer_tree_impl.cc: native tree_id = host_impl_->id()"
+    ],
+    "observedImprovement": "CERN previously bound an old widget; after correction both native producer rounds and all four decode/ACK stages completed. Strict local visual checks still failed.",
+    "failureHandling": "Prefer explicit frame-too-large over a generic later rAF timeout. No screenshot or DOM geometry is used to construct native frames."
+  },
+  "fixedFixtureControl": {
+    "evidence": {
+      "path": "test-results/public-sites-20261029/fixture-control/report.json",
+      "sha256": "202c050c60f6436fe1ccbd32727e2c24ce37acccbb74cda5e5617da9b0189d50"
+    },
+    "status": "bounded-local-comparison-complete",
+    "rounds": [
+      {
+        "mode": "native-records",
+        "active": 1,
+        "operations": 12,
+        "elapsedMs": 785.8700410000001,
+        "operationsPerSecond": 15.269700298958206,
+        "latencyMs": {
+          "p50": 66.14637500000003,
+          "p95": 68.44558300000017,
+          "max": 68.44558300000017
+        },
+        "processCpuSeconds": 0.42000000000000004,
+        "peakSummedRssBytes": 871596032,
+        "maxProcessCount": 10,
+        "minHostFreePercent": 73,
+        "newHostSwapoutBytes": 0,
+        "maxCoordinatorLoopDelayMs": 22.626303,
+        "producerPayloadBytes": 874424,
+        "producerMetadataBytes": 19356,
+        "producedFrames": 12,
+        "correctFinalState": true,
+        "meanProducerPayloadBytesPerAction": 72868.66666666667
+      },
+      {
+        "mode": "traditional-jpeg",
+        "active": 1,
+        "operations": 12,
+        "elapsedMs": 1006.79925,
+        "operationsPerSecond": 11.918960011144227,
+        "latencyMs": {
+          "p50": 83.9624589999994,
+          "p95": 87.75254200000018,
+          "max": 87.75254200000018
+        },
+        "processCpuSeconds": 0.53,
+        "peakSummedRssBytes": 809598976,
+        "maxProcessCount": 8,
+        "minHostFreePercent": 73,
+        "newHostSwapoutBytes": 0,
+        "maxCoordinatorLoopDelayMs": 22.757375,
+        "producerPayloadBytes": 546343,
+        "producerMetadataBytes": 0,
+        "producedFrames": 12,
+        "correctFinalState": true,
+        "meanProducerPayloadBytesPerAction": 45528.583333333336
+      }
+    ],
+    "burst": {
+      "requests": 96,
+      "accepted": 64,
+      "rejected": 32,
+      "statusCounts": {
+        "200": 64,
+        "429": 32
+      },
+      "requestedSessions": 16,
+      "rejectedSessions": 16,
+      "correctFinalState": true,
+      "peakSummedRssBytes": 921993216,
+      "newHostSwapoutBytes": 0
+    },
+    "scope": "Existing independent-worker fixture harness, 12 measured click operations per mode plus a bounded burst. These are different workloads/IPC scope from the public-site direct harness; do not mix the latencies. JPEG80 output quality was not quantified by this fixture benchmark, so it is not an equal-quality performance claim."
+  },
+  "safety": {
+    "maxConcurrentExecutionBrowsers": 1,
+    "siteRssBudgetMiB": 1536,
+    "minFreePercentLimit": 35,
+    "maxSwapoutBytes": 67108864,
+    "heartbeatMs": 4000,
+    "taskTimeLimitMs": 180000,
+    "allRecordedSiteAttempts": 14,
+    "peakSummedSiteTreeRssMiB": 1411.7,
+    "minObservedSiteFreePercent": 70,
+    "newSwapoutBytes": 0,
+    "safetyStops": [],
+    "todeskProcessesPresentAfterTests": true,
+    "leftoverHeadlessOrNinjaObserved": false,
+    "todeskInteractiveLatencyMeasured": false
+  },
+  "regression": {
+    "javascriptPassed": 100,
+    "pythonPassed": 16,
+    "syntaxCheckedJsFiles": 91,
+    "nativeSmoke": {
+      "path": "test-results/public-sites-20261029/fixture-smoke-regression/guard-report.json",
+      "sha256": "fe1310be3a8361ac7954413790f9a925f147d555c7ec0e7986f3a715c33e820c",
+      "status": "passed",
+      "innerStatus": "native-runtime-smoke-passed",
+      "stopped": null,
+      "budgetMiB": 1536,
+      "peakSummedRssMiB": 647.7,
+      "minFreePercent": 70,
+      "newSwapoutBytes": 0
+    },
+    "sharedHost": {
+      "path": "test-results/public-sites-20261029/pool-regression/guard-report.json",
+      "sha256": "ccf185ce382d68a682dd75e961a8cd824210009b04955c62c1fc9091e80411ff",
+      "status": "passed",
+      "innerStatus": "shared-native-host-candidate",
+      "stopped": null,
+      "budgetMiB": 1536,
+      "peakSummedRssMiB": 988.1,
+      "minFreePercent": 69,
+      "newSwapoutBytes": 0
+    },
+    "javascriptLog": "test-results/public-sites-20261029/unit-tests.log",
+    "syntaxAndPythonLog": "test-results/public-sites-20261029/check.log"
+  },
+  "earlierAttemptsPreserved": [
+    {
+      "name": "example",
+      "evidence": {
+        "path": "test-results/public-sites-20261029/example/site-report.json",
+        "sha256": "7e2859c60092affaaefe1ae37ddb37808be65bb3cac3fd3cf19faf53bcd0510f"
+      },
+      "status": "public-site-comparison-incomplete",
+      "rounds": [
+        {
+          "mode": "traditional-jpeg",
+          "status": "failed",
+          "error": "cdpSession.send: Protocol error (Browser.getBrowserCommandLine): Command line not returned because --enable-automation not set."
+        }
+      ]
+    },
+    {
+      "name": "example-v2",
+      "evidence": {
+        "path": "test-results/public-sites-20261029/example-v2/site-report.json",
+        "sha256": "e28f73f3bbe64cb355845447dec980e53a11a2cf4196c65d133c1a02bed462a1"
+      },
+      "status": "public-site-comparison-incomplete",
+      "rounds": [
+        {
+          "mode": "traditional-jpeg",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "mode": "native-records",
+          "status": "failed",
+          "error": "page.evaluate: Error: Animation frames stalled"
+        }
+      ]
+    },
+    {
+      "name": "iana",
+      "evidence": {
+        "path": "test-results/public-sites-20261029/iana/site-report.json",
+        "sha256": "101232e1b4c8de30e6b60fccff45d946b0cffebb57d4dcb070da007eb8c747b3"
+      },
+      "status": "public-site-comparison-incomplete",
+      "rounds": [
+        {
+          "mode": "traditional-jpeg",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "mode": "native-records",
+          "status": "failed",
+          "error": "Expected one renderer for the exact trusted page URL"
+        }
+      ]
+    },
+    {
+      "name": "cern",
+      "evidence": {
+        "path": "test-results/public-sites-20261029/cern/site-report.json",
+        "sha256": "eb506477a0d2a48aa38ac9e845481403233a252684d6d2b582df745d880a5b91"
+      },
+      "status": "public-site-comparison-incomplete",
+      "rounds": [
+        {
+          "mode": "traditional-jpeg",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "mode": "native-records",
+          "status": "failed",
+          "error": "No complete native frame to archive: Additional native widget in this renderer is unsupported"
+        }
+      ]
+    },
+    {
+      "name": "python",
+      "evidence": {
+        "path": "test-results/public-sites-20261029/python/site-report.json",
+        "sha256": "575e0afb7dbaeb6ed2a7205b8cdcbb7baa227f22453a5a1adf16d6d81145a3e4"
+      },
+      "status": "public-site-comparison-incomplete",
+      "rounds": [
+        {
+          "mode": "traditional-jpeg",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "mode": "native-records",
+          "status": "failed",
+          "error": "Unsupported native frame: picture-images-or-missing-record"
+        }
+      ]
+    },
+    {
+      "name": "bilibili",
+      "evidence": {
+        "path": "test-results/public-sites-20261029/bilibili/site-report.json",
+        "sha256": "47522247f61cea8ae4288f72c44359b1d72acb3ce4dc19340f98ea2a45787061"
+      },
+      "status": "public-site-comparison-incomplete",
+      "rounds": [
+        {
+          "mode": "traditional-jpeg",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "mode": "native-records",
+          "status": "failed",
+          "error": "page.evaluate: Error: Animation frames stalled"
+        }
+      ]
+    },
+    {
+      "name": "hackernews",
+      "evidence": {
+        "path": "test-results/public-sites-20261029/hackernews/site-report.json",
+        "sha256": "654866ced2cd5b2dff8a1c19240d7543183d1f92dc668e0a86064ba7274c91ae"
+      },
+      "status": "public-site-comparison-incomplete",
+      "rounds": [
+        {
+          "mode": "traditional-jpeg",
+          "status": "failed",
+          "error": "Ordinary navigation failed: HTTP 503"
+        }
+      ]
+    },
+    {
+      "name": "cern-bound",
+      "evidence": {
+        "path": "test-results/public-sites-20261029/cern-bound/site-report.json",
+        "sha256": "a8dd8c4cbe61e1fca92e2d034e48b974d8c96c3bc91f66064fdd4ac5c173cadf"
+      },
+      "status": "public-site-comparison-incomplete",
+      "rounds": [
+        {
+          "mode": "traditional-jpeg",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "mode": "native-records",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "mode": "native-records",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "mode": "traditional-jpeg",
+          "status": "passed",
+          "error": null
+        }
+      ]
+    }
+  ],
+  "nextWork": [
+    "Font/glyph resource extraction and size attribution before raising any record budget.",
+    "Original image-resource transport and CanvasKit replay; current discardable-image records are explicitly unsupported.",
+    "Match default-font rasterization and establish an accepted quality setting for the conventional JPEG control; keep pixel thresholds unchanged.",
+    "Diagnose remaining IANA main-frame provenance gap; do not guess its renderer/widget.",
+    "Re-run public-site functionality/visuals first, then measure equal-quality CPU, memory, bandwidth and client cost; retain the separate-GPU startup issue."
+  ]
+}
