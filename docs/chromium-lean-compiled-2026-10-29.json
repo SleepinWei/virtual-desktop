@@ -1,0 +1,136 @@
+{
+  "version": 1,
+  "observedAt": "2026-10-29T20:51:02.875397+08:00",
+  "status": "lean-compiled-candidate",
+  "scope": "Lean monolithic headless_shell compiled; version-only startup and direct dependency checks, no C++/native/visual acceptance.",
+  "statePath": "/Volumes/Extreme-APFS/Builds/chromium/virtual-desktop-lean-ninja-build-state.json",
+  "build": {
+    "revision": "d0c02bfad08ec92a6ffcf989e53cd995e6381a4c",
+    "output": "/Volumes/Extreme-APFS/Builds/chromium/src/out/VirtualDesktopLeanNinja",
+    "builder": "ninja",
+    "jobs": 1,
+    "stage": "lean-compiled-candidate",
+    "compiled": true,
+    "updatedAt": "2026-10-29T12:47:02.316289+00:00",
+    "exitCode": 0,
+    "binary": "/Volumes/Extreme-APFS/Builds/chromium/src/out/VirtualDesktopLeanNinja/headless_shell",
+    "binarySha256": "d016a91338184e4e14ecc98c7fe8dc24a24d275a89ccce32c6fe0ad0d7c86557",
+    "profileSha256": "d8f52940ead346afedd9972fef103c491a28f639e756044e89a7a3443660f763",
+    "patchSha256": "9a8c986d9bf7a34fb6f296e09eddb78e60f487c76059f51491d98d923b823437",
+    "gnRootPatch": {
+      "path": ".gn",
+      "baseSha256": "1c33e1726ea5b347730043bf1837fb17bedbeee4651ae9d8393f0d191fb0dd24",
+      "patchedSha256": "2ce626db4b09cbed3ec57b81ec68853bfc4450970b59b2ad0492eb1912a4a2fd",
+      "snippetSha256": "2adb190ae16cd75768a2c01c328f3289d3395e8c07d12d30e5d9e747ef58038d",
+      "environment": {
+        "VIRTUAL_DESKTOP_LEAN_ROOT": "headless"
+      },
+      "scope": "Candidate build graph only; inactive without its environment flag."
+    },
+    "bindingsConcurrencyPatch": {
+      "path": "third_party/blink/renderer/bindings/BUILD.gn",
+      "baseSha256": "a0f038c3b3079c8a1a500baebf5bc7584b95dc7ceb82d900b62c120321cca6ba",
+      "patchedSha256": "a2c993edd8f3c295deeb41d80c94b53fd09a3347ba019b9d7aafa3763a625dbd",
+      "snippetSha256": "399ef54df2d6426abefc3f7b6e6837e493e9084780b099753479ed9619f8481a",
+      "workersPerAction": 1,
+      "environment": {
+        "VIRTUAL_DESKTOP_LEAN_ROOT": "headless"
+      },
+      "scope": "Use upstream single-process code generation only for the lean candidate; Ninja owns concurrency."
+    },
+    "v8MetagenPassed": true,
+    "ccTestsPassed": false,
+    "vizTestsPassed": false,
+    "artifacts": {
+      "headless_command_resources.pak": "4eecdc01a7158a78f68b6b20f1452586aa04d2ed2e1b56084c55d51ec3f31707",
+      "headless_lib_data.pak": "2e139a8ca35dcbeba706dc247d937465c99a9041b0c1bb915d4a317193bc21ff",
+      "headless_lib_strings.pak": "f04b4efeece6d10c723d56301629a9a38185dd7ce9f96a69b714b635755863ef",
+      "headless_shell": "d016a91338184e4e14ecc98c7fe8dc24a24d275a89ccce32c6fe0ad0d7c86557",
+      "icudtl.dat": "02a01b3188b6a41a756f7322fdb5e6b5ca6573b327b01dfc8ed662d571a6f769",
+      "libEGL.dylib": "5e15e6be4edd8bae62ce70ceb8330760444ea20baa959ffc2d55f887aa23e53d",
+      "libGLESv2.dylib": "a6e3fd0160727aeb271c26f85f09b252b9c7fd69931ac0cb7b36c744c322b03d",
+      "libVkICD_mock_icd.dylib": "0ee88d2b080b93aa1b9b039243c88e0df4ffff58b282d949d5e51e65bd5c3c4d",
+      "libVkLayer_khronos_validation.dylib": "82a0cbb4ead568835925a02eab4b98a67a09c8f29f084dd2eaa34fcab5ed654b",
+      "libvk_swiftshader.dylib": "4ab483c63c13f86c4c572ee8fb83f4008b2bfcd63838c152020debe2215226f5",
+      "libvulkan.dylib": "0a4db04d33fd03e4e9b20fcbfc7d39b1d73f534784399ba5abc22a5f77b56b99",
+      "snapshot_blob.bin": "fd58c49e3f1f0bad65918f3e8ccd0e70690b07cb8920d84f084dfdc3c3dae509",
+      "v8_context_snapshot.arm64.bin": "5b3ce3d65ba70f194b6c5b0d1ec071a30ea5d959c6ddf9ec1eb46de399a0191d"
+    }
+  },
+  "binary": {
+    "bytes": 446482656,
+    "MiB": 425.8,
+    "measurementLimit": "Executable only, not a complete relocated runtime package or browser RAM measurement."
+  },
+  "finalLink": {
+    "report": "test-results/lean-final-link-20261029/guard-report.json",
+    "startedAt": "2026-10-29T12:46:30.909Z",
+    "finishedAt": "2026-10-29T12:47:02.345Z",
+    "status": "compiled-candidate",
+    "result": {
+      "code": 0,
+      "signal": null
+    },
+    "errors": [],
+    "cpuPolicy": {
+      "jobs": 1,
+      "nice": 10,
+      "darwinBackground": false,
+      "qosClamp": "utility",
+      "diskPolicy": "throttle",
+      "systemLoadHardStop": false,
+      "scope": "At most eight build commands; OS schedules cores. Compiler subtree has lower CPU/I/O priority than foreground apps."
+    },
+    "safetyPolicy": {
+      "minFreePercent": 35,
+      "maxSwapoutBytes": 67108864,
+      "maxTreeRssBytes": 8589934592,
+      "maxHeartbeatMs": 4000,
+      "maxDurationMs": null,
+      "enforceSystemLoad": false,
+      "systemLoadStopAbove": null
+    },
+    "safetyStop": null,
+    "sampledPeakTreeRssGiB": 5.3,
+    "minFreePercent": 68,
+    "newSwapoutMiB": 0.0,
+    "temporaryOverride": "Only the verified remaining [1/1] link used an 8 GiB RSS ceiling. Default build remains 6 GiB; host pressure, swapping, heartbeat and low priority remained enforced. Sampling this successful run stayed below 6 GiB; the override is not a measured memory requirement."
+  },
+  "versionSmoke": {
+    "observedAt": "2026-10-29T12:49:44.742Z",
+    "binary": "/Volumes/Extreme-APFS/Builds/chromium/src/out/VirtualDesktopLeanNinja/headless_shell",
+    "command": "--version",
+    "result": {
+      "code": 0,
+      "signal": null
+    },
+    "timedOut": false,
+    "stopped": null,
+    "stdout": "Chromium 156.0.8078.48",
+    "stderr": "",
+    "scope": "Version-only startup check, not C++/native/visual acceptance."
+  },
+  "artifactChecks": {
+    "file": {
+      "exitCode": 0,
+      "stdout": "/Volumes/Extreme-APFS/Builds/chromium/src/out/VirtualDesktopLeanNinja/headless_shell: Mach-O 64-bit executable arm64",
+      "stderr": ""
+    },
+    "dependencies": {
+      "exitCode": 0,
+      "stdout": "/Volumes/Extreme-APFS/Builds/chromium/src/out/VirtualDesktopLeanNinja/headless_shell:\n\t/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit (compatibility version 45.0.0, current version 2775.10.103)\n\t/System/Library/Frameworks/ApplicationServices.framework/Versions/A/ApplicationServices (compatibility version 1.0.0, current version 66.0.0)\n\t/System/Library/Frameworks/CoreGraphics.framework/Versions/A/CoreGraphics (compatibility version 64.0.0, current version 2050.0.0)\n\t/System/Library/Frameworks/CoreServices.framework/Versions/A/CoreServices (compatibility version 1.0.0, current version 1226.0.0)\n\t/System/Library/Frameworks/CFNetwork.framework/Versions/A/CFNetwork (compatibility version 1.0.0, current version 3896.100.1)\n\t/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation (compatibility version 150.0.0, current version 5027.0.69)\n\t/usr/lib/libobjc.A.dylib (compatibility version 1.0.0, current version 228.0.0)\n\t/System/Library/Frameworks/CoreText.framework/Versions/A/CoreText (compatibility version 1.0.0, current version 904.0.0)\n\t/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation (compatibility version 300.0.0, current version 5027.0.69)\n\t/System/Library/Frameworks/Security.framework/Versions/A/Security (compatibility version 1.0.0, current version 62460.1.2)\n\t/System/Library/Frameworks/IOKit.framework/Versions/A/IOKit (compatibility version 1.0.0, current version 275.0.0)\n\t/System/Library/Frameworks/OpenDirectory.framework/Versions/A/OpenDirectory (compatibility version 1.0.0, current version 1.0.0)\n\t/System/Library/Frameworks/Network.framework/Versions/A/Network (compatibility version 1.0.0, current version 6681.1.1)\n\t/System/Library/Frameworks/SystemConfiguration.framework/Versions/A/SystemConfiguration (compatibility version 1.0.0, current version 1446.0.0)\n\t/System/Library/Frameworks/UniformTypeIdentifiers.framework/Versions/A/UniformTypeIdentifiers (compatibility version 1.0.0, current version 709.0.0)\n\t/System/Library/Frameworks/CryptoTokenKit.framework/Versions/A/CryptoTokenKit (compatibility version 0.0.0, current version 878.0.13)\n\t/System/Library/Frameworks/LocalAuthentication.framework/Versions/A/LocalAuthentication (compatibility version 1.0.0, current version 2319.0.63)\n\t/System/Library/Frameworks/CoreVideo.framework/Versions/A/CoreVideo (compatibility version 1.2.0, current version 758.27.0)\n\t/System/Library/Frameworks/IOSurface.framework/Versions/A/IOSurface (compatibility version 1.0.0, current version 1.0.0)\n\t/System/Library/Frameworks/AVFoundation.framework/Versions/A/AVFoundation (compatibility version 1.0.0, current version 2.0.0)\n\t/System/Library/Frameworks/AVFAudio.framework/Versions/A/AVFAudio (compatibility version 1.0.0, current version 1.0.0)\n\t/System/Library/Frameworks/CoreMedia.framework/Versions/A/CoreMedia (compatibility version 1.0.0, current version 3350.77.5)\n\t/System/Library/Frameworks/Accelerate.framework/Versions/A/Accelerate (compatibility version 1.0.0, current version 4.0.0)\n\t/System/Library/Frameworks/AudioUnit.framework/Versions/A/AudioUnit (compatibility version 1.0.0, current version 1.0.0)\n\t/System/Library/Frameworks/Carbon.framework/Versions/A/Carbon (compatibility version 2.0.0, current version 170.0.0)\n\t/System/Library/Frameworks/QuartzCore.framework/Versions/A/QuartzCore (compatibility version 1.2.0, current version 1223.2.2)\n\t/System/Library/Frameworks/CoreImage.framework/Versions/A/CoreImage (compatibility version 1.0.1, current version 7.0.0)\n\t/System/Library/Frameworks/ScreenCaptureKit.framework/Versions/A/ScreenCaptureKit (compatibility version 1.0.0, current version 1.0.0, weak)\n\t/System/Library/Frameworks/Metal.framework/Versions/A/Metal (compatibility version 1.0.0, current version 382.5.3)\n\t/System/Library/PrivateFrameworks/SkyLight.framework/Versions/A/SkyLight (compatibility version 64.0.0, current version 600.0.0, weak)\n\t/System/Library/Frameworks/AudioToolbox.framework/Versions/A/AudioToolbox (compatibility version 1.0.0, current version 1000.0.0)\n\t/System/Library/Frameworks/CoreAudio.framework/Versions/A/CoreAudio (compatibility version 1.0.0, current version 1.0.0)\n\t/System/Library/Frameworks/OpenGL.framework/Versions/A/OpenGL (compatibility version 1.0.0, current version 1.0.0)\n\t/System/Library/Frameworks/Quartz.framework/Versions/A/Quartz (compatibility version 1.0.0, current version 1.0.0)\n\t/System/Library/Frameworks/Cocoa.framework/Versions/A/Cocoa (compatibility version 1.0.0, current version 24.0.0)\n\t/System/Library/Frameworks/VideoToolbox.framework/Versions/A/VideoToolbox (compatibility version 1.0.0, current version 3350.77.5)\n\t/System/Library/Frameworks/CoreMediaIO.framework/Versions/A/CoreMediaIO (compatibility version 0.0.0, current version 0.0.0)\n\t/System/Library/Frameworks/Accessibility.framework/Versions/A/Accessibility (compatibility version 1.0.0, current version 1.0.0)\n\t/System/Library/Frameworks/MetalKit.framework/Versions/A/MetalKit (compatibility version 1.0.0, current version 174.4.0)\n\t/System/Library/Frameworks/CoreBluetooth.framework/Versions/A/CoreBluetooth (compatibility version 1.0.0, current version 2700.51.0)\n\t/System/Library/Frameworks/IOBluetooth.framework/Versions/A/IOBluetooth (compatibility version 1.0.0, current version 1.0.0)\n\t/System/Library/Frameworks/CoreMIDI.framework/Versions/A/CoreMIDI (compatibility version 1.0.0, current version 69.0.0)\n\t/System/Library/Frameworks/MediaAccessibility.framework/Versions/A/MediaAccessibility (compatibility version 1.0.0, current version 62.0.0)\n\t/System/Library/Frameworks/SecurityInterface.framework/Versions/A/SecurityInterface (compatibility version 1.0.0, current version 55222.0.4)\n\t/System/Library/Frameworks/MediaPlayer.framework/Versions/A/MediaPlayer (compatibility version 1.0.0, current version 1.0.0)\n\t/System/Library/Frameworks/AuthenticationServices.framework/Versions/A/AuthenticationServices (compatibility version 1.0.0, current version 625.1.29)\n\t/System/Library/Frameworks/CoreHaptics.framework/Versions/A/CoreHaptics (compatibility version 1.0.0, current version 1.0.0)\n\t/System/Library/Frameworks/GameController.framework/Versions/A/GameController (compatibility version 1.0.0, current version 14.0.24)\n\t/System/Library/Frameworks/ForceFeedback.framework/Versions/A/ForceFeedback (compatibility version 1.0.0, current version 1.0.2)\n\t/System/Library/Frameworks/CoreWLAN.framework/Versions/A/CoreWLAN (compatibility version 1.0.0, current version 1.0.0)\n\t/System/Library/Frameworks/CoreLocation.framework/Versions/A/CoreLocation (compatibility version 1.0.0, current version 3185.0.6)\n\t/System/Library/Frameworks/Vision.framework/Versions/A/Vision (compatibility version 1.0.0, current version 10.0.44)\n\t/System/Library/Frameworks/CoreML.framework/Versions/A/CoreML (compatibility version 1.0.0, current version 1.0.0)\n\t/usr/lib/libbsm.0.dylib (compatibility version 1.0.0, current version 1.0.0)\n\t/usr/lib/libpmenergy.dylib (compatibility version 1.0.0, current version 2.0.0)\n\t/usr/lib/libpmsample.dylib (compatibility version 1.0.0, current version 2.0.0)\n\t/usr/lib/libresolv.9.dylib (compatibility version 1.0.0, current version 1.0.0)\n\t/usr/lib/libsandbox.1.dylib (compatibility version 1.0.0, current version 1.0.0)\n\t/usr/lib/libSystem.B.dylib (compatibility version 1.0.0, current version 1359.0.0)",
+      "stderr": ""
+    }
+  },
+  "acceptance": {
+    "compiled": true,
+    "versionOnlyStartup": true,
+    "ccTestsPassed": false,
+    "vizTestsPassed": false,
+    "nativeFrameReplayPassed": false,
+    "visualPassed": false,
+    "runtimePackageVerified": false
+  },
+  "engineSplitGate": "not-passed",
+  "serverRasterBypassed": false
+}

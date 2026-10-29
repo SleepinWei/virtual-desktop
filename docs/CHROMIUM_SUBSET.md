@@ -1,6 +1,6 @@
 # Chromium 最小运行子集
 
-2026-10-28：已提取并验证一版独立 **native runtime 包**，阶段为 `packaged-native-runtime-candidate`。它复用已通过 C++ 验证的 component 构建，完成运行文件提取，实际记录见 [chromium-subset-2026-10-28.json](chromium-subset-2026-10-28.json)。2026-10-29 的深度裁剪受控构建已启动，尚无新二进制；最新策略与状态见下文及 [chromium-pool-2026-10-29.json](chromium-pool-2026-10-29.json)。
+2026-10-28：已提取并验证一版独立 **native runtime 包**，阶段为 `packaged-native-runtime-candidate`。它复用已通过 C++ 验证的 component 构建，完成运行文件提取，实际记录见 [chromium-subset-2026-10-28.json](chromium-subset-2026-10-28.json)。2026-10-29 20:47 的深度裁剪候选已完成编译，20:49 版本启动通过；尚未完成同配置 C++、原生重放、视觉与独立运行包验收，见 [候选产物记录](chromium-lean-compiled-2026-10-29.json)。
 
 ## 需要保留的边界
 
@@ -69,10 +69,10 @@ DATA_DIR=.data/native-subset nice -n 10 npm run start:native -- \
 
 | 保护 | 当前编译策略 |
 | --- | --- |
-| 并发 | 一个 `headless_shell` 目标，上限 `-j 8`；八/六任务在大文件组触及 RSS 保护后，当前自适应构建已降为四任务。Blink 绑定生成动作使用上游单进程模式，避免每个动作另开整机核数的进程池。由 macOS 分配核心，不是固定 CPU affinity；关闭远程执行和 ThinLTO |
+| 并发 | 一个 `headless_shell` 目标，上限 `-j 8`；本次编译已完成，过程中按 RSS 保护逐步降档，最终链接使用一个任务。Blink 绑定生成动作使用上游单进程模式，避免每个动作另开整机核数的进程池。由 macOS 分配核心，不是固定 CPU affinity；关闭远程执行和 ThinLTO |
 | CPU / I/O | 只对编译子树使用 utility QoS clamp、nice 10 和磁盘 I/O throttle，子进程继承；监控器保持正常优先级 |
 | 整机 CPU load | 编译专用不按 load >8 直接停止；通过优先级给前台让路。浏览器测试和交互服务的默认 load 保护保留 |
-| 内存 | 整机内存压力 free percentage ≥35%，编译 owned RSS 之和 ≤6 GiB；浏览器默认仍为 1.5 GiB |
+| 内存 | 整机内存压力 free percentage ≥35%，默认编译 owned RSS 之和 ≤6 GiB；本次最后单任务链接临时使用 8 GiB 上限，其成功采样峰值 5.3 GiB。浏览器默认仍为 1.5 GiB |
 | 换页 | 最近 10 秒新增系统 swapout ≤64 MiB |
 | 监控 | 独立 watchdog，心跳 4 秒；监控器在编译的 QoS clamp 之外；监控失效也终止编译 |
 
@@ -80,7 +80,7 @@ DATA_DIR=.data/native-subset nice -n 10 npm run start:native -- \
 
 先用 SIGINT 中断旧单任务 Ninja，并验证采集到的旧编译进程全部退出，再以八任务恢复相同输出目录；没有 clean 或改变 GN 参数，完成的对象继续复用。旧单任务报告中的 `build-failed` 是这次主动中断，不代表源码编译报错。Ninja 的编译子进程可处于独立进程组，停止逻辑因此按 PPID 捕获整个归属树，先结束后代再结束根进程，避免只停止主进程组而遗留编译器。
 
-最新加速记录见 [chromium-build-budget-2026-10-29.json](chromium-build-budget-2026-10-29.json)。持续状态先读本机 `test-results/cli-handoff-20261029/build-detach.json` 指向的报告和 launchd 服务，以及外置盘 `chromium/virtual-desktop-lean-ninja-build-state.json`、`logs/chromium-lean-build.log`。当前 supervisor 为 `test-results/lean-adaptive-20261029/supervisor-report.json`，实际守护报告由其 `guardReport` 字段动态给出。构建独立于桌面应用，KeepAlive=false，没有定时任务；允许的有界 RSS 降档规则见下文。后面的旧恢复报告仅作为历史证据。
+最新产物见 [chromium-lean-compiled-2026-10-29.json](chromium-lean-compiled-2026-10-29.json)，此前加速记录见 [chromium-build-budget-2026-10-29.json](chromium-build-budget-2026-10-29.json)。持续状态先读本机 `test-results/cli-handoff-20261029/build-detach.json` 指向的报告和 launchd 服务，以及外置盘 `chromium/virtual-desktop-lean-ninja-build-state.json`、`logs/chromium-lean-build.log`。已完成的最终报告是 `test-results/lean-final-link-20261029/guard-report.json`。旧自适应 supervisor 为 `test-results/lean-adaptive-20261029/supervisor-report.json`，现为历史停止记录。构建独立于桌面应用，KeepAlive=false，没有定时任务；允许的有界 RSS 降档规则见下文。
 
 ### Blink 生成任务的并发预算修复
 
@@ -111,6 +111,6 @@ npm run build:native-lean:adaptive -- --root /Volumes/Extreme-APFS/Builds \
   --jobs 6 --max-rss-mib 6144 --output test-results/lean-adaptive
 ```
 
-当前没有新二进制、C++ 验收或轻量引擎的体积/内存结果。构建完成后仍需为 monolithic 工件增加独立验证布局，并用同配置重建/执行相关 C++ 测试、原生输入/帧和本地视觉回归，再决定替换当前引擎。
+本次已生成 425.8 MiB 的 arm64 主程序，SHA-256 `d016a91338184e4e14ecc98c7fe8dc24a24d275a89ccce32c6fe0ad0d7c86557`；`--version` 退出 0 并显示 Chromium 156.0.8078.48。这个大小只含可执行文件，不能与旧完整 runtime 包直接比较，也没有页面 RSS 收益结论。最后单任务链接曾在 17:40 因原 6 GiB RSS 上限停止；20:46 确认只余链接后，临时使用 8 GiB 上限、保留全部整机保护续跑，约 31 秒完成，采样峰值 5.3 GiB、新增 swapout 0。仍需为 monolithic 工件增加独立验证布局，并用同配置重建/执行相关 C++ 测试、原生输入/帧和本地视觉回归，再决定替换当前引擎。
 
 缩小程序文件与降低网页内存是两条工作线。RSS 后续还需按实际物理占用、进程角色、V8/图片/字体及 SKP 序列化临时副本拆分；移走编译器和开发资源不会自动减少页面的 JS heap、解码缓存或帧副本。

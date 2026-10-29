@@ -6,7 +6,11 @@
 
 ## 当前实现
 
-**2026-10-29 15:06（北京时间）最新快照：自适应构建已从六任务降为四任务，正在编译 Blink。** 先读 `test-results/cli-handoff-20261029/build-detach.json`，它指向独立 launchd 服务和 `test-results/lean-adaptive-20261029/supervisor-report.json`；再读其中动态更新的 `guardReport`，不要固定引用某次 attempt。外置状态仍是 `chromium/virtual-desktop-lean-ninja-build-state.json`。不能把历史 `running` 或本文时间戳当持续状态。KeepAlive=false，无定时任务或完成通知。CLI 默认入口已指向 npm 0.165.0，当前聊天已在 CLI 恢复；退出桌面端后其大部分内存已释放。
+**2026-10-29 20:47（北京时间）：lean 候选编译完成，20:49 的版本启动检查通过。** 外置 `chromium/virtual-desktop-lean-ninja-build-state.json` 为 `lean-compiled-candidate` / `compiled:true`，主程序 `/Volumes/Extreme-APFS/Builds/chromium/src/out/VirtualDesktopLeanNinja/headless_shell` 是 arm64 Mach-O、425.8 MiB，SHA-256 `d016a91338184e4e14ecc98c7fe8dc24a24d275a89ccce32c6fe0ad0d7c86557`。`--version` 在低优先级、15 秒超时和默认浏览器守护下退出 0，输出 Chromium 156.0.8078.48。直接 Mach-O 依赖均为系统库；这不覆盖运行时动态加载资源。详见 [候选产物记录](docs/chromium-lean-compiled-2026-10-29.json)。
+
+自适应任务原先于 17:40 停在最后链接：单任务也超过 6 GiB RSS，继续降并行无效。20:46 的 Ninja dry-run 确认只有 `[1/1] LINK ./headless_shell`，仅本次单任务链接临时使用 8 GiB RSS 上限，其余 free 35% / swapout 64 MiB / 心跳 / utility + nice 10 + I/O throttle 保护保留。31 秒后完成，采样 RSS 峰值 5.3 GiB、最低 free 68%、新增 swapout 0；该成功采样低于原上限，不能说 8 GiB 是实测需求。默认构建仍为 6 GiB。最新元数据 `test-results/cli-handoff-20261029/build-detach.json` 指向 `test-results/lean-final-link-20261029/guard-report.json`，完成后的服务不应再当运行中。**C++/原生帧/视觉/monolithic 运行包验收尚未通过，不能替换现有服务或沿用旧 component 的通过标记。**
+
+以下 **2026-10-29 15:06 的四任务状态为历史快照**：先读 `test-results/cli-handoff-20261029/build-detach.json` 确认当前任务类型；旧自适应 supervisor 是 `test-results/lean-adaptive-20261029/supervisor-report.json`，其实际守护报告由 `guardReport` 动态给出。不能把历史 `running` 或本文时间戳当持续状态。KeepAlive=false，无定时任务或完成通知。CLI 默认入口已指向 npm 0.165.0，当前聊天已在 CLI 恢复；退出桌面端后其大部分内存已释放。
 
 11:46 的两任务构建曾因 owned RSS 超过 6 GiB 停止，free 81%、没有新增 swapout。根因是 Blink 每个绑定生成动作默认另开 10 个 multiprocessing worker，两个 Ninja 任务产生约 20 个 worker。`lean-bindings-single-process.gn` 现在只在候选环境下给 GN 模板加入上游已有的 `--single_process`，让 Ninja 统一管理并发；不改生成算法或原生 C++。补丁只接受固定 BUILD.gn 原始哈希，幂等安装、记录指纹、拒绝覆盖自定义内容。真实 GN 查询确认候选有该选项，未设置候选环境时没有；4,732 份既有生成源码逐字节匹配。14:50 四任务续编稳定后，于 14:53 升至八任务；八任务进入大文件组后 RSS 6.006 GiB 触线，未新增换页。15:04 以六任务启动有界降档，六任务也触线后已实际自动恢复到四任务；观测、限制和源码指纹见 [构建预算记录](docs/chromium-build-budget-2026-10-29.json)。
 
