@@ -58,7 +58,11 @@ BENCH_SESSIONS=8 BENCH_ITERATIONS=20 npm run bench
 
 ## Chromium 原生绘图实验
 
-当前优先读取 [NATIVE_RUNTIME.md](NATIVE_RUNTIME.md)。本机 16 GiB，默认只测一个原生执行浏览器，使用 `nice -n 10 npm run bench:native -- ... --max-active 1`；96 请求突发不等于 96 个浏览器。看门狗触发即停止，不提高预算补跑。加 `--single-session --guard` 的 `experiment:live` 会明确跳过双会话恢复；额外参考浏览器仍可能超预算，不能把安全停止写成视觉通过。原生 GUI 可复用现有本机浏览器验证，避免额外起完整参考进程。
+当前优先读取 [NATIVE_RUNTIME.md](NATIVE_RUNTIME.md) 和 [lean 验收](chromium-lean-acceptance-2026-10-29.json)。本机 16 GiB，默认只测一个原生执行浏览器，使用 `nice -n 10 npm run bench:native -- ... --max-active 1`；96 请求突发不等于 96 个浏览器。看门狗触发即停止，保留失败报告；不能把安全停止写成视觉通过。加 `--single-session --guard` 的 `experiment:live` 会明确跳过双会话恢复。
+
+`npm run test:native-acceptance -- --task smoke|frames|engine|pool --root ... --output ...` 为原生后续测试提供外层进程树保护、低 CPU 优先级、180 秒上限和结果状态检查。macOS 的 `--in-process-gpu` 是显式启动 workaround，默认保持独立 GPU；当前默认路径在本机未通过。每次只运行一个 task，使用不同输出目录保存结果。具体命令见 [CHROMIUM_SUBSET.md](CHROMIUM_SUBSET.md)。
+
+该入口默认固定 1.5 GiB，只有 `--task live --max-rss-mib 2048` 接受显式 2 GiB 联合预算，覆盖执行 browser、本地 viewer 与协调进程；其他任务或任意更高数值会在启动前拒绝。live 先生成独立普通渲染参考图并关闭参考 browser，再打开执行 browser/viewer，保持原像素/区域阈值。该联合预算不改变正式会话、单生产端及公共 load guard 默认值，整机 free 35% / 换页 64 MiB / 心跳 4 秒保护保留。2026-10-29 联合测试实际峰值 1,548.9 MiB、无新增 swapout；此前 1.5 GiB 两次停止独立记录。双独立 browser/冷恢复和实体 OS 输入法本轮未验收。
 
 持续会话入口为 `npm run experiment:live`，复现和完整验收见 [CHROMIUM_LIVE.md](CHROMIUM_LIVE.md)。额外 E2E 的 `CHROMIUM_LIVE_BUILD_ROOT` 必须指向当前成功构建/测试的固定引擎，`CANVASKIT_DIRECTORY` 指向匹配 runtime。它实际启动持续执行 worker 和独立本地验证浏览器，检查接管、输入、自动更新、断线/刷新/坏资源恢复、双会话和冷存储恢复及崩溃清理。
 

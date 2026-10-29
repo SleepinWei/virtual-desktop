@@ -1,8 +1,27 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { reducedBuildJobs, hasRetryHeadroom } from '../experiments/chromium-engine/adaptive-lean-build.js';
+import { leanTask } from '../experiments/chromium-engine/lean-task.js';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
+import { fileURLToPath } from 'node:url';
 
 const rssStop = { status: 'safety-stopped', safety: { stopped: 'owned-process-rss-limit' } };
+
+test('the combined viewer budget cannot be used for producer smoke or arbitrary native limits', async () => {
+  const command = fileURLToPath(new URL('../experiments/chromium-engine/guarded-native-tests.js', import.meta.url));
+  for (const [task, limit] of [['smoke', '2048'], ['live', '4096']])
+    await assert.rejects(promisify(execFile)(process.execPath, [command, '--task', task, '--root', '/must-not-read',
+      '--output', '/must-not-write', '--max-rss-mib', limit]), /Only the combined live producer/);
+});
+
+test('C++ build/run tasks cannot overwrite the candidate executable state', () => {
+  assert.notEqual(leanTask('cpp-build').state, leanTask().state);
+  assert.equal(leanTask('cpp-build').state, leanTask('cpp-test').state);
+  assert.equal(leanTask('cpp-build').phase, 'build');
+  assert.equal(leanTask('cpp-test').phase, 'test');
+  assert.throws(() => leanTask('../build'), /Unknown/);
+});
 
 test('RSS recovery is finite and never increases parallelism', () => {
   const attempts = [8];

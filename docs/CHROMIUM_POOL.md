@@ -2,6 +2,8 @@
 
 2026-10-29：已实现并实测 `shared-native-host-candidate`。一个 patched `headless_shell` 承载多个独立 BrowserContext；本轮最多同时两个可信 fixture 会话。它是原生记录通路的复用实验，正式网关仍使用每会话 worker/browser，尚未接入公开 pool API。精简证据见 [chromium-pool-2026-10-29.json](chromium-pool-2026-10-29.json)。
 
+当天后续又用 lean monolithic 包通过同样的双 context 存储/输入/帧隔离、context 回收与 renderer/browser 故障测试；该轮显式使用 macOS 进程内 GPU，采样树 RSS 峰值 979.1 MiB、新增 swapout 0，见 [lean 验收](chromium-lean-acceptance-2026-10-29.json)。下面的早期 component RSS 数字保留为不同轮次，不能直接推导 lean 的内存节省；GPU 现在与 browser 共用故障域，独立 GPU 进程隔离未通过。
+
 ## 复用的边界
 
 可行方案是预热 browser host，在里面为每个 session 新建 BrowserContext。Playwright 的 [BrowserContext 隔离文档](https://playwright.dev/docs/browser-contexts)说明了 Cookie、localStorage、sessionStorage 等会话状态的分离。Chromium 固定版本的 `RenderProcessHostImpl::IsSuitableHost` 也明确拒绝把不同 BrowserContext 放进同一个既有 renderer（[固定提交源码](https://chromium.googlesource.com/chromium/src/+/d0c02bfad08ec92a6ffcf989e53cd995e6381a4c/content/browser/renderer_host/render_process_host_impl.cc)）。

@@ -1,10 +1,12 @@
 # 直接输入、后端调度与有限压测
 
+2026-10-29 后续：lean monolithic 已完成同配置 21 项 C++ 测试和 495.0 MiB 独立包；可信 fixture 的完整帧/视觉、单会话 live 接管恢复及双 context 共享 host 测试通过。**成功轮显式使用 macOS 进程内 GPU；默认独立 GPU 子进程启动仍有 rAF 停滞问题，不能推广为默认模式通过。** 具体模式、保护停止、采样内存和未覆盖项见 [本轮验收](chromium-lean-acceptance-2026-10-29.json) 与 [复现命令](CHROMIUM_SUBSET.md)。下文 2026-10-28 的 benchmark 和真实网站失败记录保留为历史，不是新 lean 构建的内存/容量结论。
+
 2026-10-28：接管后直接点击远端画面的输入框并打字，已移除独立文字栏。单会话的原生记录/JPEG 生产端对照和 96 请求突发完成；小红书与通用网站仍未通过。实际指标、构建指纹、保护停止及未验证范围保存在 [chromium-runtime-2026-10-28.json](chromium-runtime-2026-10-28.json)。
 
-后续已提取 684.5 MiB 的独立引擎/CanvasKit 运行包，本地原生生产端通过，手动 viewer 验证被整机压力保护阻止。深度裁剪仅 GN 配置通过、未编译，见 [CHROMIUM_SUBSET.md](CHROMIUM_SUBSET.md) 与 [子集记录](chromium-subset-2026-10-28.json)。8082 空闲服务改用提取包；不等于 RSS 优化或真实网站关卡通过。
+2026-10-28 已提取 684.5 MiB 的 component 引擎/CanvasKit 包，本地原生生产端通过，当时手动 viewer 验证被整机压力保护阻止；见 [子集记录](chromium-subset-2026-10-28.json)。当时 8082 空闲服务改用该包；本轮没有替换 8081/8082 配置。打包不等于 RSS 优化或真实网站关卡通过。
 
-2026-10-29 已增加[多会话复用原型](CHROMIUM_POOL.md)：一个 browser、独立 BrowserContext/renderer/JS heap，可信 fixture 的存储、输入、帧路由、context 回收与崩溃测试通过；正式网关仍保留下面的独立 worker/browser 结构。深度 lean 编译前两轮受整机保护停止，后按用户要求改成后台调度恢复、保留内存与换页保护，尚无新引擎，详见[本轮记录](chromium-pool-2026-10-29.json)。
+2026-10-29 已增加[多会话复用原型](CHROMIUM_POOL.md)：一个 browser、独立 BrowserContext/renderer/JS heap，可信 fixture 的存储、输入、帧路由、context 回收与崩溃测试通过；正式网关仍保留下面的独立 worker/browser 结构。早期 component 测量见[共享 host 记录](chromium-pool-2026-10-29.json)，后续 lean 与显式 GPU 模式的结果见本页上方链接，不能混用两轮 RSS 数字。
 
 ## 输入与页面兼容
 

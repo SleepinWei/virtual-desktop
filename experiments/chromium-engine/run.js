@@ -5,7 +5,7 @@ import { createPaintLab } from '../chromium-paint/server.js';
 import { capturePaint } from '../chromium-paint/capture.js';
 import { verifyReplay } from '../chromium-paint/verify.js';
 import { analyzeEngineEvidence } from './evidence.js';
-import { sha256, verifyArtifacts } from './artifacts.js';
+import { verifiedEngine } from './verified.js';
 import { loadReplayRuntime, verifyRuntimeBuild } from '../chromium-paint/runtime.js';
 
 const source = JSON.parse(await readFile(new URL('./source.json', import.meta.url), 'utf8'));
@@ -24,16 +24,9 @@ await save();
 try {
   if (!values.root) throw new Error('Pass --root or CHROMIUM_BUILD_ROOT pointing to the external build root');
   const statePath = join(resolve(values.root), 'chromium/virtual-desktop-build-state.json');
-  const state = JSON.parse(await readFile(statePath, 'utf8'));
-  if (!state.compiled || !state.ccTestsPassed || !state.vizTestsPassed || state.stage !== 'engine-tests-complete' || state.exitCode !== 0 ||
-      state.revision !== source.revision || !state.binary || !state.binarySha256) {
-    throw new Error('A successful pinned engine build and its C++ tests are required; no installed-Chrome fallback');
-  }
-  const patchSha256 = await sha256(new URL('./remote-paint.patch', import.meta.url));
-  if (state.patchSha256 !== patchSha256) {
-    throw new Error('Engine patch or executable checksum differs from the verified build state');
-  }
-  const artifacts = await verifyArtifacts(state, values.root);
+  const engineBuild = await verifiedEngine(values.root, { requireStream: true });
+  const state = { ...engineBuild.state, binary: engineBuild.binary };
+  const { patchSha256 } = engineBuild, artifacts = state.artifacts;
   const runtime = await loadReplayRuntime(values.canvaskit);
   if (values.canvaskit && runtime.metadata.skiaRevision !== source.skiaRevision) {
     throw new Error('Custom CanvasKit must match the pinned Chromium Skia revision');

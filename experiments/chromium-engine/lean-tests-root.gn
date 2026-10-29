@@ -1,0 +1,8 @@
+group("all") {
+  testonly = true
+  deps = [
+    "//cc:cc_unittests",
+    "//components/viz:viz_unittests",
+    "//headless:headless_shell",
+  ]
+}

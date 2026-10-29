@@ -2,6 +2,7 @@ import { writeFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { createCanvas, loadImage } from '@napi-rs/canvas';
 import { chromium } from 'playwright';
+import { browserProcessArgs } from '../chromium-engine/browser-runtime.js';
 
 export async function decoded(bytes) {
   const image = await loadImage(bytes), canvas = createCanvas(image.width, image.height);
@@ -54,7 +55,7 @@ export async function verifyReplay({ baseUrl, outputDir, executablePath, manifes
         manifest.stages.some((stage, index) => stage.name !== ['before', 'after'][index] || !Array.isArray(stage.pictures) || !stage.pictures.length)) {
       throw new Error('Expected a nonempty before/after capture of the 960×720 trusted fixture');
     }
-    browser = await chromium.launch({ headless: true, ...(executablePath ? { executablePath } : {}) });
+    browser = await chromium.launch({ headless: true, args: browserProcessArgs(), ...(executablePath ? { executablePath } : {}) });
     browserVersion = browser.version();
     const context = await browser.newContext({ viewport: manifest.viewport, deviceScaleFactor: 1 });
     const reference = await context.newPage(), client = await context.newPage();

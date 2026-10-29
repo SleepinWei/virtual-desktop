@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import { AppError, ensure } from './errors.js';
 import { NativeFrames } from './native-frames.js';
 import { externalSites } from '../experiments/chromium-engine/sites.js';
+import { nativeWorkerEnvironment } from '../experiments/chromium-engine/browser-runtime.js';
 
 const token = () => randomBytes(32).toString('base64url');
 export function sameToken(actual, expected) {
@@ -23,7 +24,7 @@ export class WorkerClient {
       : this.native ? '../experiments/chromium-engine/worker.js' : './worker.js', import.meta.url), [], {
       execArgv: [this.native ? '--max-old-space-size=256' : '--max-old-space-size=128'],
       stdio: ['ignore', 'ignore', 'pipe', 'ipc'], serialization: 'advanced',
-      env: { PATH: process.env.PATH, NODE_ENV: 'production' },
+      env: this.native ? nativeWorkerEnvironment() : { PATH: process.env.PATH, NODE_ENV: 'production' },
     });
     this.diagnostics = '';
     this.child.stderr.on('data', chunk => { this.diagnostics = (this.diagnostics + chunk.toString()).slice(-32768); });

@@ -9,6 +9,7 @@ import { verifiedEngine } from './verified.js';
 import { nativeFixtures } from './assets.js';
 import { analyzeEngineEvidence } from './evidence.js';
 import { decoded, crop, comparePixels } from '../chromium-paint/verify.js';
+import { browserProcessArgs } from './browser-runtime.js';
 
 const delay = milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds));
 const check = (condition, message) => { if (!condition) throw new Error(message); };
@@ -19,6 +20,38 @@ async function until(predicate, message, timeout = 10000) {
 }
 const png = async page => Buffer.from((await page.locator('#desktop').evaluate(canvas => canvas.toDataURL('image/png'))).split(',')[1], 'base64');
 const digest = bytes => createHash('sha256').update(bytes).digest('hex');
+
+// Capture independent ordinary-raster references before the native producer
+// starts. Keep exact image comparisons without retaining a third renderer.
+async function prepareReferences({ base, binary, outputDir, onOwnedProcess }) {
+  let server, browser;
+  const references = new Map();
+  try {
+    server = await chromium.launchServer({ executablePath: binary, headless: true, args: browserProcessArgs(), timeout: 15000 });
+    onOwnedProcess?.(server.process().pid);
+    browser = await chromium.connect(server.wsEndpoint());
+    const context = await browser.newContext({ viewport: { width: 960, height: 720 }, deviceScaleFactor: 1 });
+    const reference = await context.newPage();
+    await reference.goto(base + '/live-fixture.html'); await reference.evaluate(() => document.fonts.ready);
+    async function capture(name) {
+      const regions = [];
+      for (const selector of ['header', '#increment', '#count', '#message', '#echo', '#pulse', '#scroller']) {
+        const bounds = await reference.locator(selector).boundingBox();
+        check(bounds, 'Missing reference region ' + selector); regions.push({ selector, bounds });
+      }
+      const bytes = await reference.screenshot({ path: join(outputDir, `reference-${name}.png`) });
+      references.set(name, { bytes, regions, sha256: digest(bytes), browserVersion: browser.version() });
+    }
+    await reference.locator('#message').fill('Agent before viewer'); await reference.locator('#increment').click();
+    await capture('agent-before-viewer');
+    await reference.locator('#increment').click();
+    await reference.locator('#message').click({ position: { x: 500, y: 24 } }); await reference.keyboard.insertText(' + human');
+    await reference.mouse.move(800, 400); await reference.mouse.wheel(0, 180);
+    await reference.waitForFunction(() => document.querySelector('#scroller').scrollTop === 180);
+    await delay(160); await capture('human-input-scroll');
+    return references;
+  } finally { await browser?.close().catch(() => {}); await server?.close().catch(() => {}); }
+}
 
 // All PNG generation is in the independent LOCAL viewer/reference browser.
 // The execution worker delivers native records through its authenticated socket.
@@ -46,6 +79,9 @@ export async function verifyLive({ root, canvasKitDirectory, outputDir, executab
       check(digest(source) === digest(served), 'Served native fixture differs: ' + path);
       report.fixtureSha256[path] = digest(source);
     }
+    const references = await prepareReferences({ base, binary: executablePath || engine.binary, outputDir, onOwnedProcess });
+    report.referenceCapture = { phase: 'Ordinary-raster references captured and browser closed before native session creation',
+      images: Object.fromEntries([...references].map(([name, item]) => [name, { sha256: item.sha256, browserVersion: item.browserVersion, regions: item.regions }])) };
     async function api(path, token = 'test-admin', payload) {
       const response = await fetch(base + path, { method: payload === undefined ? 'GET' : 'POST', headers: {
         Authorization: `Bearer ${token}`, ...(payload === undefined ? {} : { 'Content-Type': 'application/json' }) },
@@ -70,7 +106,7 @@ export async function verifyLive({ root, canvasKitDirectory, outputDir, executab
     check(report.withoutViewer.metrics.traceActive === false && report.withoutViewer.metrics.frames.connections.length === 0, 'Frame delivery depends on an attached viewer or active trace');
     report.steps.push('Agent executes in a persistent Chromium page before any viewer connects');
 
-    browserServer = await chromium.launchServer({ executablePath: executablePath || engine.binary, headless: true });
+    browserServer = await chromium.launchServer({ executablePath: executablePath || engine.binary, headless: true, args: browserProcessArgs() });
     onOwnedProcess?.(browserServer.process().pid);
     browser = await chromium.connect(browserServer.wsEndpoint());
     report.localValidationBrowser = browser.version();
@@ -82,18 +118,14 @@ export async function verifyLive({ root, canvasKitDirectory, outputDir, executab
     const ready = () => page.waitForFunction(() => document.documentElement.dataset.connection === 'connected' &&
       Boolean(window.nativeViewer?.state().client?.presented), undefined, { timeout: 15000 });
     await ready();
-    const refContext = await browser.newContext({ viewport: { width: 960, height: 720 }, deviceScaleFactor: 1 });
-    const reference = await refContext.newPage();
-    await reference.goto(base + '/live-fixture.html'); await reference.evaluate(() => document.fonts.ready);
-    await reference.locator('#message').fill('Agent before viewer'); await reference.locator('#increment').click();
     async function compare(name) {
       await ready();
-      const clientBytes = await png(page), referenceBytes = await reference.screenshot({ path: join(outputDir, `reference-${name}.png`) });
+      const reference = references.get(name);
+      check(reference, 'Missing independent reference ' + name);
+      const clientBytes = await png(page), referenceBytes = reference.bytes;
       await writeFile(join(outputDir, `client-${name}.png`), clientBytes);
       const actual = await decoded(clientBytes), expected = await decoded(referenceBytes), regions = [];
-      for (const selector of ['header', '#increment', '#count', '#message', '#echo', '#pulse', '#scroller']) {
-        const bounds = await reference.locator(selector).boundingBox();
-        check(bounds, 'Missing reference region ' + selector);
+      for (const { selector, bounds } of reference.regions) {
         regions.push({ selector, bounds, ...comparePixels(crop(expected, bounds), crop(actual, bounds)) });
       }
       const whole = comparePixels(expected, actual), passed = whole.passed && regions.every(region => region.passed);
@@ -113,7 +145,6 @@ export async function verifyLive({ root, canvasKitDirectory, outputDir, executab
     }
     await point(80, 140);
     await until(async () => (await state()).count === 2, 'Human coordinate click');
-    await reference.locator('#increment').click();
     const stale = await api(path('actions'), session.humanToken, { epoch: 2, actionId: 'stale-pixels',
       action: { type: 'pointer', x: 80, y: 140, ...initialPresented } });
     check(stale.data.error?.code === 'STALE_FRAME', 'Stale displayed frame accepted coordinate input');
@@ -121,12 +152,9 @@ export async function verifyLive({ root, canvasKitDirectory, outputDir, executab
     await point(520, 250); await delay(120); await ready();
     await page.keyboard.type(' + human');
     await until(async () => (await state()).value === 'Agent before viewer + human', 'Native text insertion');
-    await reference.locator('#message').click({ position: { x: 500, y: 24 } }); await reference.keyboard.insertText(' + human');
     const bounds = await page.locator('#desktop').boundingBox();
     await page.mouse.move(bounds.x + 800 * bounds.width / 960, bounds.y + 400 * bounds.height / 720); await page.mouse.wheel(0, 180);
     await until(() => internal.frames.latest?.frame.scrollOffsets.some(item => item.offset[1] === 180), 'Native wheel scroll');
-    await reference.mouse.move(800, 400); await reference.mouse.wheel(0, 180);
-    await reference.waitForFunction(() => document.querySelector('#scroller').scrollTop === 180);
     await delay(160); await compare('human-input-scroll');
     report.steps.push('Human coordinate focus, native text insertion and wheel scrolling reach the real page and local pixels');
 

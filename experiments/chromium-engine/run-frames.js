@@ -1,13 +1,12 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
-import { createHash } from 'node:crypto';
 import { createFrameLab } from '../chromium-paint/frame-server.js';
 import { captureFrames, frameFixtureFingerprint } from '../chromium-paint/frame-capture.js';
 import { verifyFrames } from '../chromium-paint/frame-verify.js';
 import { layerIds } from '../chromium-paint/frame-protocol.js';
 import { loadReplayRuntime, verifyRuntimeBuild } from '../chromium-paint/runtime.js';
-import { sha256, verifyArtifacts } from './artifacts.js';
+import { verifiedEngine } from './verified.js';
 import { analyzeEngineEvidence } from './evidence.js';
 
 const { values } = parseArgs({ options: { root: { type: 'string', default: process.env.CHROMIUM_BUILD_ROOT },
@@ -20,13 +19,10 @@ await save();
 let lab;
 try {
   if (!values.root || !values.canvaskit) throw new Error('Pass --root and --canvaskit for the verified native engine and matching replay build');
-  const source = JSON.parse(await readFile(new URL('./source.json', import.meta.url), 'utf8'));
-  const state = JSON.parse(await readFile(join(resolve(values.root), 'chromium/virtual-desktop-build-state.json'), 'utf8'));
-  const patchSha256 = await sha256(new URL('./remote-paint.patch', import.meta.url));
-  if (!state.compiled || !state.ccTestsPassed || !state.vizTestsPassed || state.stage !== 'engine-tests-complete' ||
-      state.exitCode !== 0 || state.revision !== source.revision || state.patchSha256 !== patchSha256) throw new Error('Require the current pinned build and successful native tests');
-  const artifacts = await verifyArtifacts(state, values.root), runtime = await loadReplayRuntime(values.canvaskit);
-  const artifactsSha256 = createHash('sha256').update(JSON.stringify(Object.entries(artifacts).sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0))).digest('hex');
+  const engine = await verifiedEngine(values.root, { requireStream: true });
+  const { source, patchSha256, artifactsSha256, binary } = engine;
+  const state = { ...engine.state, binary };
+  const artifacts = state.artifacts, runtime = await loadReplayRuntime(values.canvaskit);
   await verifyRuntimeBuild(runtime, values.canvaskit, values.root, source);
   report.build = { revision: state.revision, skiaRevision: source.skiaRevision, binary: state.binary,
     binarySha256: state.binarySha256, artifacts, artifactsSha256, patchSha256 };

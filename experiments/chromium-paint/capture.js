@@ -2,6 +2,7 @@ import { createHash, randomUUID } from 'node:crypto';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { resolve, join } from 'node:path';
 import { chromium } from 'playwright';
+import { browserProcessArgs } from '../chromium-engine/browser-runtime.js';
 
 // Chromium's DisplayItemList::EmitTraceSnapshot exports recording-canvas SKPs.
 // This debug export does not disable the normal compositor/raster pipeline.
@@ -48,7 +49,7 @@ export function captureLaunchArgs({ producerBufferBytes, remotePaint = false, no
   const features = producer.map(argument => argument.slice('--enable-features='.length));
   if (remotePaint) features.push('VirtualDesktopRemotePaint');
   if (noDisplay) features.push('VirtualDesktopRemotePaintNoDisplay');
-  return ['--enable-automation', ...(features.length ? [`--enable-features=${features.join(',')}`] : [])];
+  return ['--enable-automation', ...(features.length ? [`--enable-features=${features.join(',')}`] : []), ...browserProcessArgs()];
 }
 
 function withoutPicturePayloads(value) {

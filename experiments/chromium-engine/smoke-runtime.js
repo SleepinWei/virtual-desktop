@@ -46,6 +46,7 @@ try {
   report.frames = internal.frames.stats;
   check(report.frames.received > 0 && report.frames.resourceBytes > 0 && !report.frames.fault, 'No supported native resources');
   report.metrics = await internal.worker.call('metrics');
+  check(report.metrics.gpuProcessMode === (process.env.VIRTUAL_DESKTOP_MAC_GPU_MODE ?? 'separate'), 'GPU process mode did not reach the browser');
   report.steps.push('Real input, click and duplicate fencing passed; complete native frames/resources arrived over the socket');
   guard.check(); report.status = 'native-runtime-smoke-passed';
 } catch (error) { report.errors.push(error.message); report.status = guard?.stopped ? 'safety-stopped' : 'smoke-failed'; }

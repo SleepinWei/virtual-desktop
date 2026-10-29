@@ -6,6 +6,7 @@ import { tmpdir } from 'node:os';
 import { captureLaunchArgs, capturePaint } from '../experiments/chromium-paint/capture.js';
 import { analyzeEngineEvidence } from '../experiments/chromium-engine/evidence.js';
 import { sha256, verifyArtifacts } from '../experiments/chromium-engine/artifacts.js';
+import { browserProcessArgs, nativeWorkerEnvironment } from '../experiments/chromium-engine/browser-runtime.js';
 
 const skp64 = Buffer.from('skiapict-synthetic-test-only').toString('base64');
 const record = (frame, pid = 42, layer = 8) => ({ name: 'VirtualDesktop.RemotePaintRecord',
@@ -13,6 +14,20 @@ const record = (frame, pid = 42, layer = 8) => ({ name: 'VirtualDesktop.RemotePa
 const noTiles = (frame, pid = 42, layer = 8) => ({ name: 'VirtualDesktop.RemotePaintNoTiles',
   cat: 'cc', pid, ts: frame * 10 + 1, args: { layer_id: layer, source_frame_number: frame } });
 const options = { rendererPids: [42], traceComplete: true };
+
+test('in-process GPU is an explicit macOS-only runtime option', () => {
+  assert.deepEqual(browserProcessArgs({ mode: 'separate', platform: 'darwin' }), []);
+  assert.deepEqual(browserProcessArgs({ mode: 'in-process', platform: 'darwin' }), ['--in-process-gpu']);
+  assert.throws(() => browserProcessArgs({ mode: 'in-process', platform: 'linux' }), /Unsupported/);
+  assert.throws(() => browserProcessArgs({ mode: '--arbitrary-flag', platform: 'darwin' }), /Unsupported/);
+});
+
+test('native workers only inherit the validated GPU option and the existing minimal environment', () => {
+  const env = nativeWorkerEnvironment({ PATH: '/bin', NODE_ENV: 'development', VIRTUAL_DESKTOP_MAC_GPU_MODE: 'in-process',
+    PRIVATE_TOKEN: 'must-not-pass', HOME: '/private-home' }, 'darwin');
+  assert.deepEqual(env, { PATH: '/bin', NODE_ENV: 'production', VIRTUAL_DESKTOP_MAC_GPU_MODE: 'in-process' });
+  assert.throws(() => nativeWorkerEnvironment({ VIRTUAL_DESKTOP_MAC_GPU_MODE: '--arbitrary-flag' }, 'darwin'), /Unsupported/);
+});
 
 test('engine and producer flags share one enable-features argument', () => {
   const args = captureLaunchArgs({ remotePaint: true, producerBufferBytes: 33554432 });

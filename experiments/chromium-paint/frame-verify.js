@@ -4,6 +4,7 @@ import { chromium } from 'playwright';
 import { FRAME_STAGES, advanceFrameFixture } from './frame-capture.js';
 import { validateFrame, layerIds } from './frame-protocol.js';
 import { comparePixels, decoded, crop } from './verify.js';
+import { browserProcessArgs } from '../chromium-engine/browser-runtime.js';
 
 const canvasPng = async page => Buffer.from((await page.locator('#skp').evaluate(canvas => canvas.toDataURL('image/png'))).split(',')[1], 'base64');
 async function ready(page, name) {
@@ -24,7 +25,7 @@ export async function verifyFrames({ baseUrl, outputDir, executablePath, manifes
   try {
     if (manifest?.version !== 1 || JSON.stringify(manifest.stages?.map(stage => stage.name)) !== JSON.stringify(FRAME_STAGES)) throw new Error('Expected all four native frame stages');
     manifest.stages.forEach(stage => validateFrame(stage.frame));
-    browser = await chromium.launch({ executablePath, headless: true });
+    browser = await chromium.launch({ executablePath, headless: true, args: browserProcessArgs() });
     report.localValidationBrowser = browser.version();
     const context = await browser.newContext({ viewport: manifest.viewport, deviceScaleFactor: 1 });
     const reference = await context.newPage(), client = await context.newPage();

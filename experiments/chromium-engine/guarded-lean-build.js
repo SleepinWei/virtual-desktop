@@ -4,21 +4,23 @@ import { readFile, mkdir, open, writeFile, rename } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { startLoadGuard, terminateProcessTree } from './load-guard.js';
+import { leanTask } from './lean-task.js';
 
 const { values } = parseArgs({ options: { root: { type: 'string', default: process.env.CHROMIUM_BUILD_ROOT },
   output: { type: 'string', default: 'test-results/lean-build' }, jobs: { type: 'string', default: '8' },
-  'max-rss-mib': { type: 'string', default: '6144' } } });
+  'max-rss-mib': { type: 'string', default: '6144' }, task: { type: 'string', default: 'build' } } });
 if (!values.root) throw new Error('Pass --root for the external APFS build root');
 const jobs = Number(values.jobs), maxRssMiB = Number(values['max-rss-mib']);
 if (!Number.isInteger(jobs) || jobs < 1 || jobs > 8 || !Number.isSafeInteger(maxRssMiB) || maxRssMiB < 512 || maxRssMiB > 8192)
   throw new Error('Use --jobs 1..8 and --max-rss-mib 512..8192');
 const root = resolve(values.root), output = resolve(values.output);
+const task = leanTask(values.task);
 await mkdir(output, { recursive: true });
-const statePath = join(root, 'chromium/virtual-desktop-lean-ninja-build-state.json');
-const report = { version: 1, startedAt: new Date().toISOString(), status: 'initializing', root, jobs, builder: 'ninja',
+const statePath = join(root, 'chromium', task.state);
+const report = { version: 1, startedAt: new Date().toISOString(), status: 'initializing', root, jobs, task: values.task, builder: 'ninja',
   cpuPolicy: { jobs, nice: 10, darwinBackground: false, qosClamp: 'utility', diskPolicy: 'throttle', systemLoadHardStop: false,
     scope: 'At most eight build commands; OS schedules cores. Compiler subtree has lower CPU/I/O priority than foreground apps.' },
-  engineSplitGate: 'not-passed', errors: [], scope: 'Separate non-component candidate. Does not replace the working runtime or imply C++/native/visual acceptance.' };
+  engineSplitGate: 'not-passed', errors: [], scope: 'Separate non-component candidate. Only cpp-test records the filtered C++ gate; no task replaces the working runtime or implies native/visual acceptance.' };
 let guard, child, log, termination;
 let saveChain = Promise.resolve();
 const save = () => {
@@ -34,7 +36,7 @@ try {
   log = await open(join(output, 'coordinator.log'), 'a');
   guard.check();
   child = spawn('/usr/sbin/taskpolicy', ['-c', 'utility', '-d', 'throttle', '/usr/bin/nice', '-n', '10', 'python3',
-    '-B', fileURLToPath(new URL('./lean-build.py', import.meta.url)), 'build', '--root', root, '--jobs', String(jobs)],
+    '-B', fileURLToPath(new URL('./' + task.script, import.meta.url)), task.phase, '--root', root, '--jobs', String(jobs)],
     { stdio: ['ignore', log.fd, log.fd], detached: true });
   const completion = new Promise((resolve, reject) => { child.once('error', reject); child.once('exit', (code, signal) => resolve({ code, signal })); });
   completion.catch(() => {});
@@ -59,7 +61,7 @@ try {
   process.once('SIGTERM', cleanup); process.once('SIGINT', cleanup);
   try {
     const result = await completion;
-    report.result = result; report.status = guard.stopped ? 'safety-stopped' : report.stopRequested ? 'interrupted' : result.code === 0 ? 'compiled-candidate' : 'build-failed';
+    report.result = result; report.status = guard.stopped ? 'safety-stopped' : report.stopRequested ? 'interrupted' : result.code === 0 ? task.success : 'build-failed';
   } finally { clearInterval(snapshot); process.off('SIGTERM', cleanup); process.off('SIGINT', cleanup); }
 } catch (error) { report.errors.push(error.message); report.status = guard?.stopped ? 'safety-stopped' : 'build-failed'; }
 finally {
@@ -83,4 +85,4 @@ finally {
   report.finishedAt = new Date().toISOString(); await save();
 }
 console.log(JSON.stringify({ status: report.status, result: report.result, errors: report.errors, output }, null, 2));
-process.exitCode = report.status === 'compiled-candidate' ? 0 : 1;
+process.exitCode = report.status === task.success ? 0 : 1;

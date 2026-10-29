@@ -4,6 +4,7 @@ import { chromium } from 'playwright';
 import { verifiedEngine } from './verified.js';
 import { browserAction } from './browser-actions.js';
 import { settlePage } from '../chromium-paint/capture.js';
+import { browserProcessArgs } from './browser-runtime.js';
 
 let server, page, viewport, stopping = false;
 async function frame() { return page.screenshot({ type: 'jpeg', quality: 80, timeout: 5000 }); }
@@ -12,7 +13,7 @@ async function dispatch(method, params) {
     const verified = await verifiedEngine(params.root);
     if (verified.artifactsSha256 !== params.expectedArtifactsSha256 || verified.patchSha256 !== params.expectedPatchSha256) throw new Error('Build changed');
     viewport = params.viewport;
-    server = await chromium.launchServer({ executablePath: verified.binary, headless: true, host: '127.0.0.1', chromiumSandbox: false });
+    server = await chromium.launchServer({ executablePath: verified.binary, headless: true, host: '127.0.0.1', chromiumSandbox: false, args: browserProcessArgs() });
     process.send({ event: 'native-browser', pid: server.process().pid });
     const browser = await chromium.connect(server.wsEndpoint());
     const context = await browser.newContext({ viewport, deviceScaleFactor: 1, acceptDownloads: false, serviceWorkers: 'block' });

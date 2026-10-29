@@ -1,6 +1,6 @@
 # Chromium 最小运行子集
 
-2026-10-28：已提取并验证一版独立 **native runtime 包**，阶段为 `packaged-native-runtime-candidate`。它复用已通过 C++ 验证的 component 构建，完成运行文件提取，实际记录见 [chromium-subset-2026-10-28.json](chromium-subset-2026-10-28.json)。2026-10-29 20:47 的深度裁剪候选已完成编译，20:49 版本启动通过；尚未完成同配置 C++、原生重放、视觉与独立运行包验收，见 [候选产物记录](chromium-lean-compiled-2026-10-29.json)。
+2026-10-29：lean monolithic 已完成同配置 C++、独立运行包及可信 fixture 的原生重放、视觉和接管测试。**所有成功的浏览器测试使用显式 macOS 进程内 GPU 模式；默认独立 GPU 启动仍未通过。** 结果见 [lean 验收](chromium-lean-acceptance-2026-10-29.json)。2026-10-28 的 component 包与历史结果保留，见 [旧包记录](chromium-subset-2026-10-28.json)。
 
 ## 需要保留的边界
 
@@ -17,7 +17,54 @@
 
 这不是把 Blink/V8 的几个源码目录单独复制出来：`headless_shell` 通过 content 及大量共享接口连接网页、进程、网络和系统服务。只保留 JS/DOM/布局，需要持续维护相应服务接口与失去的 Web 能力。
 
-## 已完成的运行包
+## Lean 包与本轮验收
+
+位置：`/Volumes/Extreme-APFS/Runtimes/virtual-desktop-lean-156-20261029`。主程序仍是 20:47 编译出的同一份 425.8 MiB Mach-O，未修改 C++ 补丁。测试程序使用同一输出目录和原 args.gn，仅通过专用 GN root 增加 cc/Viz 测试目标；17 cc + 4 Viz 全部执行通过，无跳过。主程序、配置、测试程序及 XML 指纹写入独立证据，原始 lean 与提取包分别验证，不能继承旧 component 的通过标记。
+
+| 同一 payload 范围 | 旧 component | 新 monolithic |
+| --- | ---: | ---: |
+| 引擎运行文件 | 470 个 | 13 个 |
+| 含匹配 CanvasKit、配置及 LICENSE 的总文件 | 475 个 | 19 个 |
+| 未压缩大小 | 684.5 MiB | 495.0 MiB |
+
+总文件大小下降 27.7%，不含 Node.js、本应用、系统库和字体，不代表网页 RSS 下降。7 个 Mach-O 的加载依赖已核对，仅指向系统路径；动态插件/数据仍由运行测试覆盖。LC_ID_DYLIB 是库自身标识，不当作 load dependency 放行，真正的相对或越界加载仍拒绝。新格式为 `native-runtime-monolithic-v1`，包保存固定相对路径与 lean profile；路径、内容或 C++ 证据不匹配均拒绝。
+
+| 本轮可信 fixture 测试 | 结果 | 采样进程树 RSS 峰值 |
+| --- | --- | ---: |
+| 最终冒烟 | 真实 DOM 输入、点击、actionId 去重，4 原生帧 / 3 资源 | 811.6 MiB |
+| 四阶段完整帧 | 改变/滚动/删层，7° 旋转、clip、组透明度和层序；整图与区域比较均通过 | 1,239.4 MiB |
+| 完整 live 单会话 | 直接键盘/粘贴、接管围栏、定时更新、离线/刷新/损坏资源恢复、worker 退出清理；两次视觉比较通过 | 1,548.9 MiB |
+| ordinary / remote-paint / record-only-display | raster/pixelDraw 分别为 285/16、0/16、0/0；记录一致，三种重放均通过 | 831.6 MiB |
+| 共享 browser，两个可信 context | 状态/输入/帧隔离、槽位复用；单 renderer 故障不影响另一会话，browser 故障影响其全部会话 | 979.1 MiB |
+
+以上均显式使用 `--in-process-gpu`。默认单项预算 1.5 GiB；完整 live 包含执行 browser、本地 viewer 和协调进程，参考 browser 已提前关闭，单独允许显式 2 GiB 联合测试预算。此前两次超 1.5 GiB 的保护停止保留，没有当作通过。生产默认上限不变；成功轮最低 free percentage 73%，新增 swapout 0。RSS 是含重复共享页的进程之和，秒级采样不是硬限额，也没有测 ToDesk 远程交互时延。92 JS、16 Python 与 86 JS 语法检查通过。
+
+独立 GPU 子进程在本机出现 CPU time 0、dyld::open 启动栈和 rAF 停滞，原始构建与旧 component 对照也失败；根因尚未确定。进程内 GPU 恢复画面但扩大 browser 故障域，因此默认模式没有切换，8081/8082 配置没有替换。物理输入法候选窗、双独立 browser 的 live 冷恢复、本轮真实网站/iframe/导航/DPR/Canvas/WebGL/video 与高并发均未验收；共享 host 仍是可信 fixture 探针。`engineSplitGate:not-passed`、`serverRasterBypassed:false` 保留。
+
+```bash
+# 同配置增编/执行 C++ gate；与主构建共用锁，顺序运行。
+npm run build:native-lean:adaptive -- --task cpp-build --jobs 4 \
+  --root /Volumes/Extreme-APFS/Builds --output test-results/lean-cpp-build
+npm run build:native-lean -- --task cpp-test --jobs 1 --max-rss-mib 1536 \
+  --root /Volumes/Extreme-APFS/Builds --output test-results/lean-cpp-tests
+
+# 必须从通过 C++ gate 的原始 lean 构建提取到新目录。
+npm run package:native -- --layout lean --root /Volumes/Extreme-APFS/Builds \
+  --canvaskit /Volumes/Extreme-APFS/Builds/canvaskit/out \
+  --output /Volumes/Extreme-APFS/Runtimes/new-lean-runtime
+
+# smoke、frames、engine、pool 分别顺序运行，沿用默认 1.5 GiB 预算。
+npm run test:native-acceptance -- --task smoke --in-process-gpu \
+  --root /Volumes/Extreme-APFS/Runtimes/virtual-desktop-lean-156-20261029 \
+  --output test-results/lean-smoke
+
+# 单执行会话 + 独立本地 viewer 的联合测试，显式 2 GiB，整机保护仍启用。
+npm run test:native-acceptance -- --task live --in-process-gpu --max-rss-mib 2048 \
+  --root /Volumes/Extreme-APFS/Runtimes/virtual-desktop-lean-156-20261029 \
+  --output test-results/lean-live
+```
+
+## 2026-10-28 的 component 包（历史）
 
 位置：`/Volumes/Extreme-APFS/Runtimes/virtual-desktop-native-156-20261028`。包内 `runtime-package.json` 保存每个 payload 文件的大小和 SHA-256；Chromium 和 CanvasKit 构建状态使用固定的相对路径，保持现有版本、补丁和构建验证约束。原始构建与 8081 用户会话保留。
 
@@ -111,6 +158,6 @@ npm run build:native-lean:adaptive -- --root /Volumes/Extreme-APFS/Builds \
   --jobs 6 --max-rss-mib 6144 --output test-results/lean-adaptive
 ```
 
-本次已生成 425.8 MiB 的 arm64 主程序，SHA-256 `d016a91338184e4e14ecc98c7fe8dc24a24d275a89ccce32c6fe0ad0d7c86557`；`--version` 退出 0 并显示 Chromium 156.0.8078.48。这个大小只含可执行文件，不能与旧完整 runtime 包直接比较，也没有页面 RSS 收益结论。最后单任务链接曾在 17:40 因原 6 GiB RSS 上限停止；20:46 确认只余链接后，临时使用 8 GiB 上限、保留全部整机保护续跑，约 31 秒完成，采样峰值 5.3 GiB、新增 swapout 0。仍需为 monolithic 工件增加独立验证布局，并用同配置重建/执行相关 C++ 测试、原生输入/帧和本地视觉回归，再决定替换当前引擎。
+本次已生成 425.8 MiB 的 arm64 主程序，SHA-256 `d016a91338184e4e14ecc98c7fe8dc24a24d275a89ccce32c6fe0ad0d7c86557`；`--version` 退出 0 并显示 Chromium 156.0.8078.48。这个大小只含可执行文件，不能与旧完整 runtime 包直接比较，也没有页面 RSS 收益结论。最后单任务链接曾在 17:40 因原 6 GiB RSS 上限停止；20:46 确认只余链接后，临时使用 8 GiB 上限、保留全部整机保护续跑，约 31 秒完成，采样峰值 5.3 GiB、新增 swapout 0。后续独立验证布局、同配置 C++、原生输入/帧和视觉回归已按本页上方完成；默认独立 GPU 启动仍须解决，尚未替换当前引擎。
 
 缩小程序文件与降低网页内存是两条工作线。RSS 后续还需按实际物理占用、进程角色、V8/图片/字体及 SKP 序列化临时副本拆分；移走编译器和开发资源不会自动减少页面的 JS heap、解码缓存或帧副本。

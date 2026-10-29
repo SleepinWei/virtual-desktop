@@ -25,6 +25,7 @@
     "experiment:site": "node experiments/chromium-engine/probe-site.js",
     "package:native": "node experiments/chromium-engine/package-runtime.js",
     "test:native-package": "node experiments/chromium-engine/smoke-runtime.js",
+    "test:native-acceptance": "node experiments/chromium-engine/guarded-native-tests.js",
     "experiment:pool": "node experiments/chromium-engine/probe-pool.js",
     "build:native-lean": "node experiments/chromium-engine/guarded-lean-build.js",
     "build:native-lean:adaptive": "node experiments/chromium-engine/adaptive-lean-build.js",

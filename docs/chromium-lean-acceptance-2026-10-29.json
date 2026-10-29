@@ -1,0 +1,476 @@
+{
+  "version": 1,
+  "recordedAt": "2026-10-29T14:22:52.853352+00:00",
+  "status": "lean-monolithic-fixture-candidate-macos-in-process-gpu",
+  "engineSplitGate": "not-passed",
+  "serverRasterBypassed": false,
+  "scope": "Pinned macOS arm64 monolithic build and trusted local fixtures. All successful native/visual runs explicitly use in-process GPU. No general-web, hostile-tenant, physical-IME or high-concurrency acceptance.",
+  "build": {
+    "revision": "d0c02bfad08ec92a6ffcf989e53cd995e6381a4c",
+    "patchSha256": "9a8c986d9bf7a34fb6f296e09eddb78e60f487c76059f51491d98d923b823437",
+    "binarySha256": "d016a91338184e4e14ecc98c7fe8dc24a24d275a89ccce32c6fe0ad0d7c86557",
+    "profileSha256": "d8f52940ead346afedd9972fef103c491a28f639e756044e89a7a3443660f763",
+    "engineLayout": "monolithic",
+    "compiled": true,
+    "ccTestsPassed": true,
+    "vizTestsPassed": true,
+    "stage": "lean-engine-tests-complete"
+  },
+  "cppTests": {
+    "guardReport": "test-results/lean-cpp-tests-20261029/guard-report.json",
+    "buildReport": "test-results/lean-cpp-build-20261029/supervisor-report.json",
+    "configuration": "Same output directory and unchanged args.gn; separate GN root includes headless_shell, cc_unittests and viz_unittests. Reuses completed objects.",
+    "evidence": {
+      "version": 1,
+      "revision": "d0c02bfad08ec92a6ffcf989e53cd995e6381a4c",
+      "binarySha256": "d016a91338184e4e14ecc98c7fe8dc24a24d275a89ccce32c6fe0ad0d7c86557",
+      "profileSha256": "d8f52940ead346afedd9972fef103c491a28f639e756044e89a7a3443660f763",
+      "testRoot": {
+        "path": "headless/virtual_desktop_lean_tests/BUILD.gn",
+        "sha256": "ceb93ecd4175bd7571c4e96217f94217e48173bd82fcf053ecaf4cc58549bf63"
+      },
+      "testArtifacts": {
+        "cc_unittests": "b89580b26e38079b0d83615e88fbc383f1ea25e84a567c0cdf36c2e775de8865",
+        "viz_unittests": "f15ee2898d45d51e5b534448edffbb9b94abae3bbffbe5a0a1b4d4d82ff9ded2"
+      },
+      "results": {
+        "cc": {
+          "passed": true,
+          "count": 17,
+          "xmlSha256": "8ae93242ccd29f841561cfb148b386c56f3f25768f2cb76b8a778ac4e1684784",
+          "names": [
+            "RemotePaintPictureLayerImplTest.PreservesRecordingWithoutTilings",
+            "RemotePaintPictureLayerImplTest.ActivatesSuccessiveRecordings",
+            "RemotePaintPictureLayerImplTest.RejectsEveryPictureDrawBackend",
+            "RemotePaintPictureLayerImplTest.ExportsAuthoritativeMembership",
+            "RemotePaintPictureLayerImplTest.RejectsUnknownDrawableLayer",
+            "LegacySWPictureLayerImplTest.UpdateTilesCreatesTilings",
+            "DisplayItemListTest.RemotePaintPreservesCoordinatesAndScroll",
+            "PresentationTimeCallbackBufferTest.TestNoCallbacks",
+            "PresentationTimeCallbackBufferTest.TestMainThreadCallbackOnSuccess",
+            "PresentationTimeCallbackBufferTest.TestMainThreadCallbackOnFailure",
+            "PresentationTimeCallbackBufferTest.TestMainThreadSuccessfulCallback",
+            "PresentationTimeCallbackBufferTest.TestCompositorThreadSuccessfulCallback",
+            "PresentationTimeCallbackBufferTest.TestMixedCallbacksOnSuccess",
+            "PresentationTimeCallbackBufferTest.TestMixedCallbacksOnFailure",
+            "PresentationTimeCallbackBufferTest.TestCallbackBatching",
+            "PresentationTimeCallbackBufferTest.RemotePaintFailedPresentationsDoNotAccumulate",
+            "PresentationTimeCallbackBufferTest.RemotePaintFailureCancellationRequiresBothFeatures"
+          ]
+        },
+        "viz": {
+          "passed": true,
+          "count": 4,
+          "xmlSha256": "11cb0280f637ca3f2c5d1383222190e2da1b6093c9fa498557669e3e67251192",
+          "names": [
+            "DisplayTest.RemotePaintNullDisplayPreservesFrameCallbacks",
+            "DisplayTest.RemotePaintNoDisplayRequiresPictureMode",
+            "DisplayTest.RemotePaintWithoutNoDisplayKeepsPixelBackend",
+            "DisplayTest.DisplayDamaged"
+          ]
+        }
+      }
+    }
+  },
+  "package": {
+    "root": "/Volumes/Extreme-APFS/Runtimes/virtual-desktop-lean-156-20261029",
+    "manifestSha256": "164da77da1dcb38693d2711fe00a510209ac7a1b55e021dce8a1161f176afeff",
+    "kind": "native-runtime-monolithic-v1",
+    "payloadBytes": 519027509,
+    "payloadMiB": 495.0,
+    "payloadFiles": 19,
+    "engineFiles": 13,
+    "previousComponentPayloadBytes": 717707376,
+    "reductionPercent": 27.68,
+    "selection": {
+      "method": "Pinned GN runtime closure; omit generated DevTools frontend, Python helpers and ANGLE validation metadata",
+      "originalDependencyFiles": 4558,
+      "engineFiles": 13,
+      "excludedFiles": 4545,
+      "excludedBytes": 95709016
+    },
+    "machOLoadCommandAudit": {
+      "checkedBinaries": 7,
+      "internalLibraries": 0,
+      "systemLibraries": 59,
+      "scope": "All declared Mach-O load commands resolve within the package or macOS system paths. Dynamic plugin/data lookup still needs runtime tests."
+    },
+    "scope": "Local CDP/native-records runtime. OS frameworks, system fonts, Node.js and this app are external. No source, compiler, test executables or build logs. No claim of minimal Chromium features, lower RSS, general web or video compatibility.",
+    "rssReductionProven": false
+  },
+  "runtimeMode": {
+    "default": "separate",
+    "successfulTests": "in-process",
+    "explicitOptIn": "VIRTUAL_DESKTOP_MAC_GPU_MODE=in-process or test runner --in-process-gpu",
+    "actualModeVerifiedBy": "Browser.getBrowserCommandLine in ChromiumSession.metrics; final smoke assertion passed",
+    "defaultPathPassed": false,
+    "negativeControls": [
+      {
+        "report": "test-results/lean-native-smoke-20261029/smoke-report.json",
+        "result": "new package animation-frame initialization failed"
+      },
+      {
+        "report": "test-results/lean-control-old-smoke-20261029/smoke-report.json",
+        "result": "previous component runtime also failed in default mode"
+      }
+    ],
+    "diagnostic": {
+      "path": "test-results/lean-gpu-startup-diagnostic-20261029/report.json",
+      "sha256": "9d3839c683ca81b80a78ecb487918440e02bdc15d67325aeaf1b78f456aa6414"
+    },
+    "ordinaryModeRafChecks": [
+      {
+        "name": "raw-default",
+        "args": [],
+        "rafCount": 0
+      },
+      {
+        "name": "package-in-process-gpu",
+        "args": [
+          "--in-process-gpu"
+        ],
+        "rafCount": 5
+      },
+      {
+        "name": "package-software",
+        "args": [
+          "--disable-gpu"
+        ],
+        "rafCount": 0
+      }
+    ],
+    "sample": "test-results/lean-raf-diagnostic-20261029/GPU-72075.sample.txt",
+    "observation": "The separate GPU child sampled CPU time 0 and a dyld::open startup stack; raw build path also stalls. Underlying cause remains unresolved.",
+    "limitation": "GPU now shares the browser fault domain. Separate-GPU startup and GPU-process fault isolation are not accepted; no change to the global/default launch mode."
+  },
+  "tests": {
+    "smoke": {
+      "report": {
+        "path": "test-results/lean-native-smoke-final-20261029/smoke-report.json",
+        "sha256": "413f0f819a767cf862fde1457da0f223940d88259514b59911e7d11a74a0c45a"
+      },
+      "status": "native-runtime-smoke-passed",
+      "gpuProcessMode": "in-process",
+      "framesReceived": 4,
+      "resources": 3,
+      "resourceBytes": 72835,
+      "realDomInputClickAndActionDedup": true,
+      "safety": {
+        "report": "test-results/lean-native-smoke-final-20261029/guard-report.json",
+        "sha256": "a0ee91015a60b2a23f93276ab2113ec57b1dd67f12f97338070b55677b66c0ad",
+        "status": "passed",
+        "innerStatus": "native-runtime-smoke-passed",
+        "gpuProcessMode": "in-process",
+        "budgetMiB": 1536,
+        "peakTreeRssMiB": 811.6,
+        "minimumFreePercent": 73,
+        "newSwapoutBytes": 0,
+        "stopReason": null
+      }
+    },
+    "frames": {
+      "report": {
+        "path": "test-results/lean-native-frames-inproc-20261029/frame-engine-report.json",
+        "sha256": "8b8dc7b50c5e2270482450e6035c645abe384859a73aa7c3dc77aa5ba7d4c689"
+      },
+      "status": "native-frame-candidate",
+      "nativeChanges": {
+        "multiLayer": true,
+        "transform": true,
+        "rotation": true,
+        "clip": true,
+        "groupOpacity": true,
+        "order": true,
+        "scroll": true,
+        "removedLayerIds": [
+          9
+        ]
+      },
+      "stages": [
+        {
+          "name": "before",
+          "passed": true,
+          "wholeImage": {
+            "passed": true,
+            "meanAbsoluteChannelError": 0.2606225887345679,
+            "pixelsOver32Fraction": 0.0015248842592592592,
+            "limits": {
+              "maxMeanAbsoluteChannelError": 3,
+              "maxPixelsOver32Fraction": 0.02
+            },
+            "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+          },
+          "regionCount": 7,
+          "allRegionsPassed": true
+        },
+        {
+          "name": "changed",
+          "passed": true,
+          "wholeImage": {
+            "passed": true,
+            "meanAbsoluteChannelError": 0.2876437114197531,
+            "pixelsOver32Fraction": 0.002685185185185185,
+            "limits": {
+              "maxMeanAbsoluteChannelError": 3,
+              "maxPixelsOver32Fraction": 0.02
+            },
+            "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+          },
+          "regionCount": 7,
+          "allRegionsPassed": true
+        },
+        {
+          "name": "scrolled",
+          "passed": true,
+          "wholeImage": {
+            "passed": true,
+            "meanAbsoluteChannelError": 0.286171875,
+            "pixelsOver32Fraction": 0.002683738425925926,
+            "limits": {
+              "maxMeanAbsoluteChannelError": 3,
+              "maxPixelsOver32Fraction": 0.02
+            },
+            "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+          },
+          "regionCount": 7,
+          "allRegionsPassed": true
+        },
+        {
+          "name": "removed",
+          "passed": true,
+          "wholeImage": {
+            "passed": true,
+            "meanAbsoluteChannelError": 0.27174527391975306,
+            "pixelsOver32Fraction": 0.0026374421296296298,
+            "limits": {
+              "maxMeanAbsoluteChannelError": 3,
+              "maxPixelsOver32Fraction": 0.02
+            },
+            "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+          },
+          "regionCount": 7,
+          "allRegionsPassed": true
+        }
+      ],
+      "safety": {
+        "report": "test-results/lean-native-frames-inproc-20261029/guard-report.json",
+        "sha256": "49630ad3229027aba7dfd13760d72cedc5323bfc4a6cf2e1a998ea3af519d61e",
+        "status": "passed",
+        "innerStatus": "native-frame-candidate",
+        "gpuProcessMode": "in-process",
+        "budgetMiB": null,
+        "peakTreeRssMiB": 1239.4,
+        "minimumFreePercent": 73,
+        "newSwapoutBytes": 0,
+        "stopReason": null
+      }
+    },
+    "live": {
+      "report": {
+        "path": "test-results/lean-native-live-combined-20261029/live-report.json",
+        "sha256": "bd4e9c0d14f73cc7e3ac643b921b00030d00386c235ea35a4aee62ca6df6aaa9"
+      },
+      "status": "live-native-session-candidate",
+      "steps": [
+        "Agent executes in a persistent Chromium page before any viewer connects",
+        "Human takeover rejects the old agent, read-only mutation and stale displayed coordinates",
+        "Human coordinate focus, native text insertion and wheel scrolling reach the real page and local pixels",
+        "Direct typing, shortcuts, paste and committed composition reach Chromium without a separate text bar; Escape releases local focus",
+        "Native Tab/Enter starts page-owned timers; multiple new frames and pixels arrive while trace is stopped",
+        "Offline viewer and full viewer reload restore fresh epochs while the same browser/page keeps advancing",
+        "A corrupt resource triggers a fresh snapshot/retry while preserving the same execution session",
+        "Live diagnostic trace preserves the candidate zero-raster/zero-renderer-draw evidence; updates continue after trace ends",
+        "Killing the execution worker reaps its browser/renderer group and frees session capacity"
+      ],
+      "visuals": [
+        {
+          "name": "agent-before-viewer",
+          "passed": true,
+          "wholeImage": {
+            "passed": true,
+            "meanAbsoluteChannelError": 0.30636043595679013,
+            "pixelsOver32Fraction": 0.0016550925925925926,
+            "limits": {
+              "maxMeanAbsoluteChannelError": 3,
+              "maxPixelsOver32Fraction": 0.02
+            },
+            "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+          },
+          "regionCount": 7,
+          "allRegionsPassed": true
+        },
+        {
+          "name": "human-input-scroll",
+          "passed": true,
+          "wholeImage": {
+            "passed": true,
+            "meanAbsoluteChannelError": 0.33562885802469133,
+            "pixelsOver32Fraction": 0.0017259837962962962,
+            "limits": {
+              "maxMeanAbsoluteChannelError": 3,
+              "maxPixelsOver32Fraction": 0.02
+            },
+            "scope": "Trusted fixture comparison allowing antialiasing differences; not general website visual compatibility"
+          },
+          "regionCount": 7,
+          "allRegionsPassed": true
+        }
+      ],
+      "directInput": {
+        "rapidTyping": true,
+        "selectAllDelete": true,
+        "paste": true,
+        "compositionCommittedOnce": true,
+        "escapeRestoresToolbar": true,
+        "scope": "Real browser keyboard/paste flow; composition events injected, physical OS IME candidate UI not automated."
+      },
+      "independentReferencesCapturedBeforeNativeSession": true,
+      "autonomousUpdatesWhileTraceOff": true,
+      "corruptResourceRecoveredInSameBrowser": true,
+      "workerCrashReapedBrowserAndFreedCapacity": true,
+      "dualIndependentBrowserAndColdRestore": {
+        "skipped": true,
+        "reason": "Single-native-session safety budget; this run does not revalidate dual-session isolation/cold storage."
+      },
+      "safety": {
+        "report": "test-results/lean-native-live-combined-20261029/guard-report.json",
+        "sha256": "d4701145f805fea11a81645b9ca657248b3bdc1ac6ceb55103fe37381c25f2c9",
+        "status": "passed",
+        "innerStatus": "live-native-session-candidate",
+        "gpuProcessMode": "in-process",
+        "budgetMiB": 2048,
+        "peakTreeRssMiB": 1548.9,
+        "minimumFreePercent": 73,
+        "newSwapoutBytes": 0,
+        "stopReason": null
+      }
+    },
+    "engineModes": {
+      "report": {
+        "path": "test-results/lean-native-engine-inproc-20261029/engine-report.json",
+        "sha256": "ab9e28361cd519236540201d88bcb95c1e0a83efbfcbbcb889398300a3e9ca1e"
+      },
+      "status": "record-only-display-candidate",
+      "recordingsMatch": true,
+      "modes": {
+        "ordinary": {
+          "fixtureReplayPassed": true,
+          "rasterEvents": 285,
+          "pixelDrawEvents": 16
+        },
+        "remote-paint": {
+          "fixtureReplayPassed": true,
+          "rasterEvents": 0,
+          "pixelDrawEvents": 16
+        },
+        "record-only-display": {
+          "fixtureReplayPassed": true,
+          "rasterEvents": 0,
+          "pixelDrawEvents": 0
+        }
+      },
+      "safety": {
+        "report": "test-results/lean-native-engine-inproc-20261029/guard-report.json",
+        "sha256": "e3543dbcfbd2b81a614f6c2f5c74cf4342762baa8ba52ee8883f83d31c4b258a",
+        "status": "passed",
+        "innerStatus": "record-only-display-candidate",
+        "gpuProcessMode": "in-process",
+        "budgetMiB": 1536,
+        "peakTreeRssMiB": 831.6,
+        "minimumFreePercent": 73,
+        "newSwapoutBytes": 0,
+        "stopReason": null
+      }
+    },
+    "sharedHost": {
+      "report": {
+        "path": "test-results/lean-native-pool-inproc-20261029/pool-report.json",
+        "sha256": "e77ed294d04e150aee5fe6f32fb03aaefb82a116c11f12259fb091a7e859c084"
+      },
+      "status": "shared-native-host-candidate",
+      "steps": [
+        "Two independent BrowserContexts share one browser PID; renderer PIDs, cookies, localStorage, JS markers, input and native frames remain separate",
+        "Closing one context leaves the other live; its capacity is reused by a fresh context with clean state",
+        "Crashing one renderer terminates its lease while the other context still accepts real input and exports frames",
+        "Killing the shared browser invalidates both remaining host leases; browser failure is a shared fault domain"
+      ],
+      "maxTrustedContexts": 2,
+      "oneBrowserAndSeparateRenderers": true,
+      "hostLeasesInvalidatedByBrowserCrash": true,
+      "scope": "One shared headless browser, at most two trusted fixture contexts; native records only. No public pool API, viewer/visual pass or hostile-tenant security claim.",
+      "safety": {
+        "report": "test-results/lean-native-pool-inproc-20261029/guard-report.json",
+        "sha256": "b701cc02cc81e2783ee62410db82be4ec5c7c223c389ddf1a555ee6225440be2",
+        "status": "passed",
+        "innerStatus": "shared-native-host-candidate",
+        "gpuProcessMode": "in-process",
+        "budgetMiB": 1536,
+        "peakTreeRssMiB": 979.1,
+        "minimumFreePercent": 73,
+        "newSwapoutBytes": 0,
+        "stopReason": null
+      }
+    }
+  },
+  "safety": {
+    "defaultNativeBudgetMiB": 1536,
+    "explicitCombinedLiveBudgetMiB": 2048,
+    "combinedLiveScope": "Execution browser + independent local viewer + Node coordination. Ordinary reference browser is closed first. Production/native single-runtime default stays 1536 MiB.",
+    "cpuPolicy": "Sequential browser test tasks, nice 10, no utility QoS or IO throttle on Chromium tests; compiler-only throttling unchanged.",
+    "minFreePercent": 35,
+    "maxNewSwapoutBytes": 67108864,
+    "maxHeartbeatMs": 4000,
+    "maxTestDurationMs": 180000,
+    "earlierLiveSafetyStops": [
+      {
+        "report": "test-results/lean-native-live-inproc-20261029/guard-report.json",
+        "sha256": "dc76448f2c88f793e32201b27267d2ef69916dff6436c26e6f4d195f4ba07e9a",
+        "status": "safety-stopped",
+        "innerStatus": "initializing",
+        "gpuProcessMode": "in-process",
+        "budgetMiB": null,
+        "peakTreeRssMiB": 1645.9,
+        "minimumFreePercent": 72,
+        "newSwapoutBytes": 0,
+        "stopReason": "owned-process-rss-limit"
+      },
+      {
+        "report": "test-results/lean-native-live-serial-reference-20261029/guard-report.json",
+        "sha256": "ffa24d6c8d601683d299499ed8564453e8a8fc20a1c5153ed426977d83474058",
+        "status": "safety-stopped",
+        "innerStatus": "initializing",
+        "gpuProcessMode": "in-process",
+        "budgetMiB": null,
+        "peakTreeRssMiB": 1547.1,
+        "minimumFreePercent": 73,
+        "newSwapoutBytes": 0,
+        "stopReason": "owned-process-rss-limit"
+      }
+    ],
+    "rssScope": "Sampled sum of owned process RSS including test coordinators/viewer; shared pages can be counted repeatedly. Not unique physical memory or a hard OS quota.",
+    "todeskProcessPresentAfterTests": true,
+    "noHeadlessOrNinjaProcessesObservedAfterTests": true,
+    "foregroundLatencyMeasured": false
+  },
+  "regression": {
+    "javascript": {
+      "passed": 92,
+      "failed": 0,
+      "skipped": 0,
+      "log": "test-results/lean-acceptance-20261029/unit-tests.log"
+    },
+    "python": {
+      "passed": 16,
+      "log": "test-results/lean-acceptance-20261029/check.log"
+    },
+    "javascriptSyntaxFiles": 86,
+    "rawLeanAndPackageFingerprintRecheck": "passed",
+    "finalMachOLoadAudit": "passed"
+  },
+  "remaining": [
+    "Resolve separate-GPU child startup and re-run without the workaround before promoting the default runtime.",
+    "Attribute unique physical memory and decoded font/image/SKP costs, then run matched ordinary/native benchmarks.",
+    "General website/iframe/multi-renderer/navigation, physical IME, DPR, Canvas/WebGL/video and larger concurrency remain unaccepted.",
+    "Shared host remains an explicit trusted-fixture probe; default gateway still uses an independent worker/browser per session."
+  ]
+}

@@ -52,6 +52,11 @@ export class ChromiumSession {
       this.browser = await chromium.connect(this.server.wsEndpoint());
       this.browser.on('disconnected', () => { if (!this.closed) this.onFault('Native browser disconnected', true); });
     }
+    const commandSession = await this.browser.newBrowserCDPSession();
+    try {
+      const { arguments: arguments_ } = await commandSession.send('Browser.getBrowserCommandLine');
+      this.gpuProcessMode = arguments_.includes('--in-process-gpu') ? 'in-process' : 'separate';
+    } finally { await commandSession.detach(); }
     const origin = new URL(url).origin, paths = new Set(allowedPaths);
     this.context = await this.browser.newContext({ viewport, deviceScaleFactor: 1, acceptDownloads: false, serviceWorkers: 'block',
       ...(saved ? { storageState: saved.storageState } : {}) });
@@ -180,7 +185,7 @@ export class ChromiumSession {
         .map(element => ({ selector: '#' + CSS.escape(element.id), role: element.tagName.toLowerCase(),
           name: element.getAttribute('aria-label') || element.textContent.slice(0, 160), value: element.value?.slice(0, 2000), disabled: element.disabled })) }));
     if (method === 'metrics') return { runtime: 'chromium-native', pid: process.pid, browserPid: this.browserPid,
-      rendererPid: this.rendererPid, nativeFrames: this.frames, excludedProducers: this.excluded,
+      rendererPid: this.rendererPid, gpuProcessMode: this.gpuProcessMode, nativeFrames: this.frames, excludedProducers: this.excluded,
       nativeFrameId: this.latest?.frame.id ?? null, stream: this.stream.stats, traceActive: this.traceActive,
       memory: process.memoryUsage(), maxRssKiB: process.resourceUsage().maxRSS,
       scope: 'Worker memory only; excludes Chromium browser/renderer process memory', engineSplitGate: 'not-passed' };

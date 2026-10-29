@@ -19,15 +19,16 @@ export function hasRetryHeadroom(samples) {
 async function main() {
   const { values } = parseArgs({ options: { root: { type: 'string', default: process.env.CHROMIUM_BUILD_ROOT },
     output: { type: 'string', default: 'test-results/lean-adaptive' }, jobs: { type: 'string', default: '8' },
-    'max-rss-mib': { type: 'string', default: '6144' } } });
+    'max-rss-mib': { type: 'string', default: '6144' }, task: { type: 'string', default: 'build' } } });
   let jobs = Number(values.jobs);
   const maxRssMiB = Number(values['max-rss-mib']);
+  if (!['build', 'cpp-build'].includes(values.task)) throw new Error('Adaptive task must be build or cpp-build');
   if (!values.root || !Number.isInteger(jobs) || jobs < 1 || jobs > 8
     || !Number.isSafeInteger(maxRssMiB) || maxRssMiB < 512 || maxRssMiB > 8192) throw new Error('Use --root, --jobs 1..8, --max-rss-mib 512..8192');
   const root = resolve(values.root), output = resolve(values.output);
   await mkdir(output, { recursive: true });
   const report = { version: 1, startedAt: new Date().toISOString(), status: 'initializing', root, maxJobs: jobs,
-    maxRssMiB, attempts: [], engineSplitGate: 'not-passed',
+    maxRssMiB, task: values.task, attempts: [], engineSplitGate: 'not-passed',
     policy: 'Only owned RSS stops can reduce jobs. Require 10 seconds of free>=45% and zero swapouts within a 60-second wait; never raise jobs or retry at one job. Host-pressure, swapping, heartbeat, tool failures and user interrupts stop immediately.' };
   const save = async () => {
     await writeFile(join(output, 'supervisor-report.json.tmp'), JSON.stringify(report, null, 2) + '\n');
@@ -44,7 +45,7 @@ async function main() {
       report.guardReport = join(attemptOutput, 'guard-report.json'); await save();
       if (interrupted) break;
       child = spawn(process.execPath, [fileURLToPath(new URL('./guarded-lean-build.js', import.meta.url)),
-        '--root', root, '--jobs', String(jobs), '--max-rss-mib', String(maxRssMiB), '--output', attemptOutput],
+        '--root', root, '--jobs', String(jobs), '--max-rss-mib', String(maxRssMiB), '--task', values.task, '--output', attemptOutput],
       { stdio: ['ignore', 'inherit', 'inherit'] });
       await new Promise((resolve, reject) => { child.once('error', reject); child.once('exit', resolve); });
       child = null;

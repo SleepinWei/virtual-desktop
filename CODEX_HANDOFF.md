@@ -6,6 +6,18 @@
 
 ## 当前实现
 
+**2026-10-29：lean monolithic 的同配置 C++、运行包、原生帧/视觉、人工接管与共享 host fixture 测试已完成。成功的浏览器测试均显式使用 macOS `--in-process-gpu`，默认独立 GPU 路径尚未通过，不替换现有服务。** 当前准确证据见 [lean 验收](docs/chromium-lean-acceptance-2026-10-29.json)，复现见 [CHROMIUM_SUBSET.md](docs/CHROMIUM_SUBSET.md)。通用关卡仍为 `engineSplitGate:not-passed` / `serverRasterBypassed:false`。
+
+同一 `out/VirtualDesktopLeanNinja` / 原 args.gn 增编测试程序，17 cc + 4 Viz 全部实际执行通过，无跳过；主程序 SHA 未变。独立测试状态 `chromium/virtual-desktop-lean-tests-state.json`，主状态为 `lean-engine-tests-complete`，正向 XML/测试程序/配置/主程序指纹互相绑定。构建任务 `--task cpp-build` 和执行任务 `--task cpp-test` 复用构建锁及保护；不要把独立测试状态里的 `compiled:false` 当主引擎未编译。最新 detach 元数据指向已完成的 C++ 增编任务，不是仍在编译。
+
+新包 `/Volumes/Extreme-APFS/Runtimes/virtual-desktop-lean-156-20261029`：13 个引擎文件、19 个 payload，共 519,027,509 bytes / 495.0 MiB，比旧 component 包小 27.7%。已复核 7 个 Mach-O 的 load commands 和原始/包内指纹；库自身的 LC_ID_DYLIB 不视为加载依赖，真正相对路径加载仍拒绝。这不是 RSS 收益。最终冒烟真实输入/点击/去重通过，4 个原生帧、3 个资源；四阶段整图/区域比较通过；三模式 raster/pixelDraw 计数依次为 285/16、0/16、0/0，记录一致、重放通过。
+
+单执行会话完整 live 接管、直接键盘/粘贴、定时更新、离线/刷新/坏资源恢复、worker 崩溃清理及两次视觉比较通过。参考图在普通 browser 中预先生成并关闭该 browser，再开启 producer/viewer。联合进程树采样峰值 1,548.9 MiB，显式使用 2 GiB 测试预算；此前两次 1.5 GiB 停止记录保留。生产及其余原生测试默认仍为 1.5 GiB；free 35% / swap 64 MiB / 心跳 4 秒保护未变。成功轮最低 free 73%、新增 swapout 0；ToDesk 进程在结束检查时存在，没有前台交互时延保证。共享 host 的两个可信 context 状态/输入/原生帧、槽位复用及 renderer/browser 故障域测试也通过；未接公开池 API。live 的双独立 browser/冷恢复明确跳过；composition 为注入事件，未覆盖实体 OS 输入法。92 JS、16 Python、86 JS 语法通过。
+
+**待解决：独立 GPU 子进程在本机启动时停于 dyld::open，CPU time 为 0，导致 rAF 不推进；旧 component 对照与原始构建路径也复现。** `--in-process-gpu` 恢复 rAF，但 GPU 故障现在会影响 browser，不能称为 GPU 进程隔离通过，也不能判定是 lean 回归或确定的 OS 问题。显式选项是 `VIRTUAL_DESKTOP_MAC_GPU_MODE=in-process` 或 `npm run test:native-acceptance -- --in-process-gpu ...`；仅这个经校验的环境选项可传给原生 worker，没有放开任意环境/凭据。下一步先修独立 GPU 启动，再做匹配的 RSS/物理内存归因与真实网站测试；不能拿下面历史的旧包/旧构建结果代替本轮缺失覆盖。
+
+## 历史编译与实验记录
+
 **2026-10-29 20:47（北京时间）：lean 候选编译完成，20:49 的版本启动检查通过。** 外置 `chromium/virtual-desktop-lean-ninja-build-state.json` 为 `lean-compiled-candidate` / `compiled:true`，主程序 `/Volumes/Extreme-APFS/Builds/chromium/src/out/VirtualDesktopLeanNinja/headless_shell` 是 arm64 Mach-O、425.8 MiB，SHA-256 `d016a91338184e4e14ecc98c7fe8dc24a24d275a89ccce32c6fe0ad0d7c86557`。`--version` 在低优先级、15 秒超时和默认浏览器守护下退出 0，输出 Chromium 156.0.8078.48。直接 Mach-O 依赖均为系统库；这不覆盖运行时动态加载资源。详见 [候选产物记录](docs/chromium-lean-compiled-2026-10-29.json)。
 
 自适应任务原先于 17:40 停在最后链接：单任务也超过 6 GiB RSS，继续降并行无效。20:46 的 Ninja dry-run 确认只有 `[1/1] LINK ./headless_shell`，仅本次单任务链接临时使用 8 GiB RSS 上限，其余 free 35% / swapout 64 MiB / 心跳 / utility + nice 10 + I/O throttle 保护保留。31 秒后完成，采样 RSS 峰值 5.3 GiB、最低 free 68%、新增 swapout 0；该成功采样低于原上限，不能说 8 GiB 是实测需求。默认构建仍为 6 GiB。最新元数据 `test-results/cli-handoff-20261029/build-detach.json` 指向 `test-results/lean-final-link-20261029/guard-report.json`，完成后的服务不应再当运行中。**C++/原生帧/视觉/monolithic 运行包验收尚未通过，不能替换现有服务或沿用旧 component 的通过标记。**

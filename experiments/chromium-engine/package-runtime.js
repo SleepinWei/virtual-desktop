@@ -5,21 +5,28 @@ import { basename, dirname, join, relative, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { randomUUID } from 'node:crypto';
 import { verifiedEngine } from './verified.js';
-import { sha256 } from './artifacts.js';
+import { sha256, artifactLayout, MONOLITHIC_FORMAT } from './artifacts.js';
 import { loadReplayRuntime, verifyRuntimeBuild } from '../chromium-paint/runtime.js';
 
 const exec = promisify(execFile);
 const ENGINE_DIRECTORY = 'chromium/src/out/VirtualDesktop';
 
-export async function auditMachOLinks(directory, names) {
+export function auditMachOOutput(stdout, names, installIds = {}) {
   const available = new Set(names);
   const binaries = names.filter(name => name === 'headless_shell' || name.endsWith('.dylib'));
-  const { stdout } = await exec('/usr/bin/otool', ['-L', ...binaries.map(name => join(directory, name))],
-    { timeout: 60000, maxBuffer: 32 * 1024 ** 2 });
-  const internal = new Set(), system = new Set();
+  const internal = new Set(), system = new Set(), seenIdentity = new Set();
+  let current;
   for (const line of stdout.split('\n')) {
+    if (!line.startsWith('\t') && line.endsWith(':')) { current = basename(line.slice(0, -1)); continue; }
     if (!line.startsWith('\t')) continue;
     const address = line.trim().split(' (compatibility version ')[0];
+    // otool -L also prints LC_ID_DYLIB. A library's own identity is not a
+    // load dependency; relative identities must never whitelist other loads.
+    if (installIds[current] === address && !seenIdentity.has(current)) {
+      if (!['./', '@rpath/', '@loader_path/', '@executable_path/'].some(prefix => address === prefix + current))
+        throw new Error('External Mach-O install identity: ' + address);
+      seenIdentity.add(current); continue;
+    }
     if (address.startsWith('/System/Library/') || address.startsWith('/usr/lib/')) { system.add(address); continue; }
     const match = /^@(rpath|loader_path|executable_path)\/([A-Za-z0-9_.+-]+)$/.exec(address);
     if (!match || !available.has(match[2])) throw new Error('Unresolved or external non-system Mach-O dependency: ' + address);
@@ -27,6 +34,21 @@ export async function auditMachOLinks(directory, names) {
   }
   return { checkedBinaries: binaries.length, internalLibraries: internal.size, systemLibraries: system.size,
     scope: 'All declared Mach-O load commands resolve within the package or macOS system paths. Dynamic plugin/data lookup still needs runtime tests.' };
+}
+
+export async function auditMachOLinks(directory, names) {
+  const binaries = names.filter(name => name === 'headless_shell' || name.endsWith('.dylib'));
+  const libraries = binaries.filter(name => name.endsWith('.dylib'));
+  const [loads, identities] = await Promise.all([
+    exec('/usr/bin/otool', ['-L', ...binaries.map(name => join(directory, name))], { timeout: 60000, maxBuffer: 32 * 1024 ** 2 }),
+    libraries.length ? exec('/usr/bin/otool', ['-D', ...libraries.map(name => join(directory, name))], { timeout: 60000, maxBuffer: 4 * 1024 ** 2 }) : Promise.resolve({ stdout: '' }),
+  ]);
+  const installIds = {}; let current;
+  for (const line of identities.stdout.split('\n')) {
+    if (line.endsWith(':')) current = basename(line.slice(0, -1));
+    else if (line.trim() && current) { installIds[current] = line.trim(); current = null; }
+  }
+  return auditMachOOutput(loads.stdout, names, installIds);
 }
 
 // GN's data closure includes generated DevTools UI and Python build helpers.
@@ -51,9 +73,9 @@ export function selectRuntimeFiles(dependencies) {
   return { included: [...included].sort(), excluded: [...new Set(excluded)].sort() };
 }
 
-export async function packageRuntime({ root, canvasKitDirectory, output }) {
+export async function packageRuntime({ root, canvasKitDirectory, output, layout = 'component' }) {
   root = resolve(root); canvasKitDirectory = resolve(canvasKitDirectory); output = resolve(output);
-  const engine = await verifiedEngine(root, { requireStream: true });
+  const engine = await verifiedEngine(root, { requireStream: true, layout });
   if (engine.state.distributionFormat) throw new Error('Package from the tested build, not an existing distribution');
   const runtime = await loadReplayRuntime(canvasKitDirectory);
   await verifyRuntimeBuild(runtime, canvasKitDirectory, root, engine.source);
@@ -62,9 +84,13 @@ export async function packageRuntime({ root, canvasKitDirectory, output }) {
   if (outputRelative !== '..' && !outputRelative.startsWith('../')) throw new Error('Output must be outside the build root');
   try { await lstat(output); throw new Error('Output already exists; choose a new directory'); }
   catch (error) { if (error.code !== 'ENOENT') throw error; }
-  const buildDirectory = join(root, ENGINE_DIRECTORY);
-  const { stdout } = await exec(join(root, 'depot_tools/gn'), ['desc', 'out/VirtualDesktop', '//headless:headless_shell', 'runtime_deps', '--format=json'],
-    { cwd: join(root, 'chromium/src'), timeout: 60000, maxBuffer: 8 * 1024 ** 2, env: { ...process.env, DEPOT_TOOLS_UPDATE: '0', DEPOT_TOOLS_METRICS: '0' } });
+  const buildDirectory = artifactLayout(engine.state, root).directory;
+  const monolithic = engine.state.engineLayout === 'monolithic';
+  const format = monolithic ? MONOLITHIC_FORMAT : 'native-runtime-v1';
+  const gnOutput = monolithic ? 'out/VirtualDesktopLeanNinja' : 'out/VirtualDesktop';
+  const { stdout } = await exec(join(root, 'depot_tools/gn'), ['desc', gnOutput, '//headless:headless_shell', 'runtime_deps', '--format=json'],
+    { cwd: join(root, 'chromium/src'), timeout: 60000, maxBuffer: 8 * 1024 ** 2, env: { ...process.env, DEPOT_TOOLS_UPDATE: '0', DEPOT_TOOLS_METRICS: '0',
+      ...(monolithic ? { VIRTUAL_DESKTOP_LEAN_ROOT: 'headless' } : {}) } });
   const dependencies = JSON.parse(stdout)['//headless:headless_shell']?.runtime_deps;
   const selection = selectRuntimeFiles(dependencies);
   const nativeDependencyAudit = await auditMachOLinks(buildDirectory, selection.included);
@@ -87,8 +113,9 @@ export async function packageRuntime({ root, canvasKitDirectory, output }) {
       if (name !== 'vk_swiftshader_icd.json' && !engine.state.artifacts[name]) throw new Error('Unfingerprinted engine artifact: ' + name);
       artifacts[name] = await copy(join(buildDirectory, name), ENGINE_DIRECTORY + '/' + name, engine.state.artifacts[name]);
     }
-    const buildState = { ...engine.state, distributionFormat: 'native-runtime-v1', binary: ENGINE_DIRECTORY + '/headless_shell', artifacts,
-      packaging: { originalArtifactsSha256: engine.artifactsSha256, scope: 'Exact tested component bytes; runtime packaging, not feature stripping or an RSS optimization.' } };
+    if (monolithic) await copy(join(buildDirectory, 'args.gn'), 'chromium/lean-profile.gn', engine.state.profileSha256);
+    const buildState = { ...engine.state, distributionFormat: format, stage: 'engine-tests-complete', binary: ENGINE_DIRECTORY + '/headless_shell', artifacts,
+      packaging: { originalArtifactsSha256: engine.artifactsSha256, scope: 'Exact C++-tested ' + (monolithic ? 'monolithic' : 'component') + ' bytes; no implied native/visual or RSS acceptance.' } };
     delete buildState.log; delete buildState.pid;
     await writeFile(join(staging, 'chromium/virtual-desktop-build-state.json'), JSON.stringify(buildState, null, 2) + '\n');
     for (const name of ['canvaskit.js', 'canvaskit.wasm', 'runtime.json', 'args.gn']) {
@@ -101,7 +128,7 @@ export async function packageRuntime({ root, canvasKitDirectory, output }) {
     const totalBytes = Object.values(files).reduce((sum, file) => sum + file.bytes, 0);
     let excludedBytes = 0;
     for (const name of selection.excluded) excludedBytes += (await stat(join(buildDirectory, name))).size;
-    const manifest = { version: 1, kind: 'native-runtime-v1', createdAt: new Date().toISOString(), platform: process.platform, arch: process.arch,
+    const manifest = { version: 1, kind: format, createdAt: new Date().toISOString(), platform: process.platform, arch: process.arch,
       chromiumVersion: engine.source.version, revision: engine.source.revision, patchSha256: engine.patchSha256,
       engineSplitGate: 'not-passed', serverRasterBypassed: false, files, totalBytes, nativeDependencyAudit,
       selection: { method: 'Pinned GN runtime closure; omit generated DevTools frontend, Python helpers and ANGLE validation metadata',
@@ -120,7 +147,7 @@ export async function packageRuntime({ root, canvasKitDirectory, output }) {
 
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
   const { values } = parseArgs({ options: { root: { type: 'string', default: process.env.CHROMIUM_BUILD_ROOT },
-    canvaskit: { type: 'string', default: process.env.CANVASKIT_DIRECTORY }, output: { type: 'string' } } });
+    canvaskit: { type: 'string', default: process.env.CANVASKIT_DIRECTORY }, output: { type: 'string' }, layout: { type: 'string', default: 'component' } } });
   if (!values.root || !values.canvaskit || !values.output) throw new Error('Pass --root, --canvaskit and a new --output directory');
-  console.log(JSON.stringify(await packageRuntime({ root: values.root, canvasKitDirectory: values.canvaskit, output: values.output }), null, 2));
+  console.log(JSON.stringify(await packageRuntime({ root: values.root, canvasKitDirectory: values.canvaskit, output: values.output, layout: values.layout }), null, 2));
 }
