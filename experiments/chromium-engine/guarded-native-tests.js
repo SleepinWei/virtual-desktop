@@ -18,8 +18,12 @@ const tasks = {
   engine: ['run.js', 'engine-report.json', 'record-only-display-candidate'],
   pool: ['probe-pool.js', 'pool-report.json', 'shared-native-host-candidate'],
   site: ['compare-site.js', 'site-report.json', 'public-site-comparison-complete'],
+  fonts: ['diagnose-fonts.js', 'diagnostic-report.json', 'native-diagnostics-complete'],
+  images: ['diagnose-fonts.js', 'diagnostic-report.json', 'native-diagnostics-complete'],
+  'raster-diagnostic': ['diagnose-native.js', 'diagnostic-report.json', 'native-diagnostics-complete'],
+  'startup-diagnostic': ['diagnose-native.js', 'diagnostic-report.json', 'native-diagnostics-complete'],
 };
-if (!values.root || !values.output || !Object.hasOwn(tasks, values.task)) throw new Error('Pass --root, --output, --task smoke|frames|live|engine|pool|site');
+if (!values.root || !values.output || !Object.hasOwn(tasks, values.task)) throw new Error('Pass --root, --output and a configured --task');
 if (values.task === 'site' && (!Object.hasOwn(siteWorkloads, values.site) || !Number.isInteger(Number(values.iterations)) ||
     Number(values.iterations) < 4 || Number(values.iterations) > 12 || ![1, 2].includes(Number(values.rounds))))
   throw new Error('Site tests require a configured --site, --iterations 4..12 and --rounds 1..2');
@@ -46,6 +50,8 @@ try {
   const args = ['--root', root, '--output', output];
   if (values.task !== 'smoke') args.push('--canvaskit', resolve(values.canvaskit || join(root, 'canvaskit/out')));
   if (values.task === 'live') args.push('--single-session');
+  if (values.task === 'images') args.push('--images');
+  if (values.task === 'startup-diagnostic') args.push('--startup');
   if (values.task === 'site') args.push('--site', values.site, '--iterations', values.iterations, '--rounds', values.rounds);
   child = spawn('/usr/bin/nice', ['-n', '10',
     process.execPath, fileURLToPath(new URL('./' + script, import.meta.url)), ...args], { detached: true, stdio: ['ignore', log.fd, log.fd],

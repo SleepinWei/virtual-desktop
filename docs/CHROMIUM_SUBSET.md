@@ -4,6 +4,8 @@
 
 同日后续 [六站实测](chromium-sites-2026-10-29.json) 没有得到通用网站完整通过或等画质性能收益。CERN 可原生重放并操作，但严格局部像素失败；其他站点受超大帧、图片记录、来源绑定或 HTTP 失败限制。固定页的较低生产端耗时不能外推真实网站，详见 [性能解释](NATIVE_RUNTIME.md)。
 
+2026-10-30 的 [原因诊断](chromium-native-diagnosis-2026-10-30.json) 进一步确认：完整字体重复嵌入 SKP 造成超限，图片被当前导出器显式拒绝，CoreText 与 CanvasKit/FreeType 字体像素不匹配；IANA readiness 解析已修复但仍受超大帧限制。运行包裁剪本身不会解决这些资源与重放协议问题，优先方向见 [最新说明](NATIVE_RUNTIME.md)。
+
 ## 需要保留的边界
 
 当前已经使用 `headless_shell`，没有完整 Chrome 产品外壳。为了保持真实网站语义、agent 操作与人工接管，核心边界仍包含：

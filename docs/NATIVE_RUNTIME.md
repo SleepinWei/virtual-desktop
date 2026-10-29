@@ -1,5 +1,22 @@
 # 直接输入、后端调度与有限压测
 
+2026-10-30 已完成本轮失败原因的因果诊断，见 [原始证据索引与结果](chromium-native-diagnosis-2026-10-30.json)。本轮没有重编 Chromium、提高资源上限或用截图替代原生输出。
+
+| 失败点 | 已确认的原因与对照 | 当前处理 |
+| --- | --- | --- |
+| `frame-too-large` | SKP 默认以 `kDoIncludeData` 嵌入完整字体，没有按使用字形裁剪、也没有跨 SKP 字体引用。CERN 一份 769,855-byte SKP 中，Times 两个字体占 756,248 bytes（98.23%） | 需要字体/字形资源、保持 glyph ID 的子集和缓存；扩大上限会继续重复发送大字体 |
+| Python 图片记录 | C++ 明确拒绝含 discardable images 的 DisplayItemList。相同本地页中，无图片及 inline SVG 可导出；已加载的 2×2 PNG `<img>` 与 PNG 背景均被拒绝 | 需要原始图片资源封装和重放，不能直接跳过检查或丢弃图片 |
+| CERN 文字画质 | 同一原始 SKP 在 macOS Chromium 重放，与普通原页 PNG 的逐像素误差为 0；CanvasKit 则稳定出现 3 个失败区域 | 已定位客户端字体栅格行为差异；并非这页的记录丢失或布局错误。需匹配字体栅格策略或提供匹配的本地重放后端 |
+| IANA 来源绑定 | `FillFrameData` 在 renderer 尚未就绪时不写 PID，随后发 `ProcessReadyInBrowser`；旧解析器忽略该事件，切换中的旧/新 renderer 又同时上报相同 frame | 已修复：优先解析浏览器 readiness 事件；歧义时仅在 frame/URL/loader 稳定条件下补一份导航后来源快照。真实 IANA 复测成功绑定，随后正确报告超大帧，仍非网站通过 |
+
+字体对照只改变本地测试页的字体，文本和字号保持一致：29 个拉丁字符使用小字体时 SKP 22,085 bytes，Times New Roman 时 825,469 bytes，`system-ui` 时超限；只有 8 个中文字符也超限，小字体缺字后回退到苹方仍超限。CoreText 表尺寸按 Skia 相同的完整 SFNT 构造方式估算，且只接受精确 PostScript 名匹配：`.SFNS-Regular` 7,872,432 bytes，Base64 后仅字体就有 10,496,576 bytes；苹方约 59.43 MB，Base64 后约 79.24 MB。当前 8 MiB 限制针对整份 JSON，包含内嵌 SKP 的 Base64，因此少量字符也能超过上限。表尺寸是源数据估算，拒绝后的超大线上帧没有被保存。
+
+上轮将 Example 当作轻量英文页的分类不准确：实际截图包含中文、阿拉伯文等多语种文本。本轮没有继续访问它做探针，改用本地合成文本确认系统字体与回退字体的影响。
+
+字体像素诊断使用原始捕获字节、原背景和未改动的比较阈值：普通参考图跨轮误差为 0，macOS 重放原 SKP 误差也为 0；CanvasKit 整图 MAE 1.658、局部 3/9 区域失败。Skia 版本一致，但 macOS 字体后端为 CoreText，当前软件 CanvasKit 为 FreeType；现有额外 stem-darkening 校准针对 CFF，CERN 使用的是 TrueType Times。CSS `antialiased` 对照仍有 2/9 区域失败，不能用一个 CSS 开关替换正式参考图；具体栅格参数仍需继续归因。macOS raster PNG 仅用于这项独立诊断，未进入原生生产端或 viewer 回退。
+
+105 JS、16 Python、95 JS 语法检查，以及原生 fixture 冒烟和共享 host 回归通过。诊断工具保持单测试 browser、1.5 GiB 进程树预算及原 free/swap/心跳保护；`native-diagnostics-complete` 只表示证据收集完成，不是网站验收。字体与图片协议、默认字体像素匹配仍未完成，独立 GPU 启动问题也不在本轮进程内 GPU 诊断中解决。
+
 2026-10-29 的真实网站与性能结果见 [六站实测](chromium-sites-2026-10-29.json)。本轮使用同一 lean 主程序、960×720 / DPR 1、显式 macOS 进程内 GPU，两种模式遵守同一 HTTPS 白名单，顺序启动全新 browser/context。每种模式先预热 2 次，再做 8 次本地搜索框编辑或 Tab/Shift+Tab；不提交搜索、不登录、不主动播放视频。CERN 另做 AB/BA 两轮。**没有一个公开网站达到本轮严格画质与功能验收，不能声称通用网页性能收益。**
 
 | 页面 | 普通 Chromium | 原生记录 |

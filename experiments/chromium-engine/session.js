@@ -15,12 +15,13 @@ const STARTUP_TRACE = { recordMode: 'recordAsMuchAsPossible', traceBufferSizeInK
 const delay = milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds));
 
 export class ChromiumSession {
-  constructor({ onFrame, onFault, onBrowser, sharedHost, onPage }) {
+  constructor({ onFrame, onFault, onBrowser, sharedHost, onPage, onStartupTrace }) {
     this.onFrame = onFrame; this.onFault = onFault; this.onBrowser = onBrowser;
     this.candidates = new Map(); this.actions = new Map(); this.frames = 0; this.excluded = 0;
     this.latest = null; this.route = null; this.closed = false; this.traceActive = false;
     this.sharedHost = sharedHost; this.leaseId = randomUUID();
     this.onPage = onPage;
+    this.onStartupTrace = onStartupTrace;
   }
   async start({ root, expectedArtifactsSha256, expectedPatchSha256, url, viewport, saved, allowedPaths, site }) {
     const verified = this.sharedHost?.engine || await verifiedEngine(root, { requireStream: true });
@@ -88,8 +89,29 @@ export class ChromiumSession {
     } finally { this.traceActive = false; }
     ensure(trace.dataLossOccurred === false, 502, 'NATIVE_PROVENANCE_INCOMPLETE', 'Startup process metadata was incomplete');
     const { frameTree } = await this.cdp.send('Page.getFrameTree');
+    await this.onStartupTrace?.({ events: trace.events, url: this.url, frame: frameTree.frame });
     this.startupProvenance = findPageProvenance(trace.events, this.url);
-    const provenance = site ? nativePageRoute(trace.events, this.url, frameTree.frame.id) : this.startupProvenance;
+    let provenance = this.startupProvenance;
+    if (site) {
+      try { provenance = nativePageRoute(trace.events, this.url, frameTree.frame.id, { browserPid: this.browserPid }); }
+      catch {
+        // ReadyToCommitNavigation can emit a URL/frame before the new process
+        // has a PID. A new browser inventory after navigation is authoritative;
+        // the old renderer can still have emitted post-commit layout metadata.
+        this.traceActive = true;
+        let inventory;
+        try {
+          const capture = () => recordTrace(this.cdp, () => this.page.waitForTimeout(30), { traceConfig: STARTUP_TRACE });
+          inventory = await (this.sharedHost ? this.sharedHost.trace(capture) : capture());
+        } finally { this.traceActive = false; }
+        const { frameTree: after } = await this.cdp.send('Page.getFrameTree');
+        ensure(inventory.dataLossOccurred === false && frameTree.frame.id === after.frame.id && frameTree.frame.loaderId === after.frame.loaderId &&
+          frameTree.frame.url === after.frame.url && after.frame.url === this.url,
+        502, 'NATIVE_PROVENANCE_CHANGED', 'Main document changed during startup provenance verification');
+        await this.onStartupTrace?.({ events: inventory.events, url: this.url, frame: after.frame, phase: 'post-navigation' });
+        provenance = nativePageRoute([...trace.events, ...inventory.events], this.url, after.frame.id, { browserPid: this.browserPid, currentInventory: inventory.events });
+      }
+    }
     this.startupProvenance = provenance;
     ensure(provenance.rendererPids.length === 1, 502, 'NATIVE_PROVENANCE_MISSING', 'Expected one renderer for the exact trusted page URL');
     this.provenance = { ...provenance, scope: 'One short metadata-only startup trace; frame delivery uses the authenticated native socket.' };

@@ -1,0 +1,1061 @@
+{
+  "version": 1,
+  "recordedAt": "2026-10-29T16:52:50.174408+00:00",
+  "status": "root-causes-confirmed-provenance-bug-fixed-resources-and-client-font-raster-remain",
+  "engineSplitGate": "not-passed",
+  "serverRasterBypassed": false,
+  "generalWebAcceptancePassed": false,
+  "build": {
+    "revision": "d0c02bfad08ec92a6ffcf989e53cd995e6381a4c",
+    "binarySha256": "d016a91338184e4e14ecc98c7fe8dc24a24d275a89ccce32c6fe0ad0d7c86557",
+    "patchSha256": "9a8c986d9bf7a34fb6f296e09eddb78e60f487c76059f51491d98d923b823437"
+  },
+  "mode": "Same pinned lean runtime and CanvasKit as the previous six-site tests; explicit macOS in-process GPU; no C++ or runtime binary rebuild.",
+  "fontEmbedding": {
+    "confirmed": true,
+    "cause": "SkPictureData::WriteTypefaces serializes each typeface with kDoIncludeData. SkTypeface_Mac::onOpenStream reconstructs all font tables; no used-glyph subsetting or cross-picture font-resource references exist.",
+    "transport": {
+      "jsonLimitBytes": 8388608,
+      "writerSnapshotLimitBytes": 8387584,
+      "encoding": "Inline base64 SKP inside the bounded frame JSON; base64 expands bytes by about 4/3."
+    },
+    "originalCernSkp": {
+      "id": "fe306df4718a10e754d38eaecc1a2480cee623b9abddf187b354f588581c28a5",
+      "bytes": 769855,
+      "fonts": [
+        {
+          "offset": 2567,
+          "bytes": 376728,
+          "family": "Times",
+          "fullName": "Times Bold",
+          "postScriptName": "Times-Bold",
+          "glyphs": 1443,
+          "format": "TrueType",
+          "sha256": "58e221b242b33f3df1aeb167edd0f55965a7873668da9ce6a8837f842cb0df55",
+          "tableCount": 21,
+          "largestTables": [
+            {
+              "tag": "morx",
+              "bytes": 199196
+            },
+            {
+              "tag": "glyf",
+              "bytes": 112324
+            },
+            {
+              "tag": "hdmx",
+              "bytes": 23176
+            },
+            {
+              "tag": "post",
+              "bytes": 16968
+            },
+            {
+              "tag": "cmap",
+              "bytes": 6706
+            }
+          ]
+        },
+        {
+          "offset": 379367,
+          "bytes": 379520,
+          "family": "Times",
+          "fullName": "Times Roman",
+          "postScriptName": "Times-Roman",
+          "glyphs": 1443,
+          "format": "TrueType",
+          "sha256": "1098bc29139b7120fdbe410509d0e97b8e3f9653949f2c76342aaf4c262e0454",
+          "tableCount": 21,
+          "largestTables": [
+            {
+              "tag": "morx",
+              "bytes": 199196
+            },
+            {
+              "tag": "glyf",
+              "bytes": 116680
+            },
+            {
+              "tag": "hdmx",
+              "bytes": 23176
+            },
+            {
+              "tag": "post",
+              "bytes": 16968
+            },
+            {
+              "tag": "cmap",
+              "bytes": 6706
+            }
+          ]
+        }
+      ],
+      "embeddedFontBytes": 756248,
+      "fontFraction": 0.9823252430652526
+    },
+    "syntheticCaseEvidence": {
+      "path": "test-results/native-diagnosis-20261030/fonts/diagnostic-report.json",
+      "sha256": "d0c63b1e11a5f62785e548cff7a78cd5d39576b25d79efab7f571db361d6f53f"
+    },
+    "cases": [
+      {
+        "id": "fixture-latin",
+        "cssFamily": "Probe",
+        "frameExported": true,
+        "error": null,
+        "platformFonts": [
+          {
+            "familyName": "Virtual Desktop Fixture Sans",
+            "postScriptName": "VirtualDesktopFixtureSans-Regular",
+            "isCustomFont": true,
+            "glyphCount": 29
+          }
+        ],
+        "resources": [
+          {
+            "bytes": 22085,
+            "embeddedFontBytes": 21488,
+            "fonts": [
+              {
+                "offset": 277,
+                "bytes": 21488,
+                "family": "Virtual Desktop Fixture Sans",
+                "fullName": "Virtual Desktop Fixture Sans Regular",
+                "postScriptName": "VirtualDesktopFixtureSans-Regular",
+                "glyphs": 143,
+                "format": "CFF",
+                "sha256": "6a0371fafef86d4c481a481a4b70bca57072a2e5483cba33e773229cfc3970b9",
+                "tableCount": 15,
+                "largestTables": [
+                  {
+                    "tag": "CFF ",
+                    "bytes": 12448
+                  },
+                  {
+                    "tag": "GPOS",
+                    "bytes": 4244
+                  },
+                  {
+                    "tag": "name",
+                    "bytes": 2402
+                  },
+                  {
+                    "tag": "GSUB",
+                    "bytes": 554
+                  },
+                  {
+                    "tag": "hmtx",
+                    "bytes": 554
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "serif-latin",
+        "cssFamily": "\"Times New Roman\"",
+        "frameExported": true,
+        "error": null,
+        "platformFonts": [
+          {
+            "familyName": "Times New Roman",
+            "postScriptName": "TimesNewRomanPSMT",
+            "isCustomFont": false,
+            "glyphCount": 29
+          }
+        ],
+        "resources": [
+          {
+            "bytes": 825469,
+            "embeddedFontBytes": 824920,
+            "fonts": [
+              {
+                "offset": 229,
+                "bytes": 824920,
+                "family": "Times New Roman",
+                "fullName": "Times New Roman",
+                "postScriptName": "TimesNewRomanPSMT",
+                "glyphs": 3380,
+                "format": "TrueType",
+                "sha256": "19e14c0f25fe2d0566b85ab6f8f961863c8f2f5cb0704eed4fe679784b5e2498",
+                "tableCount": 24,
+                "largestTables": [
+                  {
+                    "tag": "glyf",
+                    "bytes": 594610
+                  },
+                  {
+                    "tag": "hdmx",
+                    "bytes": 81224
+                  },
+                  {
+                    "tag": "GPOS",
+                    "bytes": 39180
+                  },
+                  {
+                    "tag": "post",
+                    "bytes": 35465
+                  },
+                  {
+                    "tag": "loca",
+                    "bytes": 13524
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "system-latin",
+        "cssFamily": "system-ui",
+        "frameExported": false,
+        "error": "frame-too-large",
+        "platformFonts": [
+          {
+            "familyName": ".SF NS",
+            "postScriptName": ".SFNS-Regular",
+            "isCustomFont": false,
+            "glyphCount": 29
+          }
+        ],
+        "resources": []
+      },
+      {
+        "id": "system-cjk",
+        "cssFamily": "system-ui",
+        "frameExported": false,
+        "error": "frame-too-large",
+        "platformFonts": [
+          {
+            "familyName": ".蘋方 UI-簡",
+            "postScriptName": ".PingFangUITextSC-Regular",
+            "isCustomFont": false,
+            "glyphCount": 8
+          }
+        ],
+        "resources": []
+      },
+      {
+        "id": "fixture-cjk-fallback",
+        "cssFamily": "Probe",
+        "frameExported": false,
+        "error": "frame-too-large",
+        "platformFonts": [
+          {
+            "familyName": "蘋方-簡",
+            "postScriptName": "PingFangSC-Regular",
+            "isCustomFont": false,
+            "glyphCount": 6
+          },
+          {
+            "familyName": "Virtual Desktop Fixture Sans",
+            "postScriptName": "VirtualDesktopFixtureSans-Regular",
+            "isCustomFont": true,
+            "glyphCount": 2
+          }
+        ],
+        "resources": []
+      },
+      {
+        "id": "system-arabic",
+        "cssFamily": "system-ui",
+        "frameExported": false,
+        "error": "frame-too-large",
+        "platformFonts": [
+          {
+            "familyName": ".SF NS",
+            "postScriptName": ".SFNS-Regular",
+            "isCustomFont": false,
+            "glyphCount": 2
+          },
+          {
+            "familyName": ".SF Arabic",
+            "postScriptName": ".SFArabic-Regular",
+            "isCustomFont": false,
+            "glyphCount": 22
+          }
+        ],
+        "resources": []
+      }
+    ],
+    "systemTableEvidence": {
+      "path": "test-results/native-diagnosis-20261030/font-table-sizes-ui.json",
+      "sha256": "828203b6f3cc086ecb7ba55c0310a6bebd442c305c89c4480c19e366f1d57e9f"
+    },
+    "systemTables": [
+      {
+        "requestedPostScriptName": ".PingFangUITextSC-Regular",
+        "actualPostScriptName": ".PingFangUITextSC-Regular",
+        "glyphs": 47102,
+        "exactNameMatch": true,
+        "estimatedSfntBytes": 59430408,
+        "estimatedBase64Bytes": 79240544,
+        "tableCount": 21,
+        "largestTables": [
+          {
+            "tag": "hvgl",
+            "bytes": 58687296
+          },
+          {
+            "tag": "cmap",
+            "bytes": 413656
+          },
+          {
+            "tag": "GSUB",
+            "bytes": 134212
+          },
+          {
+            "tag": "hmtx",
+            "bytes": 94534
+          },
+          {
+            "tag": "vmtx",
+            "bytes": 94210
+          }
+        ]
+      },
+      {
+        "requestedPostScriptName": ".SFArabic-Regular",
+        "actualPostScriptName": ".SFArabic-Regular",
+        "glyphs": 1435,
+        "exactNameMatch": true,
+        "estimatedSfntBytes": 719968,
+        "estimatedBase64Bytes": 959960,
+        "tableCount": 19,
+        "largestTables": [
+          {
+            "tag": "gvar",
+            "bytes": 485012
+          },
+          {
+            "tag": "glyf",
+            "bytes": 106466
+          },
+          {
+            "tag": "GPOS",
+            "bytes": 63220
+          },
+          {
+            "tag": "post",
+            "bytes": 20681
+          },
+          {
+            "tag": "GDEF",
+            "bytes": 13439
+          }
+        ]
+      },
+      {
+        "requestedPostScriptName": ".SFNS-Regular",
+        "actualPostScriptName": ".SFNS-Regular",
+        "glyphs": 2954,
+        "exactNameMatch": true,
+        "estimatedSfntBytes": 7872432,
+        "estimatedBase64Bytes": 10496576,
+        "tableCount": 22,
+        "largestTables": [
+          {
+            "tag": "gvar",
+            "bytes": 6750176
+          },
+          {
+            "tag": "GPOS",
+            "bytes": 407818
+          },
+          {
+            "tag": "GDEF",
+            "bytes": 269690
+          },
+          {
+            "tag": "glyf",
+            "bytes": 202335
+          },
+          {
+            "tag": "name",
+            "bytes": 50512
+          }
+        ]
+      },
+      {
+        "requestedPostScriptName": "PingFangSC-Regular",
+        "actualPostScriptName": "PingFangSC-Regular",
+        "glyphs": 47102,
+        "exactNameMatch": true,
+        "estimatedSfntBytes": 59429524,
+        "estimatedBase64Bytes": 79239368,
+        "tableCount": 21,
+        "largestTables": [
+          {
+            "tag": "hvgl",
+            "bytes": 58687296
+          },
+          {
+            "tag": "cmap",
+            "bytes": 413656
+          },
+          {
+            "tag": "GSUB",
+            "bytes": 134212
+          },
+          {
+            "tag": "hmtx",
+            "bytes": 94534
+          },
+          {
+            "tag": "vmtx",
+            "bytes": 94210
+          }
+        ]
+      },
+      {
+        "requestedPostScriptName": "TimesNewRomanPSMT",
+        "actualPostScriptName": "TimesNewRomanPSMT",
+        "glyphs": 3380,
+        "exactNameMatch": true,
+        "estimatedSfntBytes": 824920,
+        "estimatedBase64Bytes": 1099896,
+        "tableCount": 24,
+        "largestTables": [
+          {
+            "tag": "glyf",
+            "bytes": 594610
+          },
+          {
+            "tag": "hdmx",
+            "bytes": 81224
+          },
+          {
+            "tag": "GPOS",
+            "bytes": 39180
+          },
+          {
+            "tag": "post",
+            "bytes": 35465
+          },
+          {
+            "tag": "loca",
+            "bytes": 13524
+          }
+        ]
+      }
+    ],
+    "tableSizeScope": "Estimated complete SFNT streams using the same CoreText table APIs and padding formula as pinned Skia. Only exact PostScript-name matches are used; oversized wire payloads were correctly rejected rather than saved.",
+    "discardedFontResolutionAttempt": {
+      "report": "test-results/native-diagnosis-20261030/font-table-sizes.json",
+      "reason": "Direct private UI font names returned substituted Times fonts. exactNameMatch=false results are excluded; the final probe uses CTFontCreateUIFontForLanguage and CTFontCreateForString."
+    },
+    "exampleCorrection": "The captured Example Domain page is multilingual (Chinese, Arabic and others), not the assumed small English-only page. No more live Example requests were used in this investigation; local synthetic probes isolate font behavior.",
+    "fixDirection": "Separate stable font/glyph resources from frame records; subset with preserved glyph identity and cache them. Raising the frame cap would retain repeated large fonts and memory/transport cost."
+  },
+  "images": {
+    "confirmed": true,
+    "cause": "LayerTreeImpl::AsRemotePaintValueInto explicitly rejects DisplayItemLists with discardable images as picture-images-or-missing-record.",
+    "evidence": {
+      "path": "test-results/native-diagnosis-20261030/images/diagnostic-report.json",
+      "sha256": "58223451c92839d3e665ffb7caccc2fd7cee7aa51716d7ae5def0d996a547cfc"
+    },
+    "cases": [
+      {
+        "id": "no-image",
+        "frameExported": true,
+        "error": null,
+        "imageState": []
+      },
+      {
+        "id": "png-image",
+        "frameExported": false,
+        "error": "Unsupported native frame: picture-images-or-missing-record",
+        "imageState": [
+          {
+            "complete": true,
+            "naturalWidth": 2
+          }
+        ]
+      },
+      {
+        "id": "png-background",
+        "frameExported": false,
+        "error": "Unsupported native frame: picture-images-or-missing-record",
+        "imageState": []
+      },
+      {
+        "id": "inline-vector",
+        "frameExported": true,
+        "error": null,
+        "imageState": []
+      }
+    ],
+    "interpretation": "A loaded 2x2 PNG and PNG background fail while no-image and inline-vector controls export successfully. This is an explicit producer support boundary, not the size of that image.",
+    "fixDirection": "Implement and validate original image-resource serialization/transport/replay before removing the guard. Do not silently drop images or substitute page screenshots."
+  },
+  "fontRaster": {
+    "confirmed": true,
+    "evidence": {
+      "path": "test-results/native-diagnosis-20261030/raster/diagnostic-report.json",
+      "sha256": "6baa621f812a72a20cf894f16ceb67facc2cd41e472bc4ece443c4e270a7c0f1"
+    },
+    "recordSha256": "fe306df4718a10e754d38eaecc1a2480cee623b9abddf187b354f588581c28a5",
+    "referenceRepeat": {
+      "passed": true,
+      "whole": {
+        "passed": true,
+        "meanAbsoluteChannelError": 0,
+        "pixelsOver32Fraction": 0
+      },
+      "regionsChecked": 9,
+      "failedRegions": []
+    },
+    "sameSkpMacReplay": {
+      "passed": true,
+      "whole": {
+        "passed": true,
+        "meanAbsoluteChannelError": 0,
+        "pixelsOver32Fraction": 0
+      },
+      "regionsChecked": 9,
+      "failedRegions": []
+    },
+    "sameSkpCanvasKitReplay": {
+      "passed": false,
+      "whole": {
+        "passed": true,
+        "meanAbsoluteChannelError": 1.6582581018518519,
+        "pixelsOver32Fraction": 0.018504050925925927
+      },
+      "regionsChecked": 9,
+      "failedRegions": [
+        {
+          "bounds": {
+            "x": 0,
+            "y": 0,
+            "width": 320,
+            "height": 240
+          },
+          "meanAbsoluteChannelError": 4.971362847222222,
+          "pixelsOver32Fraction": 0.054140625
+        },
+        {
+          "bounds": {
+            "x": 320,
+            "y": 0,
+            "width": 320,
+            "height": 240
+          },
+          "meanAbsoluteChannelError": 1.9914453125,
+          "pixelsOver32Fraction": 0.021822916666666668
+        },
+        {
+          "bounds": {
+            "x": 0,
+            "y": 240,
+            "width": 320,
+            "height": 240
+          },
+          "meanAbsoluteChannelError": 4.920993923611111,
+          "pixelsOver32Fraction": 0.055078125
+        }
+      ]
+    },
+    "sameSkpMacVsCanvasKit": {
+      "passed": false,
+      "whole": {
+        "passed": true,
+        "meanAbsoluteChannelError": 1.6582581018518519,
+        "pixelsOver32Fraction": 0.018504050925925927
+      },
+      "regionsChecked": 9,
+      "failedRegions": [
+        {
+          "bounds": {
+            "x": 0,
+            "y": 0,
+            "width": 320,
+            "height": 240
+          },
+          "meanAbsoluteChannelError": 4.971362847222222,
+          "pixelsOver32Fraction": 0.054140625
+        },
+        {
+          "bounds": {
+            "x": 320,
+            "y": 0,
+            "width": 320,
+            "height": 240
+          },
+          "meanAbsoluteChannelError": 1.9914453125,
+          "pixelsOver32Fraction": 0.021822916666666668
+        },
+        {
+          "bounds": {
+            "x": 0,
+            "y": 240,
+            "width": 320,
+            "height": 240
+          },
+          "meanAbsoluteChannelError": 4.920993923611111,
+          "pixelsOver32Fraction": 0.055078125
+        }
+      ]
+    },
+    "smoothingAblations": [
+      {
+        "smoothing": "auto",
+        "actual": "auto",
+        "againstArchivedOriginal": {
+          "passed": true,
+          "whole": {
+            "passed": true,
+            "meanAbsoluteChannelError": 0,
+            "pixelsOver32Fraction": 0
+          },
+          "regionsChecked": 9,
+          "failedRegions": []
+        },
+        "againstCanvasKit": {
+          "passed": false,
+          "whole": {
+            "passed": true,
+            "meanAbsoluteChannelError": 1.6582581018518519,
+            "pixelsOver32Fraction": 0.018504050925925927
+          },
+          "regionsChecked": 9,
+          "failedRegions": [
+            {
+              "bounds": {
+                "x": 0,
+                "y": 0,
+                "width": 320,
+                "height": 240
+              },
+              "meanAbsoluteChannelError": 4.971362847222222,
+              "pixelsOver32Fraction": 0.054140625
+            },
+            {
+              "bounds": {
+                "x": 320,
+                "y": 0,
+                "width": 320,
+                "height": 240
+              },
+              "meanAbsoluteChannelError": 1.9914453125,
+              "pixelsOver32Fraction": 0.021822916666666668
+            },
+            {
+              "bounds": {
+                "x": 0,
+                "y": 240,
+                "width": 320,
+                "height": 240
+              },
+              "meanAbsoluteChannelError": 4.920993923611111,
+              "pixelsOver32Fraction": 0.055078125
+            }
+          ]
+        },
+        "againstMacReplay": {
+          "passed": true,
+          "whole": {
+            "passed": true,
+            "meanAbsoluteChannelError": 0,
+            "pixelsOver32Fraction": 0
+          },
+          "regionsChecked": 9,
+          "failedRegions": []
+        }
+      },
+      {
+        "smoothing": "antialiased",
+        "actual": "antialiased",
+        "againstArchivedOriginal": {
+          "passed": false,
+          "whole": {
+            "passed": true,
+            "meanAbsoluteChannelError": 1.0142597415123458,
+            "pixelsOver32Fraction": 0.010541087962962962
+          },
+          "regionsChecked": 9,
+          "failedRegions": [
+            {
+              "bounds": {
+                "x": 0,
+                "y": 0,
+                "width": 320,
+                "height": 240
+              },
+              "meanAbsoluteChannelError": 3.086115451388889,
+              "pixelsOver32Fraction": 0.03376302083333333
+            },
+            {
+              "bounds": {
+                "x": 0,
+                "y": 240,
+                "width": 320,
+                "height": 240
+              },
+              "meanAbsoluteChannelError": 2.991953125,
+              "pixelsOver32Fraction": 0.029270833333333333
+            }
+          ]
+        },
+        "againstCanvasKit": {
+          "passed": false,
+          "whole": {
+            "passed": true,
+            "meanAbsoluteChannelError": 1.4530184220679012,
+            "pixelsOver32Fraction": 0.015222800925925926
+          },
+          "regionsChecked": 9,
+          "failedRegions": [
+            {
+              "bounds": {
+                "x": 0,
+                "y": 0,
+                "width": 320,
+                "height": 240
+              },
+              "meanAbsoluteChannelError": 4.057660590277778,
+              "pixelsOver32Fraction": 0.04114583333333333
+            },
+            {
+              "bounds": {
+                "x": 0,
+                "y": 240,
+                "width": 320,
+                "height": 240
+              },
+              "meanAbsoluteChannelError": 4.431558159722222,
+              "pixelsOver32Fraction": 0.0458203125
+            }
+          ]
+        },
+        "againstMacReplay": {
+          "passed": false,
+          "whole": {
+            "passed": true,
+            "meanAbsoluteChannelError": 1.0142597415123458,
+            "pixelsOver32Fraction": 0.010541087962962962
+          },
+          "regionsChecked": 9,
+          "failedRegions": [
+            {
+              "bounds": {
+                "x": 0,
+                "y": 0,
+                "width": 320,
+                "height": 240
+              },
+              "meanAbsoluteChannelError": 3.086115451388889,
+              "pixelsOver32Fraction": 0.03376302083333333
+            },
+            {
+              "bounds": {
+                "x": 0,
+                "y": 240,
+                "width": 320,
+                "height": 240
+              },
+              "meanAbsoluteChannelError": 2.991953125,
+              "pixelsOver32Fraction": 0.029270833333333333
+            }
+          ]
+        }
+      },
+      {
+        "smoothing": "subpixel-antialiased",
+        "actual": "subpixel-antialiased",
+        "againstArchivedOriginal": {
+          "passed": true,
+          "whole": {
+            "passed": true,
+            "meanAbsoluteChannelError": 1.9290123456790124e-06,
+            "pixelsOver32Fraction": 0
+          },
+          "regionsChecked": 9,
+          "failedRegions": []
+        },
+        "againstCanvasKit": {
+          "passed": false,
+          "whole": {
+            "passed": true,
+            "meanAbsoluteChannelError": 1.6582561728395062,
+            "pixelsOver32Fraction": 0.018504050925925927
+          },
+          "regionsChecked": 9,
+          "failedRegions": [
+            {
+              "bounds": {
+                "x": 0,
+                "y": 0,
+                "width": 320,
+                "height": 240
+              },
+              "meanAbsoluteChannelError": 4.971345486111111,
+              "pixelsOver32Fraction": 0.054140625
+            },
+            {
+              "bounds": {
+                "x": 320,
+                "y": 0,
+                "width": 320,
+                "height": 240
+              },
+              "meanAbsoluteChannelError": 1.9914453125,
+              "pixelsOver32Fraction": 0.021822916666666668
+            },
+            {
+              "bounds": {
+                "x": 0,
+                "y": 240,
+                "width": 320,
+                "height": 240
+              },
+              "meanAbsoluteChannelError": 4.920993923611111,
+              "pixelsOver32Fraction": 0.055078125
+            }
+          ]
+        },
+        "againstMacReplay": {
+          "passed": true,
+          "whole": {
+            "passed": true,
+            "meanAbsoluteChannelError": 1.9290123456790124e-06,
+            "pixelsOver32Fraction": 0
+          },
+          "regionsChecked": 9,
+          "failedRegions": []
+        }
+      }
+    ],
+    "finding": "The identical original SKP replays with zero RGBA error on macOS Chromium, while CanvasKit has deterministic text-region errors. Record contents, layout and transport are intact for this case; the mismatch is in client font raster behavior.",
+    "backendContext": "macOS Skia uses CoreText; the software CanvasKit build uses FreeType. Existing extra stem-darkening calibration targets CFF, while the CERN fonts are TrueType. Exact remaining per-glyph raster parameter attribution is not yet complete.",
+    "scope": "Native macOS raster was used only as a separate diagnostic control; those PNGs never enter production native frame delivery. White-background composition follows the captured frame background. CSS smoothing ablations are not replacement acceptance references.",
+    "fixDirection": "Match the client/server font raster policy or use a matching native replay backend. A single smoothing CSS switch did not pass all original pixel limits; limits remain unchanged.",
+    "limits": {
+      "maxMeanAbsoluteChannelError": 3,
+      "maxPixelsOver32Fraction": 0.02,
+      "significantChannelDelta": 32
+    }
+  },
+  "provenance": {
+    "confirmed": true,
+    "fixed": true,
+    "before": {
+      "path": "test-results/native-diagnosis-20261030/startup/diagnostic-report.json",
+      "sha256": "d486d465572aa8ef7dd076e0e1db46a3646b699ebb2fb286486f59ae3d050eb7"
+    },
+    "after": {
+      "path": "test-results/native-diagnosis-20261030/startup-ready/diagnostic-report.json",
+      "sha256": "c7a64061eec52564655ce1e36426ac684463fdb109836088c2ec876cb318a45d"
+    },
+    "cause": "FillFrameData omits processId while a RenderProcessHost has no live process and posts ProcessReadyInBrowser. The old parser discarded the incomplete commit and ignored that standard readiness event; old/new renderers can both emit SetLayerTreeId for the frame during the transition.",
+    "browserEvidence": [
+      {
+        "eventIndex": 371,
+        "name": "FrameCommittedInBrowser",
+        "cat": "disabled-by-default-devtools.timeline",
+        "pid": 32234,
+        "ts": 125367942302,
+        "data": {
+          "frame": "04F8CAF46C9B1682C0BF01DC12F0952F",
+          "isInPrimaryMainFrame": true,
+          "isOutermostMainFrame": true,
+          "name": "",
+          "url": "https://www.iana.org/help/example-domains"
+        }
+      },
+      {
+        "eventIndex": 532,
+        "name": "ProcessReadyInBrowser",
+        "cat": "disabled-by-default-devtools.timeline",
+        "pid": 32234,
+        "ts": 125367968690,
+        "data": {
+          "frame": "04F8CAF46C9B1682C0BF01DC12F0952F",
+          "processId": 32245
+        }
+      }
+    ],
+    "resolved": {
+      "rendererPids": [
+        32245
+      ],
+      "evidence": [
+        {
+          "eventIndex": 371,
+          "name": "FrameCommittedInBrowser",
+          "frame": "04F8CAF46C9B1682C0BF01DC12F0952F",
+          "url": "https://www.iana.org/help/example-domains",
+          "processId": 32245,
+          "browserEventProcessId": null,
+          "processIdSource": "browser-process-ready"
+        }
+      ],
+      "processReadyEvidence": [
+        {
+          "eventIndex": 532,
+          "ts": 125367968690,
+          "processId": 32245
+        }
+      ],
+      "route": {
+        "pid": 32245,
+        "treeId": 1
+      },
+      "frameId": "04F8CAF46C9B1682C0BF01DC12F0952F",
+      "retiredTreeIds": [],
+      "layerTreeEvidence": [
+        {
+          "eventIndex": 2441,
+          "pid": 32245,
+          "ts": 125368567629,
+          "treeId": 1
+        },
+        {
+          "eventIndex": 2056,
+          "pid": 32245,
+          "ts": 125368447642,
+          "treeId": 1
+        },
+        {
+          "eventIndex": 1983,
+          "pid": 32245,
+          "ts": 125368361319,
+          "treeId": 1
+        },
+        {
+          "eventIndex": 1924,
+          "pid": 32245,
+          "ts": 125368347112,
+          "treeId": 1
+        },
+        {
+          "eventIndex": 1868,
+          "pid": 32245,
+          "ts": 125368290786,
+          "treeId": 1
+        },
+        {
+          "eventIndex": 1697,
+          "pid": 32245,
+          "ts": 125368213960,
+          "treeId": 1
+        },
+        {
+          "eventIndex": 1621,
+          "pid": 32245,
+          "ts": 125368209971,
+          "treeId": 1
+        }
+      ]
+    },
+    "afterError": "frame-too-large",
+    "interpretation": "IANA now binds from browser-process-ready in the original trace, then correctly fails on frame-too-large. Binding repair is not a website pass.",
+    "fallback": {
+      "evidence": {
+        "path": "test-results/native-diagnosis-20261030/startup-inventory/diagnostic-report.json",
+        "sha256": "28fcf0b696b6b08ea890c2cd68ad8259d178c0af655e71ec201c73195b496f45"
+      },
+      "behavior": "If commit/readiness evidence remains incomplete, one new post-navigation browser inventory may resolve it only while exact frame id, URL and loaderId remain unchanged and trace data is complete."
+    },
+    "guards": [
+      "Exact browser PID and native metadata category",
+      "Exact current main frame id and URL",
+      "Positive renderer/widget identity",
+      "Ambiguous, contradictory, stale and user-timing evidence rejected",
+      "Only trace-proven retired widgets ignored"
+    ]
+  },
+  "otherFailure": {
+    "site": "Hacker News",
+    "classification": "Previous ordinary HTTP 503 and native navigation failure are a reachability/control failure, not evidence of unsupported native graphics."
+  },
+  "safety": {
+    "scope": "One test browser at a time, default 1536 MiB tree RSS and existing free/swap/heartbeat/time limits. Font table size reading is a separate read-only CoreText query, not font export.",
+    "runs": [
+      {
+        "path": "test-results/native-diagnosis-20261030/fonts/guard-report.json",
+        "sha256": "d3295caae4900e9ac9449d6a2fdf9df0e0ab2eda035ffd9b776e249c860b4360",
+        "status": "passed",
+        "diagnosticStatus": "native-diagnostics-complete",
+        "stopReason": null,
+        "budgetMiB": 1536,
+        "peakSummedRssMiB": 1107.1,
+        "minimumFreePercent": 71,
+        "newSwapoutBytes": 0
+      },
+      {
+        "path": "test-results/native-diagnosis-20261030/images/guard-report.json",
+        "sha256": "6be9416698313c0f4fdfa977352c58810160a1b448778434b1e7c3a3f90c095d",
+        "status": "passed",
+        "diagnosticStatus": "native-diagnostics-complete",
+        "stopReason": null,
+        "budgetMiB": 1536,
+        "peakSummedRssMiB": 708.8,
+        "minimumFreePercent": 71,
+        "newSwapoutBytes": 0
+      },
+      {
+        "path": "test-results/native-diagnosis-20261030/raster/guard-report.json",
+        "sha256": "88463c513d581d852bda73d466f969815ea6e137dcc01d0b159a018fcb9b2d23",
+        "status": "passed",
+        "diagnosticStatus": "native-diagnostics-complete",
+        "stopReason": null,
+        "budgetMiB": 1536,
+        "peakSummedRssMiB": 684.4,
+        "minimumFreePercent": 71,
+        "newSwapoutBytes": 0
+      },
+      {
+        "path": "test-results/native-diagnosis-20261030/startup-ready/guard-report.json",
+        "sha256": "6442915d39f64e9a641677783f6889bf1e588082f872030ec78fe07153ad3ed6",
+        "status": "passed",
+        "diagnosticStatus": "native-diagnostics-complete",
+        "stopReason": null,
+        "budgetMiB": 1536,
+        "peakSummedRssMiB": 838.4,
+        "minimumFreePercent": 71,
+        "newSwapoutBytes": 0
+      },
+      {
+        "path": "test-results/native-diagnosis-20261030/smoke-regression/guard-report.json",
+        "sha256": "830805850d62638a7d71570c18f17392169daa689e038882047324172afdf2ce",
+        "status": "passed",
+        "diagnosticStatus": "native-runtime-smoke-passed",
+        "stopReason": null,
+        "budgetMiB": 1536,
+        "peakSummedRssMiB": 637.7,
+        "minimumFreePercent": 71,
+        "newSwapoutBytes": 0
+      },
+      {
+        "path": "test-results/native-diagnosis-20261030/pool-regression/guard-report.json",
+        "sha256": "1b3e201e40d700511e0dcae7dce1c98f4f2fc2bedb388ecb6bd232d727afcbc0",
+        "status": "passed",
+        "diagnosticStatus": "shared-native-host-candidate",
+        "stopReason": null,
+        "budgetMiB": 1536,
+        "peakSummedRssMiB": 984.6,
+        "minimumFreePercent": 72,
+        "newSwapoutBytes": 0
+      }
+    ],
+    "todeskInteractiveLatencyMeasured": false
+  },
+  "regression": {
+    "javascriptPassed": 105,
+    "pythonPassed": 16,
+    "syntaxCheckedJsFiles": 95,
+    "javascriptLog": "/private/tmp/vd-diagnosis-unit-20261030.log",
+    "syntaxAndPythonLog": "/private/tmp/vd-diagnosis-check-20261030.log"
+  },
+  "remaining": [
+    "Font/glyph resource protocol and subsetting",
+    "Original image resources and replay support",
+    "TrueType/default-font raster matching on CanvasKit",
+    "Separate-GPU startup remains outside this in-process-GPU diagnosis",
+    "General website acceptance and equal-quality performance remain unpassed"
+  ]
+}

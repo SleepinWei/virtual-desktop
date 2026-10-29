@@ -6,6 +6,10 @@
 
 ## 当前实现
 
+**2026-10-30 原因诊断完成，见 [证据](docs/chromium-native-diagnosis-2026-10-30.json) 与 [说明](docs/NATIVE_RUNTIME.md)。** 当前主要障碍在资源封装和客户端字体重放。CERN 769,855-byte SKP 的 98.23% 是两份完整 Times 字体；29 个拉丁字符用小字体仅 22,085 bytes，系统 UI 字体已超限。CoreText 精确匹配测得 SFNS 完整表约 7.87 MB（Base64 10.50 MB）、苹方约 59.43 MB（Base64 79.24 MB），远超 8 MiB JSON 帧预算。默认 SKP `kDoIncludeData` 不按 glyph 裁剪，不能靠扩大上限解决。上轮 Example 的轻量英文分类不准确，实际为多语种；本轮改用本地合成字体对照，没有继续访问 Example 做探针。
+
+图片是当前 C++ 的明确拒绝边界：2×2 PNG `<img>` / PNG background 均失败，无图和 inline SVG 可导出。像素问题已从源记录中隔离：同一 CERN SKP 交给 macOS Chromium 重放与普通参考逐像素误差为 0，CanvasKit 仍有 3/9 区域失败。CoreText/FreeType 行为不同，现有额外 CFF 校准未覆盖 TrueType Times；CSS smoothing 单开关仍未全部通过。macOS raster 只作独立诊断，未接生产截图回退。IANA bug 已修复：处理原先遗漏的标准 `ProcessReadyInBrowser`；歧义时补一份导航后 browser inventory，并要求 frame/URL/loader 稳定。真实复测在原 trace 中从 readiness 正确绑定新 renderer，随后仍因 frame-too-large 拒绝，不能说网站通过。浏览器 PID/category、精确主 frame 与 URL、歧义/伪 user timing 拒绝均保留。105 JS /16 Python /95 JS 语法及原生 smoke/pool 回归通过，无 C++ 重编。后续优先字体/字形外置与子集、图片资源、默认字体栅格匹配，再恢复通用网页验收；独立 GPU 问题保留。
+
 **2026-10-29 网站测试更新：六站均没有取得严格画质/功能的完整资格，不能称为通用网页性能通过。** 最新证据 [网站与性能](docs/chromium-sites-2026-10-29.json)，解释与数表见 [NATIVE_RUNTIME.md](docs/NATIVE_RUNTIME.md)。普通模式在 Example、IANA、CERN、Python 文档、哔哩哔哩加载/操作通过，HN HTTP 503；原生 Example/Bili 超 8 MiB JSON 帧上限、Python 图片记录不支持、IANA 主 frame 来源未能证明。CERN 在修复主 widget 绑定后完成两轮 16 次操作与 4 次解码/ACK，但局部文字比较失败；JPEG80 对照本身也未过严格局部阈值，工具拒绝输出收益比值。原生直接生产端 p95 33.2/35.3 ms、普通 JPEG80 51.0/51.0 ms 只能作为非等画质探索性数据，不能冒充验收。
 
 `page-route.js` 用当前 CDP frame id、URL/renderer commit、`SetLayerTreeId` 绑定主 widget，避免同 PID 的 about:blank 旧 widget 被误选；只忽略元数据证明退役的 widget，未知新增 widget 仍拒绝。没有 C++/二进制改变、截图替代或阈值放宽。测试入口 `test:native-acceptance -- --task site --site cern ...`，4–12 次、1–2 轮，单 browser、1.5 GiB；原生归档后关闭 producer，再单独重放。所有站点尝试峰值 1,411.7 MiB、最低 free 70%、新增 swapout 0，无安全停止；ToDesk 结束时存在，无遗留 headless/Ninja。100 JS、16 Python、91 JS 语法通过；原生 fixture 冒烟和双 context pool 回归通过。原有 worker fixture 对照 12 次点击 p95 原生68.4 / JPEG80 87.8 ms，RSS831.2 /772.1 MiB；这与公开网站直接生产端范围不同，也没有 JPEG 等画质结论。当前新增网站与 Example 都是 probe only；下一步优先字体/字形和原始图片资源、默认字体像素及 IANA 来源，之后再测等画质性能；独立 GPU 仍待修复。

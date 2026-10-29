@@ -89,6 +89,21 @@ npm run test:native-acceptance -- --task site --site cern --in-process-gpu \
 
 新入口固定默认 1.5 GiB，限制 4–12 次操作、1–2 轮，不接受没有对应 workload 的站点；CERN 两轮用 AB/BA 运行顺序。只做本地输入/焦点，不导航或提交表单。普通模式每动作产生 JPEG80，原生模式只产生真实 SKP 与元数据。生产端全部关闭后，用独立本地 browser 重放保存的资源，检查 ACK 与原始帧，再将原生结果和 JPEG80 各自与普通无损 PNG 对照：整图和 9 个固定区域均使用原阈值。两者功能、状态、原生新帧及两种画质均通过才输出比值；失败返回非零并写入 `site-report.json` 与 `guard-report.json`。原生无帧、网站 HTTP 失败、来源缺失、像素不一致或资源保护停止不能成为性能成功。当前六站均未获得完整资格，见 [网站实测](chromium-sites-2026-10-29.json)。
 
+原因诊断也使用同一外层保护，顺序运行，各任务使用新输出目录：
+
+```bash
+# fonts：本地字体对照；images：无图/PNG/背景/inline SVG 对照。
+npm run test:native-acceptance -- --task fonts --in-process-gpu \
+  --root /Volumes/Extreme-APFS/Runtimes/virtual-desktop-lean-156-20261029 \
+  --output test-results/diagnose-fonts
+
+# raster-diagnostic：独立 macOS raster 控制与 CanvasKit 的同字节 SKP 对照；
+# 使用保留的 test-results/public-sites-20261029/cern-final 捕获文件。
+# startup-diagnostic：IANA 的完整启动来源/readiness 证据。
+```
+
+字体分析器只读识别 SKP 内的 SFNT 元数据；`font-table-sizes.py` 通过 CoreText 读取系统字体表大小，不导出字体文件，私有 UI 字体使用正式 UI/fallback API，替换字体的尺寸不被接受。raster 诊断的 PNG 是独立普通模式控制，CSS 字体平滑修改也是消歧对照，不能替换原参考或进入生产帧。所有诊断中的 `native-diagnostics-complete` 仅表示完成观测；字体导出或图片不支持的结果仍可被成功记录。完整原因与范围见 [诊断记录](chromium-native-diagnosis-2026-10-30.json)。
+
 运行 `npm run experiment:paint` 验证本机浏览器的原生 SKP 捕获和客户端 CanvasKit 重放；`npm run experiment:headless` 配合显式 headless shell 二进制路径检测受控帧能力。版本耦合、输出和失败状态见 [CHROMIUM_PAINT.md](CHROMIUM_PAINT.md)。实验未作为当前 v0 CI 的兼容性保证，实际结果应记录浏览器版本和能力限制。
 
 ## 当前受限云端环境的结果
