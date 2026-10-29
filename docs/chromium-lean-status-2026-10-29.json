@@ -1,0 +1,80 @@
+{
+  "version": 1,
+  "date": "2026-10-29",
+  "observedAt": "2026-10-29T04:14:17.852853+00:00",
+  "observedAtAsiaShanghai": "2026-10-29T12:14:17.852853+08:00",
+  "scope": "Read-only snapshot of existing local build state and the latest guard report for the README update. No build or benchmark was started or retried.",
+  "status": "safety-stopped",
+  "sources": {
+    "state": {
+      "path": "/Volumes/Extreme-APFS/Builds/chromium/virtual-desktop-lean-ninja-build-state.json",
+      "sha256": "9b2c98bfb1eedb75fb06e18e18cbe5209f104f976979888d17561060ed1e913a"
+    },
+    "guardReport": {
+      "path": "test-results/lean-cli-detached-20261029/guard-report.json",
+      "sha256": "1dfc030544397f9ef7765cb066d7045b4e5fb8e815aebbf69f8617fd0bcc1ed4"
+    }
+  },
+  "candidate": {
+    "updatedAt": "2026-10-29T03:46:53.891Z",
+    "revision": "d0c02bfad08ec92a6ffcf989e53cd995e6381a4c",
+    "patchSha256": "9a8c986d9bf7a34fb6f296e09eddb78e60f487c76059f51491d98d923b823437",
+    "profileSha256": "d8f52940ead346afedd9972fef103c491a28f639e756044e89a7a3443660f763",
+    "output": "/Volumes/Extreme-APFS/Builds/chromium/src/out/VirtualDesktopLeanNinja",
+    "builder": "ninja",
+    "jobs": 2,
+    "pid": null,
+    "stage": "safety-stopped",
+    "safetyStop": "owned-process-rss-limit",
+    "compiled": false,
+    "ccTestsPassed": false,
+    "vizTestsPassed": false,
+    "v8MetagenPassed": true,
+    "v8MetagenHeaderSha256": "c5faa42595340b24d2426f4dd51ca90fc3b367e5a0e67d421fc184b14c5455d4"
+  },
+  "candidateBinaryExists": false,
+  "lastInvocation": {
+    "startedAt": "2026-10-29T03:30:28.975Z",
+    "finishedAt": "2026-10-29T03:46:53.898Z",
+    "finishedAtAsiaShanghai": "2026-10-29T11:46:53.898000+08:00",
+    "jobs": 2,
+    "status": "safety-stopped",
+    "reason": "owned-process-rss-limit",
+    "result": {
+      "code": null,
+      "signal": "SIGKILL"
+    },
+    "cpuPolicy": {
+      "jobs": 2,
+      "nice": 10,
+      "darwinBackground": false,
+      "qosClamp": "utility",
+      "diskPolicy": "throttle",
+      "systemLoadHardStop": false,
+      "scope": "At most eight build commands; OS schedules cores. Compiler subtree has lower CPU/I/O priority than foreground apps."
+    },
+    "safetyPolicy": {
+      "minFreePercent": 35,
+      "maxSwapoutBytes": 67108864,
+      "maxTreeRssBytes": 6442450944,
+      "maxHeartbeatMs": 4000,
+      "maxDurationMs": null,
+      "enforceSystemLoad": false,
+      "systemLoadStopAbove": null
+    },
+    "lastSample": {
+      "time": 1793245613832,
+      "freePercent": 81,
+      "treeRssBytes": 6533332992,
+      "swapoutBytes": 14779678720,
+      "load": 25.00439453125
+    }
+  },
+  "measurementLimits": [
+    "treeRssBytes is a sampled sum of process RSS, not unique physical memory.",
+    "swapoutBytes is the cumulative system counter at the sample, not newly swapped bytes for this invocation.",
+    "This is a timestamped local snapshot, not a live build monitor or a new runtime acceptance result."
+  ],
+  "engineSplitGate": "not-passed",
+  "serverRasterBypassed": false
+}
