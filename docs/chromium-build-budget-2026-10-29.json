@@ -1,0 +1,297 @@
+{
+  "version": 1,
+  "observedAt": "2026-10-29T15:08:39.232179+08:00",
+  "scope": "Timestamped build/scheduling snapshot, not a live monitor or runtime acceptance.",
+  "candidate": {
+    "revision": "d0c02bfad08ec92a6ffcf989e53cd995e6381a4c",
+    "output": "/Volumes/Extreme-APFS/Builds/chromium/src/out/VirtualDesktopLeanNinja",
+    "builder": "ninja",
+    "jobs": 4,
+    "stage": "build-running",
+    "compiled": false,
+    "ccTestsPassed": false,
+    "vizTestsPassed": false,
+    "gnRootPatch": {
+      "path": ".gn",
+      "baseSha256": "1c33e1726ea5b347730043bf1837fb17bedbeee4651ae9d8393f0d191fb0dd24",
+      "patchedSha256": "2ce626db4b09cbed3ec57b81ec68853bfc4450970b59b2ad0492eb1912a4a2fd",
+      "snippetSha256": "2adb190ae16cd75768a2c01c328f3289d3395e8c07d12d30e5d9e747ef58038d",
+      "environment": {
+        "VIRTUAL_DESKTOP_LEAN_ROOT": "headless"
+      },
+      "scope": "Candidate build graph only; inactive without its environment flag."
+    },
+    "bindingsConcurrencyPatch": {
+      "path": "third_party/blink/renderer/bindings/BUILD.gn",
+      "baseSha256": "a0f038c3b3079c8a1a500baebf5bc7584b95dc7ceb82d900b62c120321cca6ba",
+      "patchedSha256": "a2c993edd8f3c295deeb41d80c94b53fd09a3347ba019b9d7aafa3763a625dbd",
+      "snippetSha256": "399ef54df2d6426abefc3f7b6e6837e493e9084780b099753479ed9619f8481a",
+      "workersPerAction": 1,
+      "environment": {
+        "VIRTUAL_DESKTOP_LEAN_ROOT": "headless"
+      },
+      "scope": "Use upstream single-process code generation only for the lean candidate; Ninja owns concurrency."
+    },
+    "v8MetagenPassed": true
+  },
+  "previousStop": {
+    "finishedAt": "2026-10-29T03:46:53.898Z",
+    "jobs": 2,
+    "reason": "owned-process-rss-limit",
+    "lastRssGiB": 6.085,
+    "freePercent": 81,
+    "rootCause": "Two Blink binding actions each created a multiprocessing pool of ten workers, outside the Ninja two-command budget."
+  },
+  "verification": {
+    "pythonBuildToolTests": 14,
+    "gnFormatExitCode": 0,
+    "gnArgs": {
+      "candidate": {
+        "singleProcessFlag": true,
+        "argumentCount": 12
+      },
+      "upstream-control": {
+        "singleProcessFlag": false,
+        "argumentCount": 11
+      }
+    },
+    "existingGeneratedSources": {
+      "observedAt": "2026-10-29T14:55:55.452961+08:00",
+      "previousGeneratedFiles": 4732,
+      "matched": 4732,
+      "changed": [],
+      "missing": [],
+      "scope": "Existing generated sources only, including files left by earlier interrupted actions; this does not replace native runtime acceptance."
+    },
+    "sourceSha256": "a2c993edd8f3c295deeb41d80c94b53fd09a3347ba019b9d7aafa3763a625dbd",
+    "jsTests": 86,
+    "jsSyntaxFiles": 83,
+    "actualRssDownshiftObserved": true
+  },
+  "schedulingObservation": {
+    "observedAt": "2026-10-29T14:55:20.970305+08:00",
+    "observationSeconds": 30.03,
+    "probeNice": 0,
+    "schedulingWakeDelayMs": {
+      "p95": 9.73,
+      "p99": 10.03,
+      "max": 10.04,
+      "samples": 600
+    },
+    "toDeskBefore": [
+      {
+        "pid": 563,
+        "nice": 0,
+        "cpuSeconds": 4398.99,
+        "rssMiB": 43.0,
+        "cpuPercent": 2.4,
+        "command": "/Applications/ToDesk.app/Contents/MacOS/ToDesk_Service"
+      },
+      {
+        "pid": 595,
+        "nice": 0,
+        "cpuSeconds": 245.26,
+        "rssMiB": 12.7,
+        "cpuPercent": 0.0,
+        "command": "Core Audio Driver (ToDeskOutputDriver.driver)"
+      },
+      {
+        "pid": 701,
+        "nice": 0,
+        "cpuSeconds": 3185.69,
+        "rssMiB": 211.2,
+        "cpuPercent": 2.9,
+        "command": "/Applications/ToDesk.app/Contents/MacOS/ToDesk"
+      },
+      {
+        "pid": 933,
+        "nice": 0,
+        "cpuSeconds": 0.1,
+        "rssMiB": 9.8,
+        "cpuPercent": 0.0,
+        "command": "/Applications/ToDesk.app/Contents/MacOS/ToDesk_Session_Proxy"
+      },
+      {
+        "pid": 76911,
+        "nice": 0,
+        "cpuSeconds": 115.57,
+        "rssMiB": 161.7,
+        "cpuPercent": 19.4,
+        "command": "/Applications/ToDesk.app/Contents/Helpers/ToDesk_Session.app/Contents/MacOS/ToDesk_Session"
+      }
+    ],
+    "toDeskAfter": [
+      {
+        "pid": 563,
+        "nice": 0,
+        "cpuSeconds": 4400.03,
+        "rssMiB": 43.0,
+        "cpuPercent": 2.2,
+        "command": "/Applications/ToDesk.app/Contents/MacOS/ToDesk_Service"
+      },
+      {
+        "pid": 595,
+        "nice": 0,
+        "cpuSeconds": 245.32,
+        "rssMiB": 12.7,
+        "cpuPercent": 0.0,
+        "command": "Core Audio Driver (ToDeskOutputDriver.driver)"
+      },
+      {
+        "pid": 701,
+        "nice": 0,
+        "cpuSeconds": 3186.53,
+        "rssMiB": 211.1,
+        "cpuPercent": 2.8,
+        "command": "/Applications/ToDesk.app/Contents/MacOS/ToDesk"
+      },
+      {
+        "pid": 933,
+        "nice": 0,
+        "cpuSeconds": 0.1,
+        "rssMiB": 9.8,
+        "cpuPercent": 0.0,
+        "command": "/Applications/ToDesk.app/Contents/MacOS/ToDesk_Session_Proxy"
+      },
+      {
+        "pid": 76911,
+        "nice": 0,
+        "cpuSeconds": 120.24,
+        "rssMiB": 161.7,
+        "cpuPercent": 12.7,
+        "command": "/Applications/ToDesk.app/Contents/Helpers/ToDesk_Session.app/Contents/MacOS/ToDesk_Session"
+      }
+    ],
+    "toDeskCpuSecondsDelta": 6.61,
+    "buildStatus": "running",
+    "buildJobs": 8,
+    "stop": null,
+    "sampleCount": 85,
+    "minFreePercent": 81,
+    "peakTreeRssGiB": 4.232,
+    "newSwapoutMiB": 0.0,
+    "scope": "Normal-priority scheduling probe and process liveness/CPU accounting, not remote ToDesk end-to-end latency."
+  },
+  "measurementLimits": [
+    "RSS sums can count shared pages repeatedly; they are not unique physical memory.",
+    "The wake-delay probe and ToDesk process CPU progression do not measure end-to-end remote input/display latency.",
+    "Command counts do not predict wall-time percentage; later C++ files and linking may be slower.",
+    "Existing runtime, browser acceptance, and engine split gates have not been replaced by this build tooling fix."
+  ],
+  "engineSplitGate": "not-passed",
+  "serverRasterBypassed": false,
+  "eightJobResult": {
+    "report": "test-results/lean-blink-budget-eight-20261029/guard-report.json",
+    "launchRecord": "test-results/cli-handoff-20261029/build-detach.json",
+    "startedAt": "2026-10-29T06:53:52.870Z",
+    "status": "safety-stopped",
+    "jobs": 8,
+    "stop": "owned-process-rss-limit",
+    "policy": {
+      "minFreePercent": 35,
+      "maxSwapoutBytes": 67108864,
+      "maxTreeRssBytes": 6442450944,
+      "maxHeartbeatMs": 4000,
+      "maxDurationMs": null,
+      "enforceSystemLoad": false,
+      "systemLoadStopAbove": null
+    },
+    "cpuPolicy": {
+      "jobs": 8,
+      "nice": 10,
+      "darwinBackground": false,
+      "qosClamp": "utility",
+      "diskPolicy": "throttle",
+      "systemLoadHardStop": false,
+      "scope": "At most eight build commands; OS schedules cores. Compiler subtree has lower CPU/I/O priority than foreground apps."
+    },
+    "progress": {
+      "completedInInvocation": 1033,
+      "totalInInvocation": 14836,
+      "remainingCommands": 13803,
+      "lastCommand": "[1033/14836] CXX obj/third_party/blink/renderer/core/core_generated/html_element_attribute_name_lookup_trie.o"
+    },
+    "latestSample": {
+      "time": 1793257065282,
+      "freePercent": 79,
+      "swapoutBytes": 14779678720,
+      "load": 10.6005859375,
+      "treeRssBytes": 6449184768
+    },
+    "recentSampleWindow": {
+      "count": 232,
+      "from": 1793256833934,
+      "peakTreeRssGiB": 6.006,
+      "minFreePercent": 78
+    },
+    "newSwapoutMiBSinceStart": 0.0
+  },
+  "build": {
+    "supervisorReport": "test-results/lean-adaptive-20261029/supervisor-report.json",
+    "guardReport": "/Users/octopusz/CodeProjects/virtual-desktop/test-results/lean-adaptive-20261029/attempt-2-jobs-4/guard-report.json",
+    "supervisorStatus": "running",
+    "guardStatus": "running",
+    "currentJobs": 4,
+    "attempts": [
+      {
+        "jobs": 6,
+        "output": "/Users/octopusz/CodeProjects/virtual-desktop/test-results/lean-adaptive-20261029/attempt-1-jobs-6",
+        "startedAt": "2026-10-29T07:04:04.387Z",
+        "status": "safety-stopped",
+        "reason": "owned-process-rss-limit",
+        "finishedAt": "2026-10-29T07:04:24.573Z"
+      },
+      {
+        "jobs": 4,
+        "output": "/Users/octopusz/CodeProjects/virtual-desktop/test-results/lean-adaptive-20261029/attempt-2-jobs-4",
+        "startedAt": "2026-10-29T07:04:34.755Z",
+        "status": "running"
+      }
+    ],
+    "policy": "Only owned RSS stops can reduce jobs. Require 10 seconds of free>=45% and zero swapouts within a 60-second wait; never raise jobs or retry at one job. Host-pressure, swapping, heartbeat, tool failures and user interrupts stop immediately.",
+    "guardPolicy": {
+      "minFreePercent": 35,
+      "maxSwapoutBytes": 67108864,
+      "maxTreeRssBytes": 6442450944,
+      "maxHeartbeatMs": 4000,
+      "maxDurationMs": null,
+      "enforceSystemLoad": false,
+      "systemLoadStopAbove": null
+    },
+    "cpuPolicy": {
+      "jobs": 4,
+      "nice": 10,
+      "darwinBackground": false,
+      "qosClamp": "utility",
+      "diskPolicy": "throttle",
+      "systemLoadHardStop": false,
+      "scope": "At most eight build commands; OS schedules cores. Compiler subtree has lower CPU/I/O priority than foreground apps."
+    },
+    "progress": {
+      "completedInInvocation": 333,
+      "totalInInvocation": 13802,
+      "remainingCommands": 13469,
+      "lastCommand": "[333/13802] ACTION //third_party/devtools-frontend/src/front_end/panels/timeline/utils:utils-dts(//build/toolchain/mac:clang_arm64)"
+    },
+    "latestSample": {
+      "time": 1793257715045,
+      "freePercent": 77,
+      "swapoutBytes": 14779678720,
+      "load": 5.79638671875,
+      "treeRssBytes": 1679753216
+    },
+    "recentSampleWindow": {
+      "count": 240,
+      "peakTreeRssGiB": 5.367,
+      "minFreePercent": 76
+    },
+    "newSwapoutMiBSinceAttemptStart": 0.0
+  },
+  "toDeskCurrent": [
+    "563  0   5.7 /Applications/ToDesk.app/Contents/MacOS/ToDesk_Service",
+    "595  0   0.1 Core Audio Driver (ToDeskOutputDriver.driver)",
+    "701  0   4.6 /Applications/ToDesk.app/Contents/MacOS/ToDesk",
+    "933  0   0.0 /Applications/ToDesk.app/Contents/MacOS/ToDesk_Session_Proxy",
+    "76911  0  14.6 /Applications/ToDesk.app/Contents/Helpers/ToDesk_Session.app/Contents/MacOS/ToDesk_Session"
+  ]
+}

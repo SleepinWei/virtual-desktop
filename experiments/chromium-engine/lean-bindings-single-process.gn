@@ -1,0 +1,5 @@
+    # Local candidate actions share Ninja's job budget, instead of each
+    # creating an additional multiprocessing pool of all host CPU cores.
+    if (getenv("VIRTUAL_DESKTOP_LEAN_ROOT") == "headless") {
+      args += [ "--single_process" ]
+    }

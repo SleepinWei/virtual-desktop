@@ -15,6 +15,9 @@ import build
 HERE = Path(__file__).resolve().parent
 OUT = 'out/VirtualDesktopLeanNinja'
 GN_ROOT_BASE_SHA256 = '1c33e1726ea5b347730043bf1837fb17bedbeee4651ae9d8393f0d191fb0dd24'
+BINDINGS_PATH = 'third_party/blink/renderer/bindings/BUILD.gn'
+BINDINGS_BASE_SHA256 = 'a0f038c3b3079c8a1a500baebf5bc7584b95dc7ceb82d900b62c120321cca6ba'
+BINDINGS_ANCHOR = b'    if (blink_enable_generated_code_formatting) {\n'
 V8_FLAGS_TARGET = '//v8:v8_base_without_compiler(//build/toolchain/mac:clang_arm64)'
 V8_METAGEN_TARGET = 'gen/v8/metagen/instance-types.h'
 
@@ -56,6 +59,9 @@ class LeanBuild:
         root_patch = self.state.get('gnRootPatch')
         if root_patch and build.digest(self.src / '.gn') != root_patch['patchedSha256']:
             raise ValueError('Candidate GN root changed; preserving it')
+        bindings_patch = self.state.get('bindingsConcurrencyPatch')
+        if bindings_patch and build.digest(self.src / BINDINGS_PATH) != bindings_patch['patchedSha256']:
+            raise ValueError('Candidate bindings configuration changed; preserving it')
 
     def prepare_gn_root(self):
         path = self.src / '.gn'
@@ -73,6 +79,27 @@ class LeanBuild:
                   'patchedSha256': build.digest(path), 'snippetSha256': build.digest(HERE / 'lean-root.gn'),
                   'environment': {'VIRTUAL_DESKTOP_LEAN_ROOT': 'headless'},
                   'scope': 'Candidate build graph only; inactive without its environment flag.'})
+
+    def prepare_bindings_concurrency(self):
+        path = self.src / BINDINGS_PATH
+        snippet = (HERE / 'lean-bindings-single-process.gn').read_bytes()
+        current = path.read_bytes()
+        insertion = b'\n' + snippet
+        # Accept the first local insertion too; normalizing its comment spacing
+        # is safe only when removing it recovers the exact pinned source.
+        candidates = [current, current.replace(insertion, b'', 1), current.replace(snippet, b'', 1)]
+        base = next((data for data in candidates if hashlib.sha256(data).hexdigest() == BINDINGS_BASE_SHA256), None)
+        if base is None or base.count(BINDINGS_ANCHOR) != 1:
+            raise ValueError('Unrecognized Blink bindings configuration; preserving custom source')
+        patched = base.replace(BINDINGS_ANCHOR, insertion + BINDINGS_ANCHOR, 1)
+        if current != patched:
+            temporary = path.with_name('BUILD.gn.virtual-desktop.tmp')
+            temporary.write_bytes(patched)
+            temporary.replace(path)
+        self.save(bindingsConcurrencyPatch={'path': BINDINGS_PATH, 'baseSha256': BINDINGS_BASE_SHA256,
+                  'patchedSha256': build.digest(path), 'snippetSha256': build.digest(HERE / 'lean-bindings-single-process.gn'),
+                  'workersPerAction': 1, 'environment': {'VIRTUAL_DESKTOP_LEAN_ROOT': 'headless'},
+                  'scope': 'Use upstream single-process code generation only for the lean candidate; Ninja owns concurrency.'})
 
     def run(self, phase, command):
         path = self.root / 'logs' / ('chromium-lean-' + phase + '.log')
@@ -96,6 +123,7 @@ class LeanBuild:
         if args.exists() and effective_args(args.read_text()) != effective_args(profile):
             raise ValueError('Existing lean args.gn differs; preserving it')
         self.prepare_gn_root()
+        self.prepare_bindings_concurrency()
         args.write_text(profile)
         self.save(compiled=False, ccTestsPassed=False, vizTestsPassed=False, v8MetagenPassed=False, safetyStop=None, output=str(self.output),
                   builder='ninja', revision=build.CONFIG['revision'],

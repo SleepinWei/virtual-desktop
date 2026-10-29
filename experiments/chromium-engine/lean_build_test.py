@@ -23,6 +23,11 @@ class LeanBuildPreservationTest(unittest.TestCase):
         (self.src / '.gn').write_text('buildconfig = "//build/config/BUILDCONFIG.gn"\n')
         self.gn_base = patch.object(lean, 'GN_ROOT_BASE_SHA256', hashlib.sha256((self.src / '.gn').read_bytes()).hexdigest())
         self.gn_base.start(); self.addCleanup(self.gn_base.stop)
+        bindings = self.src / lean.BINDINGS_PATH
+        bindings.parent.mkdir(parents=True)
+        bindings.write_bytes(b'template("generate_bindings") {\n' + lean.BINDINGS_ANCHOR + b'    }\n}\n')
+        self.bindings_base = patch.object(lean, 'BINDINGS_BASE_SHA256', hashlib.sha256(bindings.read_bytes()).hexdigest())
+        self.bindings_base.start(); self.addCleanup(self.bindings_base.stop)
         config = dict(lean.build.CONFIG, revision='pinned-test', files={'engine.cc': {
             'patchedSha256': hashlib.sha256(b'tested source').hexdigest()}})
         self.config = patch.object(lean.build, 'CONFIG', config)
@@ -114,6 +119,31 @@ class LeanBuildPreservationTest(unittest.TestCase):
         self.assertEqual(calls, ['v8-metagen-preflight'])
         self.assertFalse(runner.state['compiled'])
         self.assertFalse(runner.state['v8MetagenPassed'])
+
+    def test_bindings_patch_is_idempotent_and_rejects_custom_source(self):
+        runner = lean.LeanBuild(self.root)
+        path = self.src / lean.BINDINGS_PATH
+        runner.prepare_bindings_concurrency(); first = path.read_bytes()
+        runner.prepare_bindings_concurrency()
+        self.assertEqual(path.read_bytes(), first)
+        self.assertEqual(runner.state['bindingsConcurrencyPatch']['workersPerAction'], 1)
+        self.assertEqual(runner.state['bindingsConcurrencyPatch']['patchedSha256'], hashlib.sha256(first).hexdigest())
+        changed = first + b'# preserve local edit\n'
+        path.write_bytes(changed)
+        with self.assertRaisesRegex(ValueError, 'preserving custom source'):
+            runner.prepare_bindings_concurrency()
+        self.assertEqual(path.read_bytes(), changed)
+
+    def test_changed_bindings_refuses_compilation_before_any_tool_runs(self):
+        runner = lean.LeanBuild(self.root)
+        with patch.object(runner, 'run'):
+            runner.configure()
+        path = self.src / lean.BINDINGS_PATH
+        path.write_bytes(path.read_bytes() + b'# local edit\n')
+        with patch.object(runner, 'run') as command:
+            with self.assertRaisesRegex(ValueError, 'bindings configuration changed'):
+                runner.compile(8)
+            command.assert_not_called()
 
 
 if __name__ == '__main__':
