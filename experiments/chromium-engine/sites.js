@@ -15,6 +15,20 @@ export const externalSites = {
     navigationDomains: ['bilibili.com'], resourceDomains: ['bilibili.com', 'hdslb.com', 'bilivideo.com'] },
 };
 const matches = (host, domains) => domains.some(domain => host === domain || host.endsWith('.' + domain));
+export function resolveSiteUrl(value) {
+  if (typeof value !== 'string' || value.length > 4096) return null;
+  const input = value.trim();
+  if (!input || /[\u0000-\u001f\u007f\\]/.test(input)) return null;
+  try {
+    const address = new URL(input.startsWith('//') ? 'https:' + input
+      : /^[a-z][a-z\d+.-]*:/i.test(input) ? input : 'https://' + input);
+    for (const site of Object.keys(externalSites)) {
+      if (allowedSiteRequest(site, address.href, { navigation: true })) return { site, url: address.href };
+    }
+  } catch {}
+  return null;
+}
+
 export function siteAccessIssue(site, address) {
   try {
     const url = new URL(address);

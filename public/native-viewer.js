@@ -3,6 +3,7 @@ import { captureNativeInput } from '/native-input.js';
 
 const $ = selector => document.querySelector(selector), canvas = $('#desktop');
 let session, client, kit, control = { owner: 'agent', epoch: 1 }, busy = false, draining = false, lastFrame, connectionStatus;
+let urlPreviewEnabled = false, resumeProfileId;
 const inputs = [];
 const inputStats = { accepted: 0, rejected: 0, pointers: 0, lastError: null };
 function notice(message, error = false) { $('#notice').textContent = message; $('#notice').classList.toggle('error', error); }
@@ -11,6 +12,8 @@ function buttons() {
   $('#create').disabled = busy || active;
   $('#take').disabled = busy || !active || human; $('#return').disabled = busy || !active || !human;
   $('#close').disabled = busy || !active; $('#reconnect').disabled = busy || !active;
+  $('#target-url').disabled = busy || !urlPreviewEnabled;
+  $('#open-url').disabled = busy || !urlPreviewEnabled || !$('#target-url').value.trim();
   $('#owner').textContent = `${human ? 'You own' : 'Agent owns'} input · control ${control.epoch}`;
 }
 function mergeControl(value) {
@@ -19,15 +22,20 @@ function mergeControl(value) {
     control = value; buttons();
   }
 }
-async function attachSession(value) {
+async function attachSession(value, { updateUrl = true } = {}) {
   kit ||= await window.CanvasKitInit({ locateFile: file => '/native-runtime/' + file });
+  if (session?.id !== value.id) { Object.assign(inputStats, { accepted: 0, rejected: 0, pointers: 0, lastError: null }); lastFrame = null; }
   session = value; control = { owner: value.owner, epoch: value.epoch };
+  resumeProfileId = value.profileId;
+  if (updateUrl) $('#target-url').value = value.url || '';
+  if (value.url) sessionStorage.setItem('vd-native-target', JSON.stringify({ url: value.url, profileId: value.profileId }));
   if ([...$('#fixture').options].some(option => option.value === value.fixture)) $('#fixture').value = value.fixture;
   sessionStorage.setItem('vd-native-viewer', JSON.stringify(session));
   $('#session').textContent = `Chromium session ${session.id.slice(0, 8)}`;
-  client = new NativeClient({ kit, canvas, session,
-    onControl: mergeControl,
+  const nextClient = new NativeClient({ kit, canvas, session,
+    onControl(value) { if (client === nextClient) mergeControl(value); },
     onStatus(status, message) {
+      if (client !== nextClient) return;
       const changed = status !== connectionStatus; connectionStatus = status;
       $('#connection').textContent = message; $('#connection').classList.toggle('error', status === 'error');
       document.documentElement.dataset.connection = status;
@@ -35,22 +43,25 @@ async function attachSession(value) {
       if (changed && status === 'connected') notice('Live frame ready. Reconnecting the viewer keeps this Chromium page alive.');
     },
     onFrame(frame) {
+      if (client !== nextClient) return;
       lastFrame = frame; canvas.dataset.ready = 'true'; canvas.dataset.revision = String(frame.revision);
       $('#frame').textContent = `Frame ${frame.revision} · ${frame.frame.surfaces.length} surfaces · ${frame.downloads.resources} resources received`;
     },
   });
-  await client.connect();
+  client = nextClient;
+  await nextClient.connect();
 }
 async function request(operation, payload, credential = session?.humanToken) {
-  const response = await fetch(`/api/sessions/${session.id}/${operation}`, { method: 'POST',
+  const current = session;
+  const response = await fetch(`/api/sessions/${current.id}/${operation}`, { method: 'POST',
     headers: { Authorization: `Bearer ${credential}`, 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
   const result = await response.json();
   if (!response.ok) throw Object.assign(new Error(result.error.message), { code: result.error.code });
-  if (result.control) mergeControl(result.control);
+  if (result.control && session?.id === current.id) mergeControl(result.control);
   return result;
 }
 async function input(action) {
-  if (control.owner !== 'human' || session?.state !== 'ACTIVE') return;
+  if (busy || control.owner !== 'human' || session?.state !== 'ACTIVE') return;
   if (!client?.presented) { notice('Wait for a complete frame before sending input.', true); return; }
   if (action.type === 'wheel' && !client.coordinateReady) {
     inputStats.rejected++; inputStats.lastError = 'FRAME_CATCHING_UP';
@@ -75,10 +86,10 @@ async function input(action) {
   } catch (error) {
     inputs.length = 0;
     inputStats.rejected++; inputStats.lastError = error.code || 'INPUT_ERROR';
-    notice(error.code === 'STALE_FRAME' ? 'The page changed. Click the field again before typing.' : error.message, true);
+    if (!busy) notice(error.code === 'STALE_FRAME' ? 'The page changed. Click the field again before typing.' : error.message, true);
   } finally { draining = false; }
 }
-const keyboard = captureNativeInput({ canvas, sink: $('#keyboard-input'), enabled: () => control.owner === 'human' && session?.state === 'ACTIVE',
+const keyboard = captureNativeInput({ canvas, sink: $('#keyboard-input'), enabled: () => !busy && control.owner === 'human' && session?.state === 'ACTIVE',
   send: input, leave: () => $('#return').focus(), onError: message => notice(message, true) });
 $('#create-form').addEventListener('submit', async event => {
   event.preventDefault(); if (busy || session?.state === 'ACTIVE') return;
@@ -98,6 +109,61 @@ $('#create-form').addEventListener('submit', async event => {
     await attachSession(result);
   } catch (error) { notice(error.message, true); }
   finally { busy = false; $('#create').textContent = 'Create session'; buttons(); }
+});
+
+async function manage(path, body) {
+  const response = await fetch(path, { method: 'POST', headers: { Authorization: `Bearer ${$('#admin-token').value}`,
+    'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  const result = await response.json();
+  if (!response.ok) throw Object.assign(new Error(result.error.message), { code: result.error.code });
+  return result;
+}
+function urlError(message = '') {
+  $('#url-error').textContent = message; $('#url-error').hidden = !message;
+  $('#target-url').setAttribute('aria-invalid', String(Boolean(message)));
+}
+$('#target-url').addEventListener('input', () => { urlError(); buttons(); });
+$('#url-form').addEventListener('submit', async event => {
+  event.preventDefault(); if (busy || !urlPreviewEnabled) return;
+  const attempted = $('#target-url').value, previous = session, wasHuman = control.owner === 'human';
+  let stopped = false, released = false, created;
+  busy = true; buttons(); urlError(); $('#open-url').textContent = 'Opening…';
+  try {
+    // Validate without changing the running page or allocating a browser.
+    const target = await manage('/api/native/targets/resolve', { url: attempted });
+    $('#target-url').value = target.url;
+    kit ||= await window.CanvasKitInit({ locateFile: file => '/native-runtime/' + file });
+    notice('Opening the URL in a native session…');
+    if (previous?.state === 'ACTIVE') {
+      inputs.length = 0; keyboard.reset(); stopped = true;
+      await client.stop();
+      await request('release', { save: true }, $('#admin-token').value);
+      previous.state = 'COLD'; released = true; resumeProfileId = previous.profileId;
+      sessionStorage.removeItem('vd-native-viewer');
+    }
+    sessionStorage.setItem('vd-native-target', JSON.stringify({ url: target.url, profileId: resumeProfileId }));
+    delete canvas.dataset.ready; canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+    $('#empty').textContent = 'Opening the URL…';
+    const result = await manage('/api/sessions', { backend: 'chromium', url: target.url,
+      ...(resumeProfileId ? { profileId: resumeProfileId } : {}), viewport: { width: 960, height: 720 } });
+    created = result;
+    await attachSession(result);
+    if (wasHuman) mergeControl(await request('control', { epoch: control.epoch, owner: 'human' }));
+  } catch (error) {
+    if (created) {
+      await client?.stop().catch(() => {});
+      await manage(`/api/sessions/${created.id}/release`, { save: false }).catch(() => {});
+      created.state = 'COLD'; if (session?.id === created.id) session.state = 'COLD';
+      sessionStorage.removeItem('vd-native-viewer'); delete canvas.dataset.ready;
+    }
+    if (stopped && !released && previous?.state === 'ACTIVE') await attachSession(previous, { updateUrl: false }).catch(() => {});
+    if (released || !previous || previous.state !== 'ACTIVE') {
+      $('#connection').textContent = 'URL could not be opened'; document.documentElement.dataset.connection = 'error';
+      $('#empty').textContent = 'Try another configured URL.';
+    }
+    urlError(error.message); notice(error.message, true);
+    $('#target-url').value = attempted;
+  } finally { busy = false; $('#open-url').textContent = 'Open URL'; buttons(); if (!$('#url-error').hidden) $('#target-url').focus(); }
 });
 for (const [selector, owner] of [['#take', 'human'], ['#return', 'agent']]) $(selector).addEventListener('click', async () => {
   if (busy) return; busy = true; buttons();
@@ -139,6 +205,10 @@ window.addEventListener('pagehide', () => { client?.stop(); });
 buttons();
 try {
   const health = await (await fetch('/health')).json();
+  urlPreviewEnabled = health.urlPreview?.enabled === true;
+  if (!urlPreviewEnabled) $('#url-help').textContent = 'URL previews are unavailable on this server.';
+  const target = JSON.parse(sessionStorage.getItem('vd-native-target') || 'null');
+  if (target && typeof target.url === 'string') { $('#target-url').value = target.url; resumeProfileId = target.profileId; }
   for (const target of health.externalTargets || []) {
     const option = [...$('#fixture').options].find(item => item.value === target); if (option) option.disabled = false;
   }
@@ -146,10 +216,15 @@ try {
   if (stored) {
     busy = true; buttons();
     const saved = JSON.parse(stored);
+    resumeProfileId = saved.profileId;
+    const savedUrl = saved.url || health.externalUrls?.[saved.fixture];
+    if (!$('#target-url').value) $('#target-url').value = savedUrl || '';
+    if (savedUrl) sessionStorage.setItem('vd-native-target', JSON.stringify({ url: savedUrl, profileId: saved.profileId }));
     const response = await fetch(`/api/sessions/${saved.id}/observe`, { headers: { Authorization: `Bearer ${saved.viewerToken}` } });
     const observed = await response.json();
     if (!response.ok) throw new Error(observed.error.message);
-    await attachSession({ ...saved, owner: observed.control.owner, epoch: observed.control.epoch });
+    await attachSession({ ...saved, ...(observed.url?.startsWith('https://') ? { url: observed.url } : {}),
+      owner: observed.control.owner, epoch: observed.control.epoch });
   }
 } catch (error) {
   sessionStorage.removeItem('vd-native-viewer'); session = null; notice(`Previous session could not be restored: ${error.message}`, true);

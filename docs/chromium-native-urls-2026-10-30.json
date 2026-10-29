@@ -1,0 +1,98 @@
+{
+  "version": 1,
+  "date": "2026-10-30",
+  "status": "native-url-preview-candidate",
+  "build": {
+    "revision": "d0c02bfad08ec92a6ffcf989e53cd995e6381a4c",
+    "patchSha256": "31da69d46799a8485b6a32ea73740bce3974d17ba1c4aeafddfecd168eb77025",
+    "artifactsSha256": "aaa3fc8e1698430a22e50cfd066faa2baa455e8d4b54853cddb48844d9b23af0"
+  },
+  "engineRecompiled": false,
+  "scope": "Bilibili homepage and search URL through the actual local viewer, one execution worker at a time. Static images; no video or strict pixel-equivalence claim.",
+  "engineSplitGate": "not-passed",
+  "serverRasterBypassed": false,
+  "tests": {
+    "javascript": 139,
+    "syntaxFiles": 103,
+    "python": 16
+  },
+  "urls": {
+    "status": "passed",
+    "testStatus": "native-url-preview-candidate",
+    "startedAt": "2026-10-29T23:48:11.026Z",
+    "finishedAt": "2026-10-29T23:48:19.910Z",
+    "maxRssMiB": 2048,
+    "safetyStop": null,
+    "peakRssMiB": 1895.921875,
+    "minFreePercent": 71,
+    "newSwapMiB": 0.0,
+    "steps": [
+      "URL shorthand plus Enter creates the Bilibili native homepage and receives a rendered ACK",
+      "Invalid URL shows an inline accessible error without stopping or replacing the active page",
+      "Search URL replaces the execution browser sequentially, preserving profile cookies/localStorage and human takeover",
+      "Reload restores the active URL/session; the URL field and Open button fit a 390px viewport"
+    ],
+    "homepage": {
+      "url": "https://www.bilibili.com/",
+      "presented": {
+        "connectionEpoch": "c515e249-b945-4b47-a82f-60770e7e56d3",
+        "seq": 1,
+        "frameId": "26719:2:150739718777",
+        "revision": 1
+      },
+      "imageAnimationPolicy": "first-frame"
+    },
+    "search": {
+      "url": "https://search.bilibili.com/all?keyword=virtual%20desktop",
+      "presented": {
+        "connectionEpoch": "f4c3c9f7-a066-47da-aa91-5b66fefee5c7",
+        "seq": 3,
+        "frameId": "26773:2:150744537740",
+        "revision": 7
+      },
+      "oldWorkerStopped": true,
+      "humanTakeoverRetained": true,
+      "peakNativeWorkers": 1,
+      "input": {
+        "accepted": 0,
+        "rejected": 0,
+        "pointers": 0,
+        "lastError": null
+      }
+    },
+    "invalidUrlRetainsPage": true,
+    "profile": {
+      "sameProfile": true,
+      "savedFromLivePage": true,
+      "privateFile": true,
+      "cookieRestored": true,
+      "localStorageRestored": true
+    },
+    "narrowLayout": {
+      "width": 390,
+      "scrollWidth": 390,
+      "inputWidth": 316,
+      "buttonHeight": 48
+    },
+    "errors": []
+  },
+  "liveRegression": {
+    "status": "passed",
+    "testStatus": "live-native-session-candidate",
+    "startedAt": "2026-10-29T23:45:36.214Z",
+    "finishedAt": "2026-10-29T23:45:43.348Z",
+    "maxRssMiB": 2048,
+    "safetyStop": null,
+    "peakRssMiB": 1428.90625,
+    "minFreePercent": 71,
+    "newSwapMiB": 0
+  },
+  "limitations": [
+    "Configured HTTPS navigation domains only; URL input does not enable arbitrary domains.",
+    "Bilibili uses first-frame images. Video/full image animation and all subpages are not certified.",
+    "Replacement preserves cookies/localStorage, not JS heap, DOM or sessionStorage.",
+    "After preflight succeeds, network/native drawing failure can leave the previous session cold.",
+    "Strict dense-text visuals and engine raster bypass remain unpassed; no equal-quality performance claim."
+  ],
+  "rawResults": "test-results/urls-20261030/{urls,live}"
+}

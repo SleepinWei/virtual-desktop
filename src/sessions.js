@@ -4,7 +4,7 @@ import { mkdir, readFile, rename, writeFile, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { AppError, ensure } from './errors.js';
 import { NativeFrames } from './native-frames.js';
-import { externalSites } from '../experiments/chromium-engine/sites.js';
+import { allowedSiteRequest, externalSites, resolveSiteUrl } from '../experiments/chromium-engine/sites.js';
 import { nativeWorkerEnvironment } from '../experiments/chromium-engine/browser-runtime.js';
 import { nativeStreamDirectory } from '../experiments/chromium-engine/native-stream.js';
 
@@ -117,12 +117,22 @@ export class SessionManager {
     }
   }
 
-  async create({ profileId = randomUUID(), viewport = { width: 960, height: 720 }, backend = 'poc', fixture = 'live' } = {}) {
+  resolveNativeUrl(url) {
+    ensure(this.nativeConfig, 503, 'NATIVE_NOT_CONFIGURED', 'A verified native backend is required');
+    ensure(this.nativeConfig.externalSites, 403, 'NATIVE_URL_DISABLED', 'URL previews are disabled in this service');
+    const target = resolveSiteUrl(url);
+    ensure(target, 400, 'URL_NOT_ALLOWED', 'Enter an HTTPS URL on a configured site, such as bilibili.com or search.bilibili.com.');
+    return { ...target, label: externalSites[target.site].label };
+  }
+
+  async create({ profileId = randomUUID(), viewport = { width: 960, height: 720 }, backend = 'poc', fixture = 'live', url } = {}) {
     ensure(!this.closing, 503, 'SHUTTING_DOWN', 'Service is stopping');
     ensure(this.sessions.size < 4096, 429, 'SESSION_RECORD_LIMIT', 'Local experiment session record limit reached');
     ensure(['poc', 'chromium'].includes(backend), 400, 'INVALID_BACKEND', 'Unknown execution backend');
+    ensure(url === undefined || backend === 'chromium', 400, 'INVALID_URL', 'URL previews require the native Chromium backend');
     if (backend === 'chromium') {
       ensure(this.nativeConfig, 503, 'NATIVE_NOT_CONFIGURED', 'Start the service with a verified native engine and matching CanvasKit');
+      if (url !== undefined) { const target = this.resolveNativeUrl(url); fixture = target.site; url = target.url; }
       ensure(['live', 'frames'].includes(fixture) || this.nativeConfig.externalSites && Object.hasOwn(externalSites, fixture),
         400, 'INVALID_FIXTURE', 'Page is not enabled in this native service');
       ensure([...this.sessions.values()].filter(session => session.backend === 'chromium' &&
@@ -133,7 +143,7 @@ export class SessionManager {
     ensure(viewport && Number.isInteger(viewport.width) && viewport.width >= 480 && viewport.width <= 1600 && Number.isInteger(viewport.height) && viewport.height >= 320 && viewport.height <= 1600, 400, 'INVALID_VIEWPORT', 'Invalid viewport');
     ensure(!this.profileLocks.has(profileId), 409, 'PROFILE_BUSY', 'Profile already has a writer or queued request');
     ensure(this.queue.length < this.maxQueued, 429, 'QUEUE_FULL', 'Session creation queue is full');
-    const s = { id: randomUUID(), profileId, backend, fixture, state: 'QUEUED', viewport, epoch: 1, owner: 'agent',
+    const s = { id: randomUUID(), profileId, backend, fixture, url, state: 'QUEUED', viewport, epoch: 1, owner: 'agent',
       agentToken: token(), viewerToken: token(), humanToken: token(), chain: Promise.resolve(), createdAt: new Date().toISOString() };
     this.sessions.set(s.id, s);
     this.profileLocks.set(profileId, s.id);
@@ -182,10 +192,14 @@ export class SessionManager {
         onFrame: payload => { try { s.frames.ingest(payload); } catch { s.frames.unsupported('Native resource or frame validation failed'); } },
         onFault: (message, fatal) => s.frames.unsupported(message, fatal) });
       this.onWorker?.(s.worker);
-      await s.worker.call('init', { saved, viewport: s.viewport, ...(s.backend === 'chromium' ? {
-        ...this.nativeConfig.worker, ...(Object.hasOwn(externalSites, s.fixture) ? { site: s.fixture, url: externalSites[s.fixture].url }
+      const initialized = await s.worker.call('init', { saved, viewport: s.viewport, ...(s.backend === 'chromium' ? {
+        ...this.nativeConfig.worker, ...(Object.hasOwn(externalSites, s.fixture) ? { site: s.fixture, url: s.url || externalSites[s.fixture].url }
           : { url: this.nativeConfig.baseUrl + (s.fixture === 'frames' ? '/frames.html' : '/live-fixture.html') }),
       } : {}) });
+      if (s.backend === 'chromium' && Object.hasOwn(externalSites, s.fixture)) {
+        ensure(allowedSiteRequest(s.fixture, initialized.url, { navigation: true }), 502, 'NATIVE_NAVIGATION_FAILED', 'Native page did not return a configured final URL');
+        s.url = initialized.url;
+      }
       s.state = 'ACTIVE';
       s.resolve({ ...this.public(s), agentToken: s.agentToken, viewerToken: s.viewerToken, humanToken: s.humanToken });
     } catch (error) {
@@ -203,6 +217,7 @@ export class SessionManager {
     this.pump();
   }
   public(s) { return { id: s.id, profileId: s.profileId, backend: s.backend, fixture: s.backend === 'chromium' ? s.fixture : undefined,
+    ...(s.backend === 'chromium' && s.url ? { url: s.url } : {}),
     state: s.state, epoch: s.epoch, owner: s.owner, createdAt: s.createdAt }; }
   get(id) {
     const s = this.sessions.get(id);

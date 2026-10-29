@@ -6,6 +6,10 @@
 
 ## 当前实现
 
+**2026-10-30 最新追加：Bilibili 首页与搜索 URL 原生预览已通过，viewer 支持粘贴网址 + Enter/Open URL。** [证据](docs/chromium-native-urls-2026-10-30.json)。只接受 `sites.js` 已配置 HTTPS 导航域；管理 preflight 在释放前校验，无效 URL 不关闭旧页。切换先保存 Cookie/localStorage、关闭旧 worker，再同 profile 创建新 session/token 并重新获取原人工接管状态；一次最多 1 个执行 worker。刷新保留 URL/活跃会话；不迁移 JS heap、DOM、sessionStorage。合法 URL 后续网络/绘图失败会显示错误，旧页可能已关闭。Bilibili 继续静态图片预览，视频和完整动画未验收。
+
+139 JS、103 JS 语法、16 Python 通过；真实 `--task urls` 和原 live 回归通过，峰值 1,895.9 / 1,428.9 MiB，最低 free 71%，零新增换页。`urls`/`live` 显式组合测试允许 2 GiB，其余 native 测试与服务默认 1.5 GiB。未重新编译，仍使用下述 web runtime 和 8082 入口。完整网站/严格视觉关卡仍未过，`serverRasterBypassed:false`。新探针可用 `--url`；复现见 [TESTING](docs/TESTING.md#url-入口2026-10-30)。原始证据目录 `test-results/urls-20261030/{urls,live}`。
+
 
 **2026-10-30 最新：原始图片、Worklet 和哔哩哔哩坐标/直接输入已完成本轮验收。** [证据](docs/chromium-native-images-2026-10-30.json) · [实现](docs/NATIVE_IMAGES.md)。使用 `/Volumes/Extreme-APFS/Runtimes/virtual-desktop-web-156-20261030`，504.8 MiB / 27 files / 13 engine files；构建已完成，无待编译对象。135 JS、16 Python、101 语法、25 cc + 4 Viz 通过；7 组图片区域、完整帧、最终 live、pool、smoke 通过。
 

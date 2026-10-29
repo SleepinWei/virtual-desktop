@@ -6,14 +6,18 @@ import { chromium } from 'playwright';
 import { createService } from '../../src/server.js';
 import { verifiedEngine } from './verified.js';
 import { startLoadGuard } from './load-guard.js';
-import { allowedSiteRequest, externalSites } from './sites.js';
+import { allowedSiteRequest, externalSites, resolveSiteUrl } from './sites.js';
 import { browserProcessArgs, imageAnimationArgs } from './browser-runtime.js';
 
 const { values } = parseArgs({ options: { root: { type: 'string', default: process.env.CHROMIUM_BUILD_ROOT },
   canvaskit: { type: 'string', default: process.env.CANVASKIT_DIRECTORY }, output: { type: 'string' },
   site: { type: 'string', default: 'xiaohongshu' }, viewer: { type: 'boolean', default: false },
+  url: { type: 'string' },
   interact: { type: 'boolean', default: false },
   mode: { type: 'string', default: 'both' }, 'max-rss-mib': { type: 'string', default: '1536' } } });
+const target = values.url !== undefined ? resolveSiteUrl(values.url) : null;
+if (values.url !== undefined && !target) throw new Error('Pass a configured HTTPS URL');
+if (target) values.site = target.site;
 if (!Object.hasOwn(externalSites, values.site)) throw new Error('Choose a configured external site');
 if (!['both', 'native', 'ordinary'].includes(values.mode)) throw new Error('Choose --mode both, native or ordinary');
 if (values.viewer && values.mode !== 'both') throw new Error('--viewer requires --mode both');
@@ -22,7 +26,7 @@ const maxRssMiB = Number(values['max-rss-mib']);
 if (maxRssMiB !== 1536 && !(values.viewer && values.mode === 'both' && maxRssMiB === 2048))
   throw new Error('Only an explicit combined live producer/viewer probe may use 2048 MiB; other site probes require 1536 MiB');
 const output = resolve(values.output || `test-results/chromium-${values.site}`); await mkdir(output, { recursive: true });
-const report = { version: 1, startedAt: new Date().toISOString(), site: values.site, url: externalSites[values.site].url,
+const report = { version: 1, startedAt: new Date().toISOString(), site: values.site, url: target?.url || externalSites[values.site].url,
   mode: values.mode, maxRssMiB, imageAnimationPolicy: externalSites[values.site].imageAnimationPolicy ?? 'static-only', status: 'initializing', errors: [], engineSplitGate: 'not-passed', serverRasterBypassed: false,
   scope: 'Fresh unauthenticated public page. No login, CAPTCHA bypass or compatibility claim from navigation alone.' };
 let guard, service, browserServer, temporary;
@@ -80,7 +84,8 @@ try {
       chromium: { root: values.root, canvasKitDirectory: values.canvaskit, maxSessions: 1, externalSites: true } });
     const base = await service.listen(0);
     const response = await fetch(base + '/api/sessions', { method: 'POST', signal: AbortSignal.timeout(35000),
-      headers: { Authorization: 'Bearer probe-local', 'Content-Type': 'application/json' }, body: JSON.stringify({ backend: 'chromium', fixture: values.site }) });
+      headers: { Authorization: 'Bearer probe-local', 'Content-Type': 'application/json' }, body: JSON.stringify({ backend: 'chromium', fixture: values.site,
+        ...(target ? { url: target.url } : {}) }) });
     const native = await response.json(); report.native = { status: response.status, error: native.error || null,
       sessionStates: [...service.manager.sessions.values()].map(session => ({ state: session.state, frames: session.frames?.stats,
         workerDiagnostics: session.worker?.diagnostics })) };

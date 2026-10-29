@@ -28,6 +28,20 @@ Content-Type: application/json
 
 成功保存后回收 worker，session 进入 `COLD`。用相同 `profileId` 再次创建，会恢复示例应用状态并分配新 session id 与新 token。旧 session 的页面内存、输入去重缓存和控制 epoch 不迁移。`save:false` 会丢弃尚未保存的应用变更。
 
+### 原生网址预览
+
+验证引擎并启用 `--external-sites` 后，可创建指定网址的原生会话：
+
+```json
+{"backend":"chromium","url":"https://search.bilibili.com/all?keyword=virtual%20desktop","profileId":"optional-profile-id"}
+```
+
+网址自动确定已有站点策略，保留 path/query/fragment；缺协议默认 HTTPS。仅接受 `sites.js` 中的导航域及其子域、HTTPS 默认端口，不接受凭据、资源 CDN 域或本地地址。`url` 仅适用于 Chromium backend。返回 `url` 为实际最终地址；`GET /health` 的 `urlPreview.enabled/domains` 和 `externalUrls` 用于发现配置。配置未启用返回 `NATIVE_URL_DISABLED`，不符合规则返回 `URL_NOT_ALLOWED`。
+
+`POST /api/native/targets/resolve` 使用管理凭据和 `{"url":"..."}`，只校验并返回 `{site,url,label}`，不分配或回收浏览器，容量已满时也能校验。原生 viewer 的 Website URL 支持粘贴及回车；先校验，再 `release {save:true}`，然后以相同 `profileId` 创建新会话。两个执行浏览器依次运行，Cookie/localStorage 可恢复，原人工接管状态用新 token/epoch 重新申请。JS heap、DOM、sessionStorage 和旧输入去重历史不迁移。
+
+无效网址保留当前页；通过校验后发生的网络或原生绘图失败会显示错误，旧页可能已回收，可重试其他网址。当前已实测 Bilibili 首页与搜索页的原生重放；视频、完整图片动画、站内所有链接及任意网站兼容性尚未验收。单次页面仍绑定其原生 URL/widget，粘贴新 URL 通过替换会话访问。
+
 ## agent 观察与操作
 
 `GET /api/sessions/ID/observe`：三种 session token 均可读，返回文本、交互目标和边界框、`seq` 及 `control:{owner,epoch}`。不是完整浏览器 AX API。

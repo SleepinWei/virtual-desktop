@@ -1,5 +1,18 @@
 # 测试与本地复现
 
+## URL 入口（2026-10-30）
+
+[本轮记录](chromium-native-urls-2026-10-30.json)。UI → 管理 API → 真实执行 browser → 本地 CanvasKit → rendered ACK 全流程测试：Bilibili 首页 shorthand + Enter、搜索 URL（保留 query）、无效 URL 保留旧页、顺序回收/启动、私有 Cookie/localStorage 保存恢复、人工接管延续、刷新重连及 390px 布局。测试标记只记录布尔结果，不输出 Cookie 或会话凭据。
+
+```bash
+node experiments/chromium-engine/guarded-native-tests.js --task urls --root /Volumes/Extreme-APFS/Runtimes/virtual-desktop-web-156-20261030 --canvaskit /Volumes/Extreme-APFS/Runtimes/virtual-desktop-web-156-20261030/canvaskit/out --in-process-gpu --max-rss-mib 2048 --output test-results/native-urls
+
+# 指定已有站点策略内的 HTTPS 页面进行独立探测。
+VIRTUAL_DESKTOP_MAC_GPU_MODE=in-process node experiments/chromium-engine/probe-site.js --root /Volumes/Extreme-APFS/Runtimes/virtual-desktop-web-156-20261030 --canvaskit /Volumes/Extreme-APFS/Runtimes/virtual-desktop-web-156-20261030/canvaskit/out --url 'https://search.bilibili.com/all?keyword=virtual%20desktop' --mode both --viewer --max-rss-mib 2048 --output test-results/native-url-probe
+```
+
+`urls` 和 `live` 是显式执行端 + viewer 联合测试，允许 2 GiB；其余 coordinator 任务及长期服务仍默认 1.5 GiB。URL 成功轮峰值 1,895.9 MiB，live 回归 1,428.9 MiB，最低 free 71%，均零新增 swapout、无安全停止。没有重新编译引擎或改用服务端截图；视频、完整动画及严格密集文字画质仍未验收。
+
 ## 图片及真实输入（2026-10-30）
 
 [验收证据](chromium-native-images-2026-10-30.json)：135 JS、16 Python、29 C++ 通过。图片、圆角、渐变遮罩及明确首帧模式的两帧 GIF，共 7 组图片区域通过；密集文字与公开网站严格视觉仍失败，不据此接受性能比值。

@@ -160,7 +160,7 @@ export class ChromiumSession {
     this.page.on('framenavigated', frame => {
       if (frame === this.page.mainFrame() && frame.url() !== this.url) this.onFault('Navigation outside the bound native page is unsupported');
     });
-    return { runtime: 'chromium-native', browserPid: this.browserPid, rendererPid: this.rendererPid,
+    return { runtime: 'chromium-native', url: this.url, browserPid: this.browserPid, rendererPid: this.rendererPid,
       nativeFrameId: this.latest.frame.id, stream: this.stream.stats, provenance: this.provenance };
   }
   receive(message) {

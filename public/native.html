@@ -16,6 +16,11 @@
       <label>Page source<select id="fixture"><option value="live">Input and live updates</option><option value="frames">Layers and transforms</option><option value="example" disabled>Example Domain · external preview</option><option value="bilibili" disabled>Bilibili · static image preview</option><option value="xiaohongshu" disabled>Xiaohongshu · session access restricted</option></select></label>
       <button id="create" class="primary">Create session</button>
     </form>
+    <form id="url-form" class="url-setup">
+      <div class="url-row"><label class="url-field">Website URL<input id="target-url" type="text" inputmode="url" placeholder="https://www.bilibili.com/" autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="url-help url-error" disabled></label><button id="open-url" class="primary" disabled>Open URL</button></div>
+      <p id="url-help">Paste a configured HTTPS site. Cookies/storage are saved when replacing the running page. Bilibili uses static image preview.</p>
+      <p id="url-error" role="alert" hidden></p>
+    </form>
     <div class="toolbar"><div><strong id="session">No active session</strong><span id="owner">Agent owns input</span></div>
       <div class="buttons"><button id="take" disabled>Take control</button><button id="return" disabled>Return to agent</button><button id="reconnect" disabled>Reconnect viewer</button><button id="close" disabled>Close session</button></div>
     </div>

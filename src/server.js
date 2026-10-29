@@ -75,6 +75,9 @@ export function createService({ adminToken = 'dev-local', chromium: nativeOption
       if (request.method === 'GET' && url.pathname === '/health') { json(200, { ok: true, runtime: 'linkedom-yoga-poc', protocolVersion: 1,
         ...(nativeEngine ? { nativeAvailable: true, nativeProtocolVersion: 1, engineSplitGate: 'not-passed',
           externalTargets: nativeOptions.externalSites ? Object.keys(externalSites).filter(site => externalSites[site].interactive !== false) : [],
+          externalUrls: nativeOptions.externalSites ? Object.fromEntries(Object.entries(externalSites).map(([id, site]) => [id, site.url])) : {},
+          urlPreview: { enabled: Boolean(nativeOptions.externalSites), domains: nativeOptions.externalSites
+            ? [...new Set(Object.values(externalSites).flatMap(site => site.navigationDomains))] : [] },
           ...(nativeOptions.resourceStatus ? { nativeResources: nativeOptions.resourceStatus() } : {}) } : {}) }); return; }
       const credential = request.headers.authorization?.startsWith('Bearer ') ? request.headers.authorization.slice(7) : '';
       const admin = () => ensure(sameToken(credential, adminToken), 403, 'FORBIDDEN', 'Management capability required');
@@ -82,6 +85,9 @@ export function createService({ adminToken = 'dev-local', chromium: nativeOption
       if (request.headers.origin) ensure(request.headers.origin === `http://${request.headers.host}`, 403, 'INVALID_ORIGIN', 'Cross-origin requests are forbidden');
       if (url.pathname === '/api/sessions' && request.method === 'POST') { admin(); json(201, await manager.create(await body(request))); return; }
       if (url.pathname === '/api/sessions' && request.method === 'GET') { admin(); json(200, { sessions: [...manager.sessions.values()].map(s => manager.public(s)), stats: manager.stats() }); return; }
+      if (url.pathname === '/api/native/targets/resolve' && request.method === 'POST') {
+        admin(); json(200, manager.resolveNativeUrl((await body(request)).url)); return;
+      }
       const nativeMatch = /^\/api\/sessions\/([a-f0-9-]{36})\/frames\/(connect|stream|ack|disconnect|resources\/([a-f0-9]{64}))$/.exec(url.pathname);
       if (nativeMatch) {
         const [, id, operation, resourceId] = nativeMatch, { frames, role } = manager.native(id, credential);

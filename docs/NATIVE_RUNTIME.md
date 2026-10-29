@@ -1,5 +1,11 @@
 # 直接输入、后端调度与有限压测
 
+## 2026-10-30 Bilibili URL 入口
+
+原生 viewer 新增 Website URL，支持粘贴、HTTPS 简写和回车打开。服务从 URL 选择已有站点配置；Bilibili 首页与 `search.bilibili.com/all?keyword=virtual%20desktop` 已完成本地 CanvasKit 重放及 ACK 验证。无效网址在关闭旧页前拒绝。合法网址切换保存 Cookie/localStorage，再顺序停止旧 worker、使用同 profile 创建新会话，保留人工接管；刷新 viewer 不启动另一份执行浏览器。它不迁移页面 JS heap、DOM 或 sessionStorage，网络/绘图失败时旧页可能已关闭。
+
+单元/API 回归 139 项、语法 103 文件、Python 16 项通过，真实 URL 流程和原 live 回归通过。联合采样峰值分别 1,895.9 / 1,428.9 MiB，最低 free 71%，无新增 swapout。长期服务仍为单会话和默认 1.5 GiB 保护；本轮没有 C++/runtime 包变化。详见 [URL 验证记录](chromium-native-urls-2026-10-30.json) 与 [协议](PROTOCOL.md#原生网址预览)。视频、完整图片动画、通用网站严格文字画质关卡仍未通过，`engineSplitGate:not-passed`、`serverRasterBypassed:false`。
+
 ## 2026-10-30 原始图片、Worklet 与哔哩哔哩输入
 
 [本轮证据](chromium-native-images-2026-10-30.json) · [图片与输入协议](NATIVE_IMAGES.md)。最终包为 `/Volumes/Extreme-APFS/Runtimes/virtual-desktop-web-156-20261030`：13 个引擎文件、27 个 payload，共 529,317,559 bytes（504.8 MiB），字体预置资源沿用上一包。原始压缩图片通过私有二进制文件传输，SKP 只携带 `vdimage1` 哈希引用；本地 CanvasKit 持有压缩数据及 lazy SkImage，解码缓存设为 32 MiB。没有服务端截图或 PNG 转码回退。
