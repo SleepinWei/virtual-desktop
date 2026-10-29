@@ -1,5 +1,10 @@
 # Chromium 最小运行子集
 
+## 2026-10-30 图片与 Worklet 更新
+
+最新运行包为 `/Volumes/Extreme-APFS/Runtimes/virtual-desktop-web-156-20261030`，payload 504.8 MiB、13 个引擎文件 / 27 个总文件，同配置 25 cc + 4 Viz 实际通过。原生图片保留原始编码，客户端本地解码；PaintWorklet 输出真实 PaintRecord。静态图片模式、输入围栏、最终验收和未通过项见 [NATIVE_IMAGES.md](NATIVE_IMAGES.md) 与 [本轮证据](chromium-native-images-2026-10-30.json)。未通过通用网站、等画质性能、完整图片动画/视频及默认独立 GPU 关卡。旧 font、lean 和 component 包保留。
+
+以下为之前构建的历史数据。
 
 2026-10-30 字体资源版见 [验收记录](chromium-font-runtime-2026-10-30.json)：新包 `/Volumes/Extreme-APFS/Runtimes/virtual-desktop-fonts-156-20261030` payload **504.77 MiB**，其中 8 份常用字体/测试字形子集约 9.74 MiB。普通字体以 SFNT 二进制预置；Apple hvgl 字体用保留原 glyph ID 的原生轮廓子集，其他字形按需走私有二进制接口。客户端只加载当前帧所需资源，不将整套预置字体一次性装入 WASM。旧包不变，字体像素、图片和通用网站 gate 仍未完成。
 

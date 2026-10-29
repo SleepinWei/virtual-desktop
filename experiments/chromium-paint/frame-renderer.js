@@ -23,12 +23,22 @@ export function createFramePainter(kit, visibleCanvas) {
             let alphaPaint, layerSaved = false;
             try {
               if (item.clipped) canvas.clipRect(rectangle(item.clip), kit.ClipOp.Intersect, false);
+              // Native masks are expressed in the target surface's space.
+              if (item.roundedClip) {
+                const r = item.roundedClip;
+                canvas.clipRRect(Float32Array.of(r[0], r[1], r[0] + r[2], r[1] + r[3], ...r.slice(4)), kit.ClipOp.Intersect, true);
+              }
               const m = item.transform;
               canvas.concat([m[0], m[1], m[3], m[4], m[5], m[7], 0, 0, 1]);
               const bounds = item.kind === 'surface' ? surfaces.get(item.id).rect : item.bounds;
               canvas.clipRect(rectangle(bounds), kit.ClipOp.Intersect, false);
-              if (item.opacity < 1) {
+              // Chromium rasterizes each picture into transparent layer
+              // backing. Internal DstIn must affect that backing, preserving
+              // the parent background. Rounded edges also apply once per group.
+              if (item.kind === 'picture' || item.opacity < 1 || item.roundedClip || item.blendMode && item.blendMode !== 'SrcOver' ||
+                  item.kind === 'surface' && surfaces.get(item.id).isolated) {
                 alphaPaint = new kit.Paint(); alphaPaint.setAlphaf(item.opacity);
+                if (item.blendMode) alphaPaint.setBlendMode(kit.BlendMode[item.blendMode]);
                 canvas.saveLayer(alphaPaint, rectangle(bounds));
                 layerSaved = true;
               }
@@ -47,7 +57,10 @@ export function createFramePainter(kit, visibleCanvas) {
           }
         } finally { canvas.restore(); }
       }
-      drawSurface(frame.root);
+      if (surfaces.get(frame.root).isolated) {
+        canvas.saveLayer(null, rectangle(surfaces.get(frame.root).rect));
+        try { drawSurface(frame.root); } finally { canvas.restore(); }
+      } else drawSurface(frame.root);
       surface.flush();
       // Commit only after every layer has drawn successfully. A decoding error
       // or stale asynchronous load leaves the previously visible frame intact.

@@ -22,6 +22,14 @@ test('public site runs reject unbounded sample counts before touching the filesy
       '--output', '/must-not-write', '--iterations', iterations, '--rounds', rounds]), /configured --site/);
 });
 
+test('site RSS exception requires an explicit live viewer and preserves all other probe budgets', async () => {
+  const command = fileURLToPath(new URL('../experiments/chromium-engine/probe-site.js', import.meta.url));
+  for (const args of [['--mode', 'ordinary', '--max-rss-mib', '2048'], ['--mode', 'native', '--max-rss-mib', '2048'],
+    ['--mode', 'both', '--max-rss-mib', '2048'], ['--mode', 'both', '--viewer', '--max-rss-mib', '4096']])
+    await assert.rejects(promisify(execFile)(process.execPath, [command, '--root', '/must-not-read',
+      '--output', '/must-not-write', ...args]), /Only an explicit combined live producer/);
+});
+
 test('C++ build/run tasks cannot overwrite the candidate executable state', () => {
   assert.notEqual(leanTask('cpp-build').state, leanTask().state);
   assert.equal(leanTask('cpp-build').state, leanTask('cpp-test').state);

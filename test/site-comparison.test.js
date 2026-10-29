@@ -35,7 +35,7 @@ test('website workloads stay inside configured HTTPS origins and never submit fo
       assert.ok(action.type === 'fill' || action.type === 'key' && action.key === 'Tab');
     }
   }
-  for (const name of Object.keys(siteWorkloads)) assert.equal(externalSites[name].interactive, false);
+  for (const name of Object.keys(siteWorkloads)) assert.equal(externalSites[name].interactive, name === 'bilibili');
   assert.equal(allowedSiteRequest('python', 'https://ajax.googleapis.com/ajax/libs/jquery.js'), true);
   assert.equal(allowedSiteRequest('python', 'https://ajax.googleapis.com/', { navigation: true }), false);
   assert.equal(allowedSiteRequest('python', 'https://python.org.evil.test/'), false);

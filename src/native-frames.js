@@ -1,7 +1,8 @@
 import { randomUUID, createHash } from 'node:crypto';
 import { FrameChannel, FRAME_LIMITS, validateFrame } from '../experiments/chromium-paint/frame-protocol.js';
 import { AppError, ensure } from './errors.js';
-import { openNativeFont } from './native-font-file.js';
+import { openNativeAsset } from './native-font-file.js';
+import { pointerSignature } from './native-input-signature.js';
 
 export function visualSignature(frame) {
   return createHash('sha256').update(JSON.stringify({ viewport: frame.viewport, background: frame.background,
@@ -23,12 +24,12 @@ export class NativeFrames {
       for (const entry of resources) {
         const descriptor = frame.resources.find(resource => resource.id === entry.id), data = entry.data;
         ensure(descriptor && !incoming.has(entry.id), 500, 'NATIVE_RESOURCE_ERROR', 'Native resource inventory does not match');
-        if (descriptor.kind === 'font') {
-          ensure(data === undefined, 500, 'NATIVE_RESOURCE_ERROR', 'Font bytes must use the binary asset store');
+        if (['font', 'image'].includes(descriptor.kind)) {
+          ensure(data === undefined, 500, 'NATIVE_RESOURCE_ERROR', 'Font and image bytes must use the binary asset store');
           ensure(!this.resources.has(entry.id) || this.resources.get(entry.id).length === descriptor.bytes,
-            500, 'NATIVE_RESOURCE_ERROR', 'Changed native font length');
+            500, 'NATIVE_RESOURCE_ERROR', 'Changed native asset length');
           // Previously verified assets are immutable and pinned by open inode.
-          incoming.set(entry.id, this.resources.get(entry.id) || openNativeFont(entry.filePath, descriptor));
+          incoming.set(entry.id, this.resources.get(entry.id) || openNativeAsset(entry.filePath, descriptor));
         } else {
           ensure(Buffer.isBuffer(data) && data.length === descriptor.bytes &&
             createHash('sha256').update(data).digest('hex') === descriptor.id,
@@ -69,7 +70,7 @@ export class NativeFrames {
     ensure(this.latest && !this.fault, 409, 'NATIVE_FRAME_UNAVAILABLE', this.fault || 'Native page has not produced a supported frame');
     ensure(this.connections.size < 4, 429, 'VIEWER_LIMIT', 'At most four native viewers are permitted');
     const epoch = randomUUID(), channel = new FrameChannel(epoch);
-    const connection = { epoch, role, channel, send: null, close: null, presented: null, presentations: new Map() };
+    const connection = { epoch, role, channel, send: null, close: null, presented: null, presentations: new Map(), coordinateFrames: new Map() };
     connection.timer = setTimeout(() => this.disconnect(epoch), 15000); connection.timer.unref();
     this.connections.set(epoch, connection);
     return { epoch, revision: this.revision, control: this.control() };
@@ -103,10 +104,14 @@ export class NativeFrames {
         revision: packet.frame.bridgeSeq, signature: visualSignature(packet.frame) };
       connection.presentations.set(ack.seq, connection.presented);
       if (connection.presentations.size > 16) connection.presentations.delete(connection.presentations.keys().next().value);
+      // Only two bounded frame metadata snapshots, with no resource bytes.
+      connection.coordinateFrames.set(ack.seq, packet.frame);
+      if (connection.coordinateFrames.size > 2) connection.coordinateFrames.delete(connection.coordinateFrames.keys().next().value);
     }
     if (result.packet) this.deliver(connection, result.packet);
     this.prune();
-    return { accepted: result.accepted, channel: connection.channel.state, control: this.control() };
+    return { accepted: result.accepted, current: Boolean(result.accepted && !this.fault &&
+      connection.presented?.signature === this.latest?.signature), channel: connection.channel.state, control: this.control() };
   }
   resource(epoch, role, id) {
     const connection = this.get(epoch, role);
@@ -119,9 +124,11 @@ export class NativeFrames {
   assertPresented(action, requireCurrent = true) {
     ensure(!this.fault && this.latest, 409, 'NATIVE_FRAME_UNAVAILABLE', 'A current supported frame is required');
     const connection = this.connections.get(action.connectionEpoch), presented = connection?.presentations.get(action.seq);
+    const point = pointerSignature(this.latest.frame, action), old = connection?.coordinateFrames.get(action.seq);
+    const current = presented?.signature === this.latest.signature || point && old && point === pointerSignature(old, action);
     ensure(presented && action.seq === presented.seq && action.frameId === presented.frameId &&
-      (!requireCurrent || presented.signature === this.latest.signature), 409, 'STALE_FRAME', 'The displayed frame changed; wait for the next presented frame');
-    return this.latest.signature;
+      (!requireCurrent || current), 409, 'STALE_FRAME', 'The displayed input region changed; wait for the next presented frame');
+    return requireCurrent && point ? point : this.latest.signature;
   }
   assertPointer(action) { return this.assertPresented(action); }
   disconnect(epoch) {

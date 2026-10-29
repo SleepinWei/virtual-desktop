@@ -1,5 +1,18 @@
 # 测试与本地复现
 
+## 图片及真实输入（2026-10-30）
+
+[验收证据](chromium-native-images-2026-10-30.json)：135 JS、16 Python、29 C++ 通过。图片、圆角、渐变遮罩及明确首帧模式的两帧 GIF，共 7 组图片区域通过；密集文字与公开网站严格视觉仍失败，不据此接受性能比值。
+
+```bash
+node experiments/chromium-engine/guarded-native-tests.js --root /Volumes/Extreme-APFS/Runtimes/virtual-desktop-web-156-20261030 --canvaskit /Volumes/Extreme-APFS/Runtimes/virtual-desktop-web-156-20261030/canvaskit/out --task images --in-process-gpu --output test-results/native-images
+
+VIRTUAL_DESKTOP_MAC_GPU_MODE=in-process node experiments/chromium-engine/probe-site.js --root /Volumes/Extreme-APFS/Runtimes/virtual-desktop-web-156-20261030 --canvaskit /Volumes/Extreme-APFS/Runtimes/virtual-desktop-web-156-20261030/canvaskit/out --site bilibili --mode both --viewer --interact --max-rss-mib 2048 --output test-results/bilibili-input
+```
+
+Bilibili 预览显式固定图片首帧，普通对照也使用同一浏览器设置。测试检查坐标请求确实被接受、远端真实 input 收到 8 个字符、URL 不变、提示没有遗留错误；不能仅靠之前 agent 的焦点把文字送入就算坐标通过。坐标签名测试覆盖目标内外变化、遮挡、移动、嵌套裁剪、2 px 保守边缘、滚动和两份元数据保留上限。当前动画图片默认拒绝，只有明确的首帧标记允许；GIF 故障注入会移除标记并确认实际 WASM 拒绝。
+
+最终原始结果存放在 `test-results/images-runtime-20261030/`，成功网站轮为 `bilibili-region-input`；之前的风控、动画、内存与坐标失败保留，不能当最新通过轮。构建和短时联合测试分别沿用既有 6 GiB / 2 GiB 例外，单浏览器及默认服务仍为 1.5 GiB。
 
 ## 字体 runtime（2026-10-30）
 

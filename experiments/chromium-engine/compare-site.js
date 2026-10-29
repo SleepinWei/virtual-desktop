@@ -9,14 +9,13 @@ import { verifiedEngine } from './verified.js';
 import { ChromiumSession } from './session.js';
 import { NativeFrames } from '../../src/native-frames.js';
 import { allowedSiteRequest, externalSites } from './sites.js';
-import { browserProcessArgs } from './browser-runtime.js';
+import { browserProcessArgs, imageAnimationArgs } from './browser-runtime.js';
 import { browserAction } from './browser-actions.js';
 import { hostSample } from './load-guard.js';
 import { acceptedVisualStages, attachSiteAudit, comparablePair, measureProcesses, pageSnapshot, percentile, siteAction, siteWorkloads } from './site-metrics.js';
 import { settlePage } from '../chromium-paint/capture.js';
 import { createFrameLab } from '../chromium-paint/frame-server.js';
 import { loadReplayRuntime, verifyRuntimeBuild } from '../chromium-paint/runtime.js';
-import { comparePixels, crop, decoded } from '../chromium-paint/verify.js';
 
 const { values } = parseArgs({ options: { root: { type: 'string' }, canvaskit: { type: 'string' }, output: { type: 'string' },
   site: { type: 'string' }, iterations: { type: 'string', default: '8' }, rounds: { type: 'string', default: '2' } } });
@@ -26,8 +25,9 @@ if (!values.root || !values.canvaskit || !values.output || !Object.hasOwn(siteWo
 const output = resolve(values.output), workload = siteWorkloads[values.site], policy = externalSites[values.site], viewport = { width: 960, height: 720 };
 await mkdir(join(output, 'pictures'), { recursive: true });
 await mkdir(join(output, 'fonts'), { recursive: true });
+await mkdir(join(output, 'images'), { recursive: true });
 const report = { version: 1, startedAt: new Date().toISOString(), status: 'initializing', site: values.site, url: policy.url,
-  gpuProcessMode: process.env.VIRTUAL_DESKTOP_MAC_GPU_MODE ?? 'separate', viewport, workload, iterations, rounds: [], comparisons: [], visuals: [], errors: [],
+  gpuProcessMode: process.env.VIRTUAL_DESKTOP_MAC_GPU_MODE ?? 'separate', imageAnimationPolicy: policy.imageAnimationPolicy ?? 'static-only', viewport, workload, iterations, rounds: [], comparisons: [], visuals: [], errors: [],
   engineSplitGate: 'not-passed', serverRasterBypassed: false,
   scope: 'Fresh unauthenticated real website, sequential ordinary JPEG80 and native-record producers. Local-only focus/search edits; no submission, login or video playback.',
   exclusions: ['Direct producer comparison, excluding gateway/worker IPC, client decode/raster and end-to-end network latency.',
@@ -61,7 +61,7 @@ async function runMode(engine, mode, round) {
   let server, browser, native, page, audit, busy = false, loop, lastJpeg;
   const hub = new NativeFrames(() => ({ owner: 'agent', epoch: 1 }));
   const samples = [], faults = [], seen = new Set();
-  const produced = { frames: 0, resourceBytes: 0, metadataBytes: 0, uniqueResourceBytes: 0, ipcBufferBytes: 0, referencedFontBytes: 0 };
+  const produced = { frames: 0, resourceBytes: 0, metadataBytes: 0, uniqueResourceBytes: 0, ipcBufferBytes: 0, referencedFontBytes: 0, referencedImageBytes: 0 };
   const start = await hostSample([process.pid]);
   const interval = setInterval(async () => {
     if (busy) return; busy = true;
@@ -78,6 +78,7 @@ async function runMode(engine, mode, round) {
             for (const resource of payload.frame.resources) {
               produced.resourceBytes += resource.bytes;
               if (resource.kind === 'font') produced.referencedFontBytes += resource.bytes;
+              else if (resource.kind === 'image') produced.referencedImageBytes += resource.bytes;
               else produced.ipcBufferBytes += resource.bytes;
               if (!seen.has(resource.id)) { seen.add(resource.id); produced.uniqueResourceBytes += resource.bytes; }
             }
@@ -91,7 +92,7 @@ async function runMode(engine, mode, round) {
       check(native.gpuProcessMode === report.gpuProcessMode, 'Actual native GPU mode differs');
     } else {
       server = await chromium.launchServer({ executablePath: engine.binary, headless: true, chromiumSandbox: false,
-        host: '127.0.0.1', timeout: 15000, args: ['--enable-automation', ...browserProcessArgs()] });
+        host: '127.0.0.1', timeout: 15000, args: ['--enable-automation', ...browserProcessArgs(), ...imageAnimationArgs(policy.imageAnimationPolicy)] });
       browser = await chromium.connect(server.wsEndpoint());
       const context = await browser.newContext({ viewport, deviceScaleFactor: 1, acceptDownloads: false, serviceWorkers: 'block' });
       await context.route('**/*', route => {
@@ -183,10 +184,13 @@ async function runMode(engine, mode, round) {
 }
 
 async function replay(engine) {
+  // Native pixel-reference libraries are needed only after both producers
+  // exit. Keep their resident memory out of the producer measurement window.
+  const { comparePixels, crop, decoded } = await import('../chromium-paint/verify.js');
   let lab, server, browser;
   try {
     lab = createFrameLab({ outputDir: output, canvasKitDirectory: values.canvaskit }); const base = await lab.listen();
-    server = await chromium.launchServer({ executablePath: engine.binary, headless: true, args: ['--enable-automation', ...browserProcessArgs()], timeout: 15000 });
+    server = await chromium.launchServer({ executablePath: engine.binary, headless: true, args: ['--enable-automation', ...browserProcessArgs(), ...imageAnimationArgs(policy.imageAnimationPolicy)], timeout: 15000 });
     browser = await chromium.connect(server.wsEndpoint());
     const context = await browser.newContext({ viewport: { width: 1180, height: 1100 }, deviceScaleFactor: 1 });
     const page = await context.newPage(); await page.goto(base);

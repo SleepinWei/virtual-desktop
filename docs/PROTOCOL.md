@@ -99,3 +99,10 @@ v0 仍发送完整顺序和 targets，使用 HTTP 轮询；没有实现字体/�
 管理 token 可访问 `GET /api/sessions/ID/metrics`，返回 worker pid、内存与命令数。`pixelBackend:null` 描述此 PoC 没有像素生成后端，**不是计数器或独立 trace 证明**。
 
 部分受限环境没有 `/proc`，当前 RSS 读数会缺失。此时 `rss:null`，并保留 `maxRssKiB` 生命周期峰值。不要把峰值当作当前内存。
+
+
+## 原生帧资源与输入（实验）
+
+原生后端独立使用 `native/frame-protocol.js`，版本仍为 1。图片描述为 `kind:image`、SHA-256 `id`、`bytes`、`width/height` 与 `images/<id>.img`；picture 的 `images` 引用依赖，字体/图片描述必须先于 picture。二进制不进入帧 JSON 或 worker IPC。可选 `animationPolicy:first-frame` 仅在执行浏览器明确禁用图片动画时使用；缺少标记仍拒绝动画容器。圆角 `roundedClip`、surface 的 `isolated` 和 `SrcOver`/`DstIn` 处理见 [NATIVE_IMAGES.md](NATIVE_IMAGES.md)。
+
+ACK 响应的 `current` 表示本次成功呈现的完整帧是否仍等同最新原生帧；`accepted:false` 不声明当前性。点击需带原有 connection epoch、seq、frameId。服务端从最近两份已确认的原生帧元数据计算可能覆盖该坐标的保守签名，并在 worker 派发前重验；与坐标无关、可证明完全分离的图层变化可忽略。目标资源/变换/遮挡/滚动改变仍拒绝，过旧坐标元数据也拒绝。滚轮保持整帧校验；键盘使用原有最多 16 份小型确认历史。

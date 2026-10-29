@@ -57,6 +57,8 @@ export async function createNativeStream(consume) {
   await chmod(directory, 0o700);
   const fonts = join(directory, 'fonts');
   await mkdir(fonts, { mode: 0o700 });
+  const images = join(directory, 'images');
+  await mkdir(images, { mode: 0o700 });
   const path = join(directory, 'paint.sock'), token = randomBytes(32).toString('hex'), sockets = new Set();
   const stats = { messages: 0, rejected: 0, connections: 0, maxBufferedBytes: 0 };
   const server = net.createServer(socket => {
@@ -81,10 +83,14 @@ export async function createNativeStream(consume) {
   return {
     directory,
     environment: { VIRTUAL_DESKTOP_REMOTE_PAINT_SOCKET: path, VIRTUAL_DESKTOP_REMOTE_PAINT_TOKEN: token,
-      VIRTUAL_DESKTOP_REMOTE_FONT_DIRECTORY: fonts },
+      VIRTUAL_DESKTOP_REMOTE_FONT_DIRECTORY: fonts, VIRTUAL_DESKTOP_REMOTE_IMAGE_DIRECTORY: images },
     fontResource(id) {
       if (!/^[a-f0-9]{64}$/.test(id)) throw new Error('Invalid native font ID');
       return { id, filePath: join(fonts, id + '.font') };
+    },
+    imageResource(id) {
+      if (!/^[a-f0-9]{64}$/.test(id)) throw new Error('Invalid native image ID');
+      return { id, filePath: join(images, id + '.img') };
     },
     get stats() { return { ...stats, activeConnections: sockets.size }; },
     async close() {

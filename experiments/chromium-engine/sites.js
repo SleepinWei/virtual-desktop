@@ -11,10 +11,20 @@ export const externalSites = {
     navigationDomains: ['python.org'], resourceDomains: ['python.org', 'ajax.googleapis.com'] },
   xiaohongshu: { label: 'Xiaohongshu · probe only', interactive: false, url: 'https://www.xiaohongshu.com/explore',
     navigationDomains: ['xiaohongshu.com'], resourceDomains: ['xiaohongshu.com', 'xhscdn.com'] },
-  bilibili: { label: 'Bilibili · probe only', interactive: false, url: 'https://www.bilibili.com/',
+  bilibili: { label: 'Bilibili · static image preview', interactive: true, imageAnimationPolicy: 'first-frame', url: 'https://www.bilibili.com/',
     navigationDomains: ['bilibili.com'], resourceDomains: ['bilibili.com', 'hdslb.com', 'bilivideo.com'] },
 };
 const matches = (host, domains) => domains.some(domain => host === domain || host.endsWith('.' + domain));
+export function siteAccessIssue(site, address) {
+  try {
+    const url = new URL(address);
+    if (site === 'xiaohongshu' && url.protocol === 'https:' && matches(url.hostname, ['xiaohongshu.com']) &&
+        url.pathname === '/website-login/error' && url.searchParams.get('error_code') === '300012') {
+      return '小红书拒绝了当前浏览会话（300012）。日常浏览器的登录与访问状态不会自动共享到此会话；可先使用哔哩哔哩。';
+    }
+  } catch {}
+  return null;
+}
 export function allowedSiteRequest(site, address, { navigation = false, method = 'GET' } = {}) {
   const policy = externalSites[site];
   if (!policy) return false;

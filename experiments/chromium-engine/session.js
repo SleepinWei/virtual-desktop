@@ -2,13 +2,15 @@ import { chromium } from 'playwright';
 import { verifiedEngine } from './verified.js';
 import { createNativeStream } from './native-stream.js';
 import { browserAction } from './browser-actions.js';
-import { allowedSiteRequest, externalSites } from './sites.js';
+import { allowedSiteRequest, externalSites, siteAccessIssue } from './sites.js';
 import { captureLaunchArgs, findPageProvenance, recordTrace, settlePage } from '../chromium-paint/capture.js';
 import { normalizeNativeFrame } from '../chromium-paint/native-frame.js';
 import { visualSignature } from '../../src/native-frames.js';
 import { ensure } from '../../src/errors.js';
 import { randomUUID } from 'node:crypto';
 import { nativePageRoute } from './page-route.js';
+import { imageAnimationArgs } from './browser-runtime.js';
+import { pointerSignature } from '../../src/native-input-signature.js';
 
 const STARTUP_TRACE = { recordMode: 'recordAsMuchAsPossible', traceBufferSizeInKb: 4096,
   includedCategories: ['disabled-by-default-devtools.timeline'], excludedCategories: ['*'] };
@@ -30,6 +32,7 @@ export class ChromiumSession {
       409, 'ENGINE_CHANGED', 'Native build changed; restart the service before creating sessions');
     ensure(!site || externalSites[site] && allowedSiteRequest(site, url, { navigation: true }), 400, 'INVALID_SITE', 'Unknown external site');
     this.viewport = viewport; this.url = url; this.site = site;
+    this.imageAnimationPolicy = externalSites[site]?.imageAnimationPolicy;
     if (saved) ensure(saved.kind === 'chromium-storage-v1' && saved.storageState && Array.isArray(saved.storageState.cookies) &&
       Array.isArray(saved.storageState.origins), 409, 'INVALID_PROFILE_STATE', 'Expected a Chromium storage profile');
     if (this.sharedHost) {
@@ -45,7 +48,8 @@ export class ChromiumSession {
       this.server = await chromium.launchServer({ executablePath: verified.binary, headless: true, host: '127.0.0.1', timeout: 15000,
         // Cross-site process launches serialize tracing shared memory through an
         // upstream switch capped at 8 MiB. Live frames do not use trace transport.
-        chromiumSandbox: false, args: captureLaunchArgs({ remotePaint: true, noDisplay: true, producerBufferBytes: 8388608 }),
+        chromiumSandbox: false, args: [...captureLaunchArgs({ remotePaint: true, noDisplay: true, producerBufferBytes: 8388608 }),
+          ...imageAnimationArgs(this.imageAnimationPolicy)],
         env: { ...process.env, ...this.stream.environment } });
       this.browserPid = this.server.process().pid; this.onBrowser(this.browserPid, this.server.process());
       let diagnosticBytes = 0;
@@ -61,6 +65,8 @@ export class ChromiumSession {
     try {
       const { arguments: arguments_ } = await commandSession.send('Browser.getBrowserCommandLine');
       this.gpuProcessMode = arguments_.includes('--in-process-gpu') ? 'in-process' : 'separate';
+      ensure(imageAnimationArgs(this.imageAnimationPolicy).every(argument => arguments_.includes(argument)),
+        422, 'NATIVE_IMAGE_POLICY_UNSUPPORTED', 'Native image animation policy was not applied');
     } finally { await commandSession.detach(); }
     const origin = new URL(url).origin, paths = new Set(allowedPaths);
     this.context = await this.browser.newContext({ viewport, deviceScaleFactor: 1, acceptDownloads: false, serviceWorkers: 'block',
@@ -86,6 +92,10 @@ export class ChromiumSession {
         ensure(response?.ok() && (site ? allowedSiteRequest(site, this.url, { navigation: true }) : this.url === url),
           502, 'NATIVE_NAVIGATION_FAILED', 'Native page did not load within its configured site policy');
         if (site) await this.page.waitForTimeout(750); else await settlePage(this.page);
+        this.url = this.page.url();
+        const accessIssue = siteAccessIssue(site, this.url);
+        ensure(!accessIssue, 403, 'SITE_ACCESS_RESTRICTED', accessIssue);
+        ensure(!site || allowedSiteRequest(site, this.url, { navigation: true }), 502, 'NATIVE_NAVIGATION_FAILED', 'Native page redirected outside its configured site policy');
       }, { traceConfig: STARTUP_TRACE });
       trace = await (this.sharedHost ? this.sharedHost.trace(capture) : capture());
     } finally { this.traceActive = false; }
@@ -172,12 +182,13 @@ export class ChromiumSession {
       ensure(!message.error, 422, 'NATIVE_FRAME_UNSUPPORTED', message.error || 'Native producer error');
       const native = { name: 'VirtualDesktop.RemotePaintFrame', cat: 'cc', pid: message.pid, ts: message.ts,
         args: { snapshot: message.snapshot } };
-      const { frame, bytes, fonts } = normalizeNativeFrame(native);
+      const { frame, bytes, fonts, images } = normalizeNativeFrame(native, { imageAnimationPolicy: this.imageAnimationPolicy });
       ensure(frame.viewport.width === this.viewport.width && frame.viewport.height === this.viewport.height,
         422, 'NATIVE_VIEWPORT_UNSUPPORTED', 'Native viewport changed outside the session configuration');
       this.frames++;
       this.latest = { frame, signature: visualSignature(frame) };
       this.onFrame({ frame, resources: [...fonts.keys()].map(id => this.stream.fontResource(id))
+        .concat([...images.keys()].map(id => this.stream.imageResource(id)))
         .concat([...bytes].map(([id, data]) => ({ id, data }))) });
     } catch (error) { this.latest = null; this.lastFault = error.message; this.onFault(error.message); }
   }
@@ -189,7 +200,8 @@ export class ChromiumSession {
     }
     const before = this.frames;
     if (['pointer', 'wheel'].includes(action.type)) {
-      ensure(this.latest && expectedSignature === this.latest.signature, 409, 'STALE_FRAME', 'Native page changed before input dispatch');
+      ensure(this.latest && expectedSignature === (pointerSignature(this.latest.frame, action) || this.latest.signature),
+        409, 'STALE_FRAME', 'Native input region changed before input dispatch');
     }
     await browserAction(this.page, this.viewport, action);
     await settlePage(this.page);
@@ -221,10 +233,17 @@ export class ChromiumSession {
       finally { this.traceActive = false; this.stopTrace = null; }
     }
     if (method === 'action') return this.action(params);
-    if (method === 'observe') return this.page.evaluate(() => ({ title: document.title, url: location.href,
+    if (method === 'observe') return this.page.evaluate(() => {
+      const active = document.activeElement, editable = active && ['INPUT', 'TEXTAREA'].includes(active.tagName);
+      return { title: document.title, url: location.href,
+      // Semantic input observation, separate from the native drawing payload.
+      activeInput: editable ? { role: active.tagName.toLowerCase(), type: active.type,
+        value: active.type === 'password' ? null : active.value.slice(0, 2000) } : null,
       text: document.body.innerText.slice(0, 32768), targets: [...document.querySelectorAll('input[id],button[id],textarea[id],select[id]')].slice(0, 200)
         .map(element => ({ selector: '#' + CSS.escape(element.id), role: element.tagName.toLowerCase(),
-          name: element.getAttribute('aria-label') || element.textContent.slice(0, 160), value: element.value?.slice(0, 2000), disabled: element.disabled })) }));
+          name: element.getAttribute('aria-label') || element.textContent.slice(0, 160),
+          value: element.type === 'password' ? null : element.value?.slice(0, 2000), disabled: element.disabled })) };
+    });
     if (method === 'metrics') return { runtime: 'chromium-native', pid: process.pid, browserPid: this.browserPid,
       rendererPid: this.rendererPid, gpuProcessMode: this.gpuProcessMode, nativeFrames: this.frames, excludedProducers: this.excluded,
       nativeFrameId: this.latest?.frame.id ?? null, stream: this.stream.stats, traceActive: this.traceActive,

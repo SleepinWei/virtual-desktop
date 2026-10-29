@@ -7,6 +7,17 @@
 ## 当前实现
 
 
+**2026-10-30 最新：原始图片、Worklet 和哔哩哔哩坐标/直接输入已完成本轮验收。** [证据](docs/chromium-native-images-2026-10-30.json) · [实现](docs/NATIVE_IMAGES.md)。使用 `/Volumes/Extreme-APFS/Runtimes/virtual-desktop-web-156-20261030`，504.8 MiB / 27 files / 13 engine files；构建已完成，无待编译对象。135 JS、16 Python、101 语法、25 cc + 4 Viz 通过；7 组图片区域、完整帧、最终 live、pool、smoke 通过。
+
+Bilibili 选项是**静态图片预览**，Chromium `imageAnimationPolicy=2`，原始 GIF/AVIF 等仅在资源明确标记时本地重放首帧；默认动画仍拒绝，完整动画未完成。CSS 轮播仍运行。点击签名比较原生绘图覆盖区域，只有能证明在点击位置之外的变化才可忽略；目标资源、变换、遮挡、裁剪或滚动变动仍拒绝，派发前再次验证。每 viewer 仅留两份坐标场景元数据，16 份小型键盘签名历史。ACK `current` 是整帧就绪，滚轮继续用整帧；坐标不因页面其他位置的轮播一律失败。Bili 成功轮 `test-results/images-runtime-20261030/bilibili-region-input`，首试点击 + 8 字符直接输入、3 accepted / 0 rejected，峰值 1,991.4 MiB / 显式 2 GiB，无新增换页。
+
+本机入口仍为 `http://127.0.0.1:8082/native`；沿用 `.data/native-fonts-20261030` 保留资料。新服务 PID/log 前缀 `/private/tmp/vd-web-8082-20261030`，单活跃会话、默认 1.5 GiB 长期保护、显式进程内 GPU。旧包保留。小红书新实验会话仍 300012，用户日常浏览器可访问，不能说整体 IP/网络被封，也不要说已修复其访问。
+
+最终对照两端各 4 操作生产成功，p95 原生31.2 / JPEG80 95.0 ms，但两处严格局部视觉失败，收益比值为空，不能宣称等画质性能胜出。7 组受控密集文字区域仍不通过；`engineSplitGate:not-passed` / `serverRasterBypassed:false`。默认独立 GPU、完整图片动画/视频、OS IME、大规模并发仍未验收。哈希验证现在复用 64 KiB 缓冲；默认编译6 GiB，仅验证剩一个 headless_shell 链接后用过单任务8 GiB，其他保护未变。
+
+以下是之前轮次的历史记录，以本节为准。
+
+
 本机新入口已在 `http://127.0.0.1:8082/native` 启动，使用独立 `.data/native-fonts-20261030`、单活跃会话与默认长期 watchdog；显式进程内 GPU。PID 文件 `/private/tmp/vd-fonts-8082-20261030.pid`，日志同名前缀 `.log`。8081 和旧 profile 未改。
 
 **2026-10-30 字体 runtime 改造已完成本轮验收，见 [证据](docs/chromium-font-runtime-2026-10-30.json) 和 [结构](docs/NATIVE_RUNTIME.md)。** 新包 `/Volumes/Extreme-APFS/Runtimes/virtual-desktop-fonts-156-20261030` payload 504.77 MiB，8 份预置资源共 10,208,879 bytes。普通字体以独立 SFNT 二进制提供，SKP 只保留 `vdfont01` 哈希/实例描述；当前 macOS 苹方的 Apple hvgl 无法被 FreeType 读取，已加入 `vdglyph1` 原 glyph ID 的原生矢量轮廓子集（8 个中文字符 7,952 bytes）。字体程序不进帧 JSON 或 worker IPC，后台 writer 先写完文件再发帧；每个 HTTP 下载复制已验证 inode 的描述符，已修复 ReadStream.destroy 关闭共享 FD 导致重连失败的问题。客户端验证字体和字形齐全才解码/ACK，淘汰旧字体子集及相关 picture。

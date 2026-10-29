@@ -42,6 +42,7 @@ export async function captureFrames({ url, executablePath, outputDir, viewport =
   if (!executablePath) throw new Error('Native frame capture requires an explicit patched executablePath');
   await mkdir(join(outputDir, 'pictures'), { recursive: true });
   await mkdir(join(outputDir, 'fonts'), { recursive: true });
+  await mkdir(join(outputDir, 'images'), { recursive: true });
   const args = captureLaunchArgs({ remotePaint: true, noDisplay: true, producerBufferBytes: 33554432 });
   const stream = await createNativeStream(() => {});
   let browser;
@@ -83,6 +84,7 @@ export async function captureFrames({ url, executablePath, outputDir, viewport =
       const selected = selectNativeFrame(trace.events, { rendererPids: provenance.rendererPids, start, end, viewport });
       for (const [id, data] of selected.bytes) await writeFile(join(outputDir, `pictures/${id}.skp`), data);
       for (const resource of selected.fonts.values()) await copyFile(stream.fontResource(resource.id).filePath, join(outputDir, resource.path));
+      for (const resource of selected.images.values()) await copyFile(stream.imageResource(resource.id).filePath, join(outputDir, resource.path));
       stages.push({ name: marker.name, frame: selected.frame, evidence: {
         eventIndex: selected.eventIndex, observedFrames: selected.observedFrames, start, end,
       } });

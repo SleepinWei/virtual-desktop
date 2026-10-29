@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { createReadStream } from 'node:fs';
+import { open } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 
 export const COMPONENT_DIRECTORY = 'chromium/src/out/VirtualDesktop';
@@ -20,9 +20,15 @@ export function artifactLayout(state, root) {
 }
 
 export async function sha256(path) {
-  const hash = createHash('sha256');
-  for await (const chunk of createReadStream(path)) hash.update(chunk);
-  return hash.digest('hex');
+  const hash = createHash('sha256'), file = await open(path, 'r'), scratch = Buffer.allocUnsafe(65536);
+  try {
+    let position = 0;
+    for (;;) {
+      const { bytesRead } = await file.read(scratch, 0, scratch.length, position);
+      if (!bytesRead) return hash.digest('hex');
+      hash.update(scratch.subarray(0, bytesRead)); position += bytesRead;
+    }
+  } finally { await file.close(); }
 }
 
 export async function verifyArtifacts(state, root) {

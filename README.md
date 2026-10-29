@@ -73,7 +73,7 @@ flowchart LR
 
 ## 当前进展
 
-固定页面已验证原生多层重放、agent/人工共页、断线恢复与存储冷恢复，共享 host 完成双会话隔离实验。当前继续精简 Chromium runtime，并处理字体/图片资源协议和真实网站兼容。已有小样本中，原生记录延迟较低，但 RSS 没有优势、全量 SKP 字节更多。[运行实测](docs/NATIVE_RUNTIME.md) · [精简运行时](docs/CHROMIUM_SUBSET.md)
+固定页面已验证原生多层重放、agent/人工共页、断线恢复与存储冷恢复，共享 host 完成双会话隔离实验。字体与原始图片已改为独立二进制资源；Bilibili 静态图片预览已通过坐标点击和接管后直接输入，轮播变化不再一律使其他区域的点击过期。严格文字及公开网站画质仍未通过，性能收益比值不采纳。[图片与输入](docs/NATIVE_IMAGES.md) · [运行实测](docs/NATIVE_RUNTIME.md) · [精简运行时](docs/CHROMIUM_SUBSET.md)
 
 **仍处实验阶段：**通用网站、Canvas/WebGL/video、生产多租户隔离与大规模调度尚未通过；原生实验关闭 Chromium sandbox。`engineSplitGate: not-passed`、`serverRasterBypassed: false` 保留。视觉 agent 需要在线绘制端生成截图，不能在所有绘制端离线时继续提供纯视觉观察。
 

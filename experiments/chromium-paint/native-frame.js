@@ -1,7 +1,8 @@
 import { createHash } from 'node:crypto';
 import { FRAME_LIMITS, FRAME_VERSION, validateFrame } from './frame-protocol.js';
 
-export function normalizeNativeFrame(event) {
+export function normalizeNativeFrame(event, { imageAnimationPolicy } = {}) {
+  if (imageAnimationPolicy !== undefined && imageAnimationPolicy !== 'first-frame') throw new Error('Unsupported native image animation policy');
   if (event?.name !== 'VirtualDesktop.RemotePaintFrame' || !event.cat?.split(',').includes('cc') ||
       !Number.isInteger(event.pid) || !Number.isFinite(event.ts)) throw new Error('Missing native cc frame provenance');
   const raw = event.args?.snapshot;
@@ -19,18 +20,22 @@ export function normalizeNativeFrame(event) {
       !Array.isArray(raw.viewport) || raw.viewport.length !== 4 || raw.viewport[0] !== 0 || raw.viewport[1] !== 0) {
     throw new Error('Invalid native frame collections or viewport');
   }
-  const surfaces = raw.surfaces.map(surface => ({ id: surface.id, rect: surface.content_rect, items: [] }));
+  const surfaces = raw.surfaces.map(surface => ({ id: surface.id, rect: surface.content_rect, items: [],
+    ...(surface.isolated !== undefined ? { isolated: surface.isolated } : {}) }));
   const targets = new Map(surfaces.map(surface => [surface.id, surface]));
-  const resources = new Map(), fonts = new Map(), bytes = new Map();
+  const resources = new Map(), fonts = new Map(), images = new Map(), bytes = new Map();
   for (const entry of entries) {
     const target = targets.get(entry.target);
     if (!target) throw new Error('Native entry has no render target');
     const item = { kind: entry.kind, id: entry.id, transform: entry.transform,
       opacity: entry.opacity, clipped: entry.is_clipped, clip: entry.clip };
+    if (entry.rounded_clip !== undefined) item.roundedClip = entry.rounded_clip;
+    if (entry.blend_mode !== undefined) item.blendMode = entry.blend_mode;
     if (entry.kind !== 'surface') item.bounds = entry.bounds;
     if (entry.kind === 'picture') {
       const record = entry.record;
       if (record?.font_error === true) throw new Error('Native font export failed');
+      if (record?.image_error === true) throw new Error('Native image export failed: ' + (record.image_error_reason || 'unsupported image semantics'));
       const dependencies = record?.fonts ?? (record?.font_count === 0 ? [] : null);
       // Legacy captures have embedded fonts. New exporters explicitly report
       // a complete external font inventory, including the empty case.
@@ -42,14 +47,25 @@ export function normalizeNativeFrame(event) {
         if (ids.includes(font.id) || fonts.has(font.id) && fonts.get(font.id).bytes !== font.bytes) throw new Error('Conflicting native font');
         fonts.set(font.id, descriptor); ids.push(font.id);
       }
+      const imageDependencies = record?.images ?? (record?.image_count === 0 ? [] : null);
+      if (record?.image_count !== undefined && (!Array.isArray(imageDependencies) ||
+          imageDependencies.length !== record.image_count || record.image_error !== false)) throw new Error('Invalid native image inventory');
+      const imageIds = [];
+      for (const image of imageDependencies || []) {
+        const descriptor = { kind: 'image', id: image.id, bytes: image.bytes, width: image.width, height: image.height, path: `images/${image.id}.img`,
+          ...(imageAnimationPolicy ? { animationPolicy: imageAnimationPolicy } : {}) };
+        if (imageIds.includes(image.id) || images.has(image.id) && JSON.stringify(images.get(image.id)) !== JSON.stringify(descriptor)) throw new Error('Conflicting native image');
+        images.set(image.id, descriptor); imageIds.push(image.id);
+      }
       const encoded = entry.record?.skp64;
       if (typeof encoded !== 'string' || encoded.length > Math.ceil(FRAME_LIMITS.resourceBytes / 3) * 4 ||
           !encoded.length || encoded.length % 4 || !/^[A-Za-z0-9+/]*={0,2}$/.test(encoded)) throw new Error('Invalid native SKP base64');
       const data = Buffer.from(encoded, 'base64');
       if (data.length > FRAME_LIMITS.resourceBytes || data.subarray(0, 8).toString('ascii') !== 'skiapict') throw new Error('Invalid native SKP bytes');
       const id = createHash('sha256').update(data).digest('hex');
-      const descriptor = { id, bytes: data.length, path: `pictures/${id}.skp`, ...(record?.font_count !== undefined ? { fonts: ids.sort() } : {}) };
-      if (resources.has(id) && JSON.stringify(resources.get(id)) !== JSON.stringify(descriptor)) throw new Error('Changed picture font inventory');
+      const descriptor = { id, bytes: data.length, path: `pictures/${id}.skp`, ...(record?.font_count !== undefined ? { fonts: ids.sort() } : {}),
+        ...(record?.image_count !== undefined ? { images: imageIds.sort() } : {}) };
+      if (resources.has(id) && JSON.stringify(resources.get(id)) !== JSON.stringify(descriptor)) throw new Error('Changed picture asset inventory');
       resources.set(id, descriptor);
       bytes.set(id, data); item.resource = id;
     } else if (entry.kind === 'solid') item.color = entry.color;
@@ -60,8 +76,8 @@ export function normalizeNativeFrame(event) {
   const native = { pid: event.pid, treeId: raw.tree_id, ts: event.ts, sourceFrameNumber: raw.source_frame_number };
   const frame = validateFrame({ version: FRAME_VERSION, id: `${event.pid}:${raw.tree_id}:${event.ts}`, native,
     viewport: { width: raw.viewport[2], height: raw.viewport[3] }, background: raw.background,
-    root: raw.root, surfaces, resources: [...fonts.values(), ...resources.values()], scrollOffsets });
-  return { frame, bytes, fonts };
+    root: raw.root, surfaces, resources: [...fonts.values(), ...images.values(), ...resources.values()], scrollOffsets });
+  return { frame, bytes, fonts, images };
 }
 
 export function selectNativeFrame(events, { rendererPids, start, end, viewport }) {

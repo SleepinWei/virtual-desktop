@@ -253,11 +253,38 @@ index f4628a9e40..685a2e90b4 100644
      "//gpu/command_buffer/common:mailbox",
      "//ui/gfx:gfx_skia",
      "//ui/gfx/animation",
+diff --git a/cc/paint/decode_stashing_image_provider.cc b/cc/paint/decode_stashing_image_provider.cc
+index 926ae50593..35c0412290 100644
+--- a/cc/paint/decode_stashing_image_provider.cc
++++ b/cc/paint/decode_stashing_image_provider.cc
+@@ -14,6 +14,10 @@ DecodeStashingImageProvider::DecodeStashingImageProvider(
+ }
+ DecodeStashingImageProvider::~DecodeStashingImageProvider() = default;
+ 
++bool DecodeStashingImageProvider::IsRecordingOnly() const {
++  return source_provider_->IsRecordingOnly();
++}
++
+ ImageProvider::ScopedResult DecodeStashingImageProvider::GetRasterContent(
+     const DrawImage& draw_image) {
+   // TODO(xidachen): Ensure this function works with paint worklet generated
+diff --git a/cc/paint/decode_stashing_image_provider.h b/cc/paint/decode_stashing_image_provider.h
+index e323a626ac..7bbbacf492 100644
+--- a/cc/paint/decode_stashing_image_provider.h
++++ b/cc/paint/decode_stashing_image_provider.h
+@@ -27,6 +27,7 @@ class CC_PAINT_EXPORT DecodeStashingImageProvider : public ImageProvider {
+       delete;
+ 
+   // ImageProvider implementation.
++  bool IsRecordingOnly() const override;
+   ImageProvider::ScopedResult GetRasterContent(
+       const DrawImage& draw_image) override;
+ 
 diff --git a/cc/paint/display_item_list.cc b/cc/paint/display_item_list.cc
-index 6f828b07a4..e6997bb01e 100644
+index 6f828b07a4..ae64c23d84 100644
 --- a/cc/paint/display_item_list.cc
 +++ b/cc/paint/display_item_list.cc
-@@ -6,8 +6,29 @@
+@@ -6,13 +6,35 @@
  
  #include <limits>
  #include <map>
@@ -287,7 +314,13 @@ index 6f828b07a4..e6997bb01e 100644
  #include "base/trace_event/trace_event.h"
  #include "base/trace_event/traced_value.h"
  #include "cc/base/math_util.h"
-@@ -26,6 +47,248 @@ namespace cc {
+ #include "cc/debug/picture_debug_util.h"
+ #include "cc/paint/paint_op_buffer_iterator.h"
++#include "cc/paint/image_provider.h"
+ #include "cc/paint/solid_color_analyzer.h"
+ #include "third_party/perfetto/include/perfetto/tracing/track_event_args.h"
+ #include "third_party/skia/include/core/SkCanvas.h"
+@@ -26,6 +48,402 @@ namespace cc {
  
  namespace {
  
@@ -507,15 +540,155 @@ index 6f828b07a4..e6997bb01e 100644
 +  return *cache;
 +}
 +
++// Keep original compressed images outside the SKP. No encode, readback or
++// pixel decode is permitted on this recording path.
++struct RemoteImageAsset { size_t bytes; int width; int height; };
++struct RemoteImageContext {
++  bool failed = false;
++  std::map<std::string, RemoteImageAsset> images;
++};
++class RemoteImageProvider : public ImageProvider {
++ public:
++  explicit RemoteImageProvider(const PaintWorkletRecordMap* records) : records_(records) {}
++  bool IsRecordingOnly() const override { return true; }
++  ScopedResult GetRasterContent(const DrawImage& draw) override {
++    const auto& image = draw.paint_image();
++    auto fail = [&](const char* reason) {
++      failed = true;
++      if (failure_reason.empty()) failure_reason = reason;
++      return ScopedResult();
++    };
++    if (!image) return fail("empty-image");
++    if (image.IsTextureBacked()) return fail("texture-image");
++    if (image.ShouldAnimate()) return fail("animated-image");
++    if (image.HasGainmapInfo()) return fail("gainmap-image");
++    if (image.GetReinterpretAsSRGB()) return fail("reinterpreted-color-image");
++    if (draw.use_dark_mode()) return fail("dark-mode-image");
++    if (draw.frame_index() != PaintImage::kDefaultFrameIndex) return fail("non-default-image-frame");
++    if (image.IsDeferredPaintRecord()) {
++      if (image.IsPaintWorklet() && records_) {
++        const auto found = records_->find(image.GetPaintWorkletInput());
++        if (found != records_->end() && found->second.second)
++          return ScopedResult(found->second.second);
++      }
++      return fail("paint-worklet-record-unavailable");
++    }
++    // GetSwSkImage returns the existing lazy image after the texture checks
++    // above; its readback/makeNonTextureImage branches cannot be reached.
++    auto lazy = image.GetSwSkImage();
++    if (!lazy) return fail("missing-skimage");
++    if (!lazy->refEncodedData()) {
++      if (image.completion_state() != PaintImage::CompletionState::kDone)
++        return fail("image-data-incomplete");
++      return fail(image.IsLazyGenerated() ? "unencoded-lazy-image" : "unencoded-bitmap");
++    }
++    return ScopedResult(DecodedDrawImage(std::move(lazy), nullptr,
++        SkSize::Make(0, 0), SkSize::Make(1, 1), draw.filter_quality(), false));
++  }
++  bool failed = false;
++  std::string failure_reason;
++ private:
++  raw_ptr<const PaintWorkletRecordMap> records_;
++};
++class RemoteImageCache {
++ public:
++  sk_sp<const SkData> Serialize(SkImage* image, RemoteImageContext* context) {
++    auto directory = base::Environment::Create()->GetVar(
++        "VIRTUAL_DESKTOP_REMOTE_IMAGE_DIRECTORY");
++    auto fail = [&]() -> sk_sp<const SkData> {
++      context->failed = true;
++      return SkData::MakeEmpty();  // Never use Skia's default PNG encoder.
++    };
++    if (!directory || !base::FilePath(*directory).IsAbsolute() ||
++        image->isTextureBacked() || image->width() <= 0 || image->height() <= 0 ||
++        image->width() > 8192 || image->height() > 8192 ||
++        static_cast<int64_t>(image->width()) * image->height() > 16 * 1024 * 1024)
++      return fail();
++    base::AutoLock lock(lock_);
++    const auto key = std::make_pair(*directory, image->uniqueID());
++    auto found = instances_.find(key);
++    if (found == instances_.end()) {
++      if (instances_.size() >= 1024) return fail();
++      auto data = image->refEncodedData();
++      if (!data || data->size() < 8 || data->size() > 16 * 1024 * 1024)
++        return fail();
++      const auto id = base::HexEncodeLower(crypto::hash::Sha256(skia::as_byte_span(*data)));
++      const auto asset_key = std::make_pair(*directory, id);
++      if (!assets_.contains(asset_key)) {
++        if (asset_bytes_ + data->size() > 128 * 1024 * 1024) return fail();
++        pending_[asset_key] = data;
++        assets_.insert(asset_key);
++        asset_bytes_ += data->size();
++      }
++      SkDynamicMemoryWStream reference;
++      reference.write("vdimage1", 8);
++      reference.write(id.data(), id.size());
++      found = instances_.emplace(key, Instance{id,
++          {data->size(), image->width(), image->height()}, reference.detachAsData()}).first;
++    }
++    const auto& asset = found->second.asset;
++    const auto [stored, inserted] = context->images.emplace(found->second.id, asset);
++    if (!inserted && (stored->second.width != asset.width ||
++        stored->second.height != asset.height || stored->second.bytes != asset.bytes))
++      return fail();
++    return found->second.reference;
++  }
++  bool WritePending() {
++    decltype(pending_) pending;
++    {
++      base::AutoLock lock(lock_);
++      if (write_failed_) return false;
++      pending.swap(pending_);
++    }
++    bool success = true;
++    for (const auto& [key, data] : pending) {
++      base::FilePath temporary;
++      const base::FilePath parent(key.first);
++      if (!base::CreateTemporaryFileInDir(parent, &temporary)) {
++        success = false;
++        continue;
++      }
++      const bool written = base::WriteFile(temporary, skia::as_byte_span(*data));
++      if (!written || !base::Move(temporary, parent.AppendASCII(key.second + ".img"))) {
++        base::DeleteFile(temporary);
++        success = false;
++      }
++    }
++    base::AutoLock lock(lock_);
++    write_failed_ |= !success;
++    return !write_failed_;
++  }
++ private:
++  struct Instance { std::string id; RemoteImageAsset asset; sk_sp<const SkData> reference; };
++  base::Lock lock_;
++  size_t asset_bytes_ = 0;
++  bool write_failed_ = false;
++  std::map<std::pair<std::string, std::string>, sk_sp<const SkData>> pending_;
++  std::set<std::pair<std::string, std::string>> assets_;
++  std::map<std::pair<std::string, uint32_t>, Instance> instances_;
++};
++RemoteImageCache& RemoteImages() {
++  static base::NoDestructor<RemoteImageCache> cache;
++  return *cache;
++}
++
 +void SerializeRemotePicture(SkPicture* picture,
-+                            base::trace_event::TracedValue* state) {
++                            base::trace_event::TracedValue* state,
++                            bool image_failed,
++                            const std::string& image_failure_reason) {
 +  RemoteFontContext context;
++  RemoteImageContext images;
++  images.failed = image_failed;
 +  RemoteGlyphCollector collector(&context);
 +  picture->playback(&collector);
 +  SkSerialProcs procs;
 +  procs.fTypefaceCtx = &context;
 +  procs.fTypefaceProc = [](SkTypeface* face, void* ctx) -> sk_sp<const SkData> {
 +    return RemoteFonts().Serialize(face, static_cast<RemoteFontContext*>(ctx));
++  };
++  procs.fImageCtx = &images;
++  procs.fImageProc = [](SkImage* image, void* ctx) -> sk_sp<const SkData> {
++    return RemoteImages().Serialize(image, static_cast<RemoteImageContext*>(ctx));
 +  };
 +  auto data = picture->serialize(&procs);
 +  state->SetBoolean("font_error", context.failed || !data);
@@ -528,7 +701,21 @@ index 6f828b07a4..e6997bb01e 100644
 +    state->EndDictionary();
 +  }
 +  state->EndArray();
-+  if (!context.failed && data) {
++  state->SetBoolean("image_error", images.failed || !data);
++  if (images.failed || !data) state->SetString("image_error_reason",
++      image_failure_reason.empty() ? "image-serialization" : image_failure_reason);
++  state->SetInteger("image_count", images.images.size());
++  state->BeginArray("images");
++  for (const auto& [id, asset] : images.images) {
++    state->BeginDictionary();
++    state->SetString("id", id);
++    state->SetInteger("bytes", asset.bytes);
++    state->SetInteger("width", asset.width);
++    state->SetInteger("height", asset.height);
++    state->EndDictionary();
++  }
++  state->EndArray();
++  if (!context.failed && !images.failed && data) {
 +    state->SetString("skp64", base::Base64Encode(skia::as_byte_span(*data)));
 +  }
 +}
@@ -536,12 +723,14 @@ index 6f828b07a4..e6997bb01e 100644
  bool GetCanvasClipBounds(SkCanvas* canvas, gfx::Rect* clip_bounds) {
    SkRect canvas_clip_bounds;
    if (!canvas->getLocalClipBounds(&canvas_clip_bounds))
-@@ -240,6 +503,25 @@ void DisplayItemList::EmitTraceSnapshot() const {
+@@ -240,6 +658,29 @@ void DisplayItemList::EmitTraceSnapshot() const {
        "snapshot", CreateTracedValue(include_items));
  }
  
 +bool DisplayItemList::WriteRemoteFontAssets() {
-+  return RemoteFonts().WritePending();
++  const bool fonts = RemoteFonts().WritePending();
++  const bool images = RemoteImages().WritePending();
++  return fonts && images;
 +}
 +
 +std::unique_ptr<base::trace_event::TracedValue>
@@ -555,14 +744,16 @@ index 6f828b07a4..e6997bb01e 100644
 +
 +void DisplayItemList::AsRemotePaintValueInto(
 +    base::trace_event::TracedValue* state,
-+    const ScrollOffsetMap& scroll_offsets) const {
-+  AddToValue(state, false, &scroll_offsets, true, true);
++    const ScrollOffsetMap& scroll_offsets,
++    const gfx::Rect* visible_rect,
++    const PaintWorkletRecordMap* worklet_records) const {
++  AddToValue(state, false, &scroll_offsets, true, true, visible_rect, worklet_records);
 +}
 +
  std::string DisplayItemList::ToString() const {
    base::trace_event::TracedValueJSON value;
    AddToValue(&value, true);
-@@ -254,14 +536,21 @@ DisplayItemList::CreateTracedValue(bool include_items) const {
+@@ -254,23 +695,33 @@ DisplayItemList::CreateTracedValue(bool include_items) const {
  }
  
  void DisplayItemList::AddToValue(base::trace_event::TracedValue* state,
@@ -570,7 +761,9 @@ index 6f828b07a4..e6997bb01e 100644
 +                                 bool include_items,
 +                                 const ScrollOffsetMap* scroll_offsets,
 +                                 bool preserve_coordinates,
-+                                 bool external_fonts) const {
++                                 bool external_fonts,
++                                 const gfx::Rect* visible_rect,
++                                 const PaintWorkletRecordMap* worklet_records) const {
    state->BeginDictionary("params");
  
 -  // DisplayItemList doesn't know the current scroll offsets, so use zero.
@@ -586,7 +779,9 @@ index 6f828b07a4..e6997bb01e 100644
  
    // For tracing code, just use the entire positive quadrant if the |rtree_|
    // has invalid bounds.
-@@ -270,7 +559,7 @@ void DisplayItemList::AddToValue(base::trace_event::TracedValue* state,
+   gfx::Rect bounds = rtree_.bounds().value_or(kMaxBounds);
++  if (visible_rect) bounds.Intersect(*visible_rect);
+   if (include_items) {
      state->BeginArray("items");
  
      PlaybackParams params(nullptr, SkM44());
@@ -595,7 +790,7 @@ index 6f828b07a4..e6997bb01e 100644
      std::map<size_t, gfx::Rect> visual_rects = rtree_.GetAllBoundsForTracing();
      for (const PaintOp& op : paint_op_buffer_) {
        state->BeginDictionary();
-@@ -303,14 +592,20 @@ void DisplayItemList::AddToValue(base::trace_event::TracedValue* state,
+@@ -303,14 +754,21 @@ void DisplayItemList::AddToValue(base::trace_event::TracedValue* state,
    {
      SkPictureRecorder recorder;
      SkCanvas* canvas = recorder.beginRecording(gfx::RectToSkRect(bounds));
@@ -605,14 +800,15 @@ index 6f828b07a4..e6997bb01e 100644
 +    }
      canvas->clipRect(gfx::RectToSkRect(bounds));
 -    Raster(canvas, /*image_provider=*/nullptr, &zero_scroll_offsets);
-+    Raster(canvas, /*image_provider=*/nullptr, scroll_offsets);
++    RemoteImageProvider images(worklet_records);
++    Raster(canvas, external_fonts ? &images : nullptr, scroll_offsets);
      sk_sp<SkPicture> picture = recorder.finishRecordingAsPicture();
  
 -    std::string b64_picture;
 -    PictureDebugUtil::SerializeAsBase64(picture.get(), &b64_picture);
 -    state->SetString("skp64", b64_picture);
 +    if (external_fonts) {
-+      SerializeRemotePicture(picture.get(), state);
++      SerializeRemotePicture(picture.get(), state, images.failed, images.failure_reason);
 +    } else {
 +      std::string b64_picture;
 +      PictureDebugUtil::SerializeAsBase64(picture.get(), &b64_picture);
@@ -622,15 +818,15 @@ index 6f828b07a4..e6997bb01e 100644
  }
  
 diff --git a/cc/paint/display_item_list.h b/cc/paint/display_item_list.h
-index 42ef9d4363..39033e3814 100644
+index 42ef9d4363..9a9c629885 100644
 --- a/cc/paint/display_item_list.h
 +++ b/cc/paint/display_item_list.h
-@@ -167,6 +167,21 @@ class CC_PAINT_EXPORT DisplayItemList
+@@ -167,6 +167,23 @@ class CC_PAINT_EXPORT DisplayItemList
  
    void EmitTraceSnapshot() const;
  
 +  // Called only by the MayBlock transport writer before a dependent frame.
-+  // Font programs never enter the frame JSON or a worker IPC message.
++  // Font programs and compressed images never enter frame JSON or worker IPC.
 +  static bool WriteRemoteFontAssets();
 +
 +  // A complete recording-only snapshot for experimental remote-paint tracing.
@@ -642,12 +838,14 @@ index 42ef9d4363..39033e3814 100644
 +  // Append into the caller's writer. A forced-JSON writer cannot embed a
 +  // separately created Perfetto writer through TracedValue::SetValue.
 +  void AsRemotePaintValueInto(base::trace_event::TracedValue* state,
-+                              const ScrollOffsetMap& scroll_offsets) const;
++                              const ScrollOffsetMap& scroll_offsets,
++                              const gfx::Rect* visible_rect = nullptr,
++                              const PaintWorkletRecordMap* worklet_records = nullptr) const;
 +
    gfx::Rect VisualRectForTesting(int index) const {
      return visual_rects_[static_cast<size_t>(index)];
    }
-@@ -233,7 +248,11 @@ class CC_PAINT_EXPORT DisplayItemList
+@@ -233,7 +250,13 @@ class CC_PAINT_EXPORT DisplayItemList
  
    std::unique_ptr<base::trace_event::TracedValue> CreateTracedValue(
        bool include_items) const;
@@ -656,12 +854,14 @@ index 42ef9d4363..39033e3814 100644
 +                  bool include_items,
 +                  const ScrollOffsetMap* scroll_offsets = nullptr,
 +                  bool preserve_coordinates = false,
-+                  bool external_fonts = false) const;
++                  bool external_fonts = false,
++                  const gfx::Rect* visible_rect = nullptr,
++                  const PaintWorkletRecordMap* worklet_records = nullptr) const;
  
    // If we're currently within a paired display item block, unions the
    // given visual rect with the begin display item's visual rect.
 diff --git a/cc/paint/display_item_list_unittest.cc b/cc/paint/display_item_list_unittest.cc
-index 846f16fbe0..c771463ef5 100644
+index 846f16fbe0..5cb0f48ff4 100644
 --- a/cc/paint/display_item_list_unittest.cc
 +++ b/cc/paint/display_item_list_unittest.cc
 @@ -10,8 +10,14 @@
@@ -679,15 +879,26 @@ index 846f16fbe0..c771463ef5 100644
  #include "base/trace_event/traced_value.h"
  #include "base/values.h"
  #include "cc/paint/filter_operation.h"
-@@ -31,6 +37,7 @@
+@@ -25,12 +31,18 @@
+ #include "cc/test/pixel_test_utils.h"
+ #include "cc/test/skia_common.h"
+ #include "cc/test/test_skcanvas.h"
++#include "cc/test/test_paint_worklet_input.h"
+ #include "skia/ext/font_utils.h"
+ #include "testing/gmock/include/gmock/gmock.h"
+ #include "testing/gtest/include/gtest/gtest.h"
  #include "third_party/skia/include/core/SkBitmap.h"
  #include "third_party/skia/include/core/SkColor.h"
  #include "third_party/skia/include/core/SkFont.h"
++#include "cc/paint/paint_image_generator.h"
++#include "cc/paint/paint_shader.h"
++#include "cc/paint/paint_filter.h"
++#include "third_party/skia/include/core/SkData.h"
 +#include "third_party/skia/include/core/SkPicture.h"
  #include "third_party/skia/include/core/SkSurface.h"
  #include "third_party/skia/include/core/SkTextBlob.h"
  #include "ui/gfx/geometry/rect.h"
-@@ -145,6 +152,111 @@ TEST_F(DisplayItemListTest, TraceEmptyVisualRect) {
+@@ -145,6 +157,325 @@ TEST_F(DisplayItemListTest, TraceEmptyVisualRect) {
    EXPECT_EQ("DrawRectOp", *name);
  }
  
@@ -796,9 +1007,460 @@ index 846f16fbe0..c771463ef5 100644
 +TEST_F(DisplayItemListTest, RemotePaintExternalFonts) { VerifyRemoteFonts(false); }
 +TEST_F(DisplayItemListTest, RemotePaintOutlineFonts) { VerifyRemoteFonts(true); }
 +
++// Any pixel decode on the recording path fails this fixture immediately.
++class RemoteEncodedGenerator : public PaintImageGenerator {
++ public:
++  RemoteEncodedGenerator(sk_sp<const SkData> data, int* decodes)
++      : PaintImageGenerator(SkImageInfo::MakeN32Premul(1, 1), gfx::HDRMetadata()),
++        data_(std::move(data)), decodes_(decodes) {}
++  sk_sp<const SkData> GetEncodedData() const override { return data_; }
++  bool GetPixels(SkPixmap, size_t, PaintImage::GeneratorClientId, uint32_t) override {
++    ++*decodes_;
++    return false;
++  }
++  bool QueryYUVA(const SkYUVAPixmapInfo::SupportedDataTypes&, SkYUVAPixmapInfo*) const override {
++    return false;
++  }
++  bool GetYUVAPlanes(const SkYUVAPixmaps&, size_t, uint32_t, PaintImage::GeneratorClientId) override {
++    ++*decodes_;
++    return false;
++  }
++ private:
++  sk_sp<const SkData> data_;
++  raw_ptr<int> decodes_;
++};
++
++enum class RemoteImageUse { kImage, kShader, kRecordShader, kFilter };
++
++void VerifyRemoteImages(RemoteImageUse use) {
++  base::ScopedTempDir directory;
++  ASSERT_TRUE(directory.CreateUniqueTempDir());
++  auto environment = base::Environment::Create();
++  const char variable[] = "VIRTUAL_DESKTOP_REMOTE_IMAGE_DIRECTORY";
++  auto previous = environment->GetVar(variable);
++  struct Restore {
++    raw_ptr<base::Environment> environment;
++    std::optional<std::string> previous;
++    ~Restore() {
++      if (previous) environment->SetVar("VIRTUAL_DESKTOP_REMOTE_IMAGE_DIRECTORY", *previous);
++      else environment->UnSetVar("VIRTUAL_DESKTOP_REMOTE_IMAGE_DIRECTORY");
++    }
++  } restore{environment.get(), previous};
++  std::string png;
++  ASSERT_TRUE(base::Base64Decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScLttAAAAABJRU5ErkJggg==", &png));
++  auto data = SkData::MakeWithCopy(png.data(), png.size());
++  int decodes = 0;
++  auto image = sk_make_sp<RemoteEncodedGenerator>(data, &decodes);
++  auto paint_image = PaintImageBuilder::WithDefault()
++      .set_id(PaintImage::GetNextId())
++      .set_paint_image_generator(std::move(image)).TakePaintImage();
++  auto list = base::MakeRefCounted<DisplayItemList>();
++  list->StartPaint();
++  if (use == RemoteImageUse::kImage) {
++    list->push<DrawImageOp>(paint_image, 0.f, 0.f);
++  } else {
++    PaintFlags flags;
++    if (use == RemoteImageUse::kRecordShader) {
++      PaintOpBuffer nested;
++      nested.push<DrawImageOp>(paint_image, 0.f, 0.f);
++      flags.setShader(PaintShader::MakePaintRecord(nested.ReleaseAsRecord(),
++          SkRect::MakeWH(1, 1), SkTileMode::kRepeat, SkTileMode::kRepeat, nullptr));
++    } else if (use == RemoteImageUse::kShader) {
++      flags.setShader(PaintShader::MakeImage(paint_image, SkTileMode::kRepeat,
++                                             SkTileMode::kRepeat, nullptr));
++    } else {
++      flags.setImageFilter(sk_make_sp<ImagePaintFilter>(paint_image,
++          SkRect::MakeWH(1, 1), SkRect::MakeWH(32, 32), PaintFlags::FilterQuality::kNone));
++    }
++    list->push<DrawRectOp>(SkRect::MakeWH(32, 32), flags);
++  }
++  list->EndPaintOfUnpaired(gfx::Rect(32, 32));
++  list->Finalize();
++  auto snapshot = [&]() {
++    std::string json;
++    list->CreateTracedValueForRemotePaint()->AppendAsTraceFormat(&json);
++    return base::JSONReader::Read(json, base::JSON_PARSE_RFC);
++  };
++  environment->UnSetVar(variable);
++  auto missing = snapshot();
++  ASSERT_TRUE(missing);
++  EXPECT_TRUE(missing->GetDict().FindBool("image_error").value_or(false));
++  EXPECT_FALSE(missing->GetDict().FindString("skp64"));
++  environment->SetVar(variable, directory.GetPath().value());
++  auto value = snapshot();
++  ASSERT_TRUE(value);
++  EXPECT_FALSE(value->GetDict().FindBool("image_error").value_or(true));
++  const auto* images = value->GetDict().FindList("images");
++  ASSERT_TRUE(images);
++  ASSERT_EQ(1u, images->size());
++  const auto& descriptor = (*images)[0].GetDict();
++  const auto* id = descriptor.FindString("id");
++  ASSERT_TRUE(id);
++  EXPECT_EQ(64u, id->size());
++  EXPECT_EQ(1, descriptor.FindInt("width"));
++  EXPECT_EQ(1, descriptor.FindInt("height"));
++  ASSERT_TRUE(DisplayItemList::WriteRemoteFontAssets());
++  std::string stored;
++  ASSERT_TRUE(base::ReadFileToString(directory.GetPath().AppendASCII(*id + ".img"), &stored));
++  EXPECT_EQ(png, stored);
++  std::string skp;
++  ASSERT_TRUE(base::Base64Decode(*value->GetDict().FindString("skp64"), &skp));
++  EXPECT_NE(std::string::npos, skp.find("vdimage1"));
++  EXPECT_EQ(std::string::npos, skp.find(png));
++  EXPECT_EQ(0, decodes);
++}
++
++TEST_F(DisplayItemListTest, RemotePaintExternalImages) { VerifyRemoteImages(RemoteImageUse::kImage); }
++TEST_F(DisplayItemListTest, RemotePaintImageShader) {
++  VerifyRemoteImages(RemoteImageUse::kShader);
++  VerifyRemoteImages(RemoteImageUse::kRecordShader);
++}
++TEST_F(DisplayItemListTest, RemotePaintImageFilter) { VerifyRemoteImages(RemoteImageUse::kFilter); }
++
++TEST_F(DisplayItemListTest, RemotePaintRejectsUnencodedImage) {
++  int decodes = 0;
++  auto image = sk_make_sp<RemoteEncodedGenerator>(nullptr, &decodes);
++  auto paint_image = PaintImageBuilder::WithDefault()
++      .set_id(PaintImage::GetNextId())
++      .set_paint_image_generator(std::move(image)).TakePaintImage();
++  auto list = base::MakeRefCounted<DisplayItemList>();
++  list->StartPaint();
++  list->push<DrawImageOp>(paint_image, 0.f, 0.f);
++  list->EndPaintOfUnpaired(gfx::Rect(1, 1));
++  list->Finalize();
++  std::string json;
++  list->CreateTracedValueForRemotePaint()->AppendAsTraceFormat(&json);
++  auto value = base::JSONReader::Read(json, base::JSON_PARSE_RFC);
++  ASSERT_TRUE(value);
++  EXPECT_TRUE(value->GetDict().FindBool("image_error").value_or(false));
++  EXPECT_FALSE(value->GetDict().FindString("skp64"));
++  EXPECT_EQ(0, decodes);
++}
++
++TEST_F(DisplayItemListTest, RemotePaintVisibleImageCull) {
++  int decodes = 0;
++  auto image = sk_make_sp<RemoteEncodedGenerator>(nullptr, &decodes);
++  auto paint_image = PaintImageBuilder::WithDefault()
++      .set_id(PaintImage::GetNextId())
++      .set_paint_image_generator(std::move(image)).TakePaintImage();
++  auto list = base::MakeRefCounted<DisplayItemList>();
++  PaintFlags red;
++  red.setColor(SK_ColorRED);
++  list->StartPaint();
++  list->push<DrawRectOp>(SkRect::MakeXYWH(0, 0, 10, 10), red);
++  list->EndPaintOfUnpaired(gfx::Rect(10, 10));
++  list->StartPaint();
++  list->push<DrawImageOp>(paint_image, 0.f, 1000.f);
++  list->EndPaintOfUnpaired(gfx::Rect(0, 1000, 1, 1));
++  list->Finalize();
++  const gfx::Rect visible(10, 10);
++  base::trace_event::TracedValueJSON state;
++  list->AsRemotePaintValueInto(&state, ScrollOffsetMap(), &visible);
++  std::string json;
++  state.AppendAsTraceFormat(&json);
++  auto value = base::JSONReader::Read(json, base::JSON_PARSE_RFC);
++  ASSERT_TRUE(value);
++  EXPECT_FALSE(value->GetDict().FindBool("image_error").value_or(true));
++  EXPECT_EQ(0, value->GetDict().FindInt("image_count"));
++  EXPECT_TRUE(value->GetDict().FindString("skp64"));
++  EXPECT_EQ(0, decodes);
++}
++
++TEST_F(DisplayItemListTest, RemotePaintWorkletRecords) {
++  auto input = base::MakeRefCounted<TestPaintWorkletInput>(gfx::SizeF(16, 16));
++  auto image = PaintImageBuilder::WithDefault().set_id(PaintImage::GetNextId())
++      .set_deferred_paint_record(input).TakePaintImage();
++  PaintFlags red;
++  red.setColor(SK_ColorRED);
++  PaintOpBuffer content;
++  content.push<DrawRectOp>(SkRect::MakeWH(16, 16), red);
++  PaintWorkletRecordMap records;
++  records[input] = {image.stable_id(), content.ReleaseAsRecord()};
++  for (int mode : {0, 1, 2}) {
++    auto list = base::MakeRefCounted<DisplayItemList>();
++    list->StartPaint();
++    if (mode == 0) {
++      list->push<DrawImageRectOp>(image, SkRect::MakeWH(16, 16), SkRect::MakeWH(32, 32), SkCanvas::kStrict_SrcRectConstraint);
++    } else {
++      PaintFlags flags;
++      if (mode == 1) {
++        const auto tile = SkRect::MakeWH(16, 16);
++        flags.setShader(PaintShader::MakeImage(image, SkTileMode::kRepeat, SkTileMode::kRepeat, nullptr, &tile));
++      } else {
++        flags.setImageFilter(sk_make_sp<ImagePaintFilter>(image, SkRect::MakeWH(16, 16), SkRect::MakeWH(32, 32), PaintFlags::FilterQuality::kNone));
++      }
++      list->push<DrawRectOp>(SkRect::MakeWH(32, 32), flags);
++    }
++    list->EndPaintOfUnpaired(gfx::Rect(64, 64));
++    list->Finalize();
++    auto snapshot = [&](const PaintWorkletRecordMap* worklets) {
++      base::trace_event::TracedValueJSON state;
++      list->AsRemotePaintValueInto(&state, ScrollOffsetMap(), nullptr, worklets);
++      return state.ToBaseValue();
++    };
++    auto missing = snapshot(nullptr);
++    EXPECT_TRUE(missing->GetDict().FindBool("image_error").value_or(false));
++    EXPECT_FALSE(missing->GetDict().FindString("skp64"));
++    auto ready = snapshot(&records);
++    EXPECT_FALSE(ready->GetDict().FindBool("image_error").value_or(true));
++    EXPECT_EQ(0, ready->GetDict().FindInt("image_count"));
++    const auto* encoded = ready->GetDict().FindString("skp64");
++    ASSERT_TRUE(encoded);
++    std::string bytes;
++    ASSERT_TRUE(base::Base64Decode(*encoded, &bytes));
++    auto picture = SkPicture::MakeFromData(bytes.data(), bytes.size());
++    ASSERT_TRUE(picture);
++    // Raster only in this independent unit-test oracle, never in the producer.
++    SkBitmap bitmap;
++    bitmap.allocN32Pixels(64, 64);
++    SkCanvas canvas(bitmap);
++    canvas.clear(SK_ColorTRANSPARENT);
++    canvas.drawPicture(picture);
++    EXPECT_EQ(SK_ColorRED, bitmap.getColor(8, 8)) << mode;
++    EXPECT_EQ(SK_ColorTRANSPARENT, bitmap.getColor(48, 48)) << mode;
++  }
++}
++
  TEST_F(DisplayItemListTest, SingleUnpairedRange) {
    gfx::Rect layer_rect(100, 100);
    PaintFlags blue_flags;
+diff --git a/cc/paint/image_provider.cc b/cc/paint/image_provider.cc
+index 66da01cf3a..b418d3f9b3 100644
+--- a/cc/paint/image_provider.cc
++++ b/cc/paint/image_provider.cc
+@@ -11,6 +11,8 @@
+ 
+ namespace cc {
+ 
++bool ImageProvider::IsRecordingOnly() const { return false; }
++
+ ImageProvider::ScopedResult::ScopedResult() = default;
+ 
+ ImageProvider::ScopedResult::ScopedResult(DecodedDrawImage image)
+diff --git a/cc/paint/image_provider.h b/cc/paint/image_provider.h
+index 5903980636..1100691651 100644
+--- a/cc/paint/image_provider.h
++++ b/cc/paint/image_provider.h
+@@ -61,6 +61,10 @@ class CC_PAINT_EXPORT ImageProvider {
+   // provided, the draw for this image will be skipped during raster. Or,
+   // 2. The PaintRecord produced by paint worklet JS paint callback.
+   virtual ScopedResult GetRasterContent(const DrawImage& draw_image) = 0;
++
++  // Recording providers validate and retain lazy encoded images. They never
++  // promise the decoded pixel backing expected by tile raster providers.
++  virtual bool IsRecordingOnly() const;
+ };
+ 
+ }  // namespace cc
+diff --git a/cc/paint/paint_filter.cc b/cc/paint/paint_filter.cc
+index c73044a739..460c135c06 100644
+--- a/cc/paint/paint_filter.cc
++++ b/cc/paint/paint_filter.cc
+@@ -21,6 +21,8 @@
+ #include "cc/paint/paint_image_builder.h"
+ #include "cc/paint/paint_op_writer.h"
+ #include "cc/paint/paint_record.h"
++#include "cc/paint/paint_op.h"
++#include "cc/paint/paint_op_buffer.h"
+ #include "cc/paint/scoped_raster_flags.h"
+ #include "third_party/skia/include/core/SkColorFilter.h"
+ #include "third_party/skia/include/core/SkColorSpace.h"
+@@ -794,6 +796,22 @@ sk_sp<PaintFilter> ImagePaintFilter::SnapshotWithImagesInternal(
+   if (!scoped_result)
+     return nullptr;
+ 
++  if (scoped_result.has_paint_record() && image_provider->IsRecordingOnly()) {
++    PaintOpBuffer buffer;
++    buffer.push<SaveOp>();
++    buffer.push<ClipRectOp>(dst_rect_, SkClipOp::kIntersect, false);
++    buffer.push<ConcatOp>(SkM44(SkMatrix::RectToRect(src_rect_, dst_rect_)));
++    buffer.push<ClipRectOp>(SkRect::MakeWH(image_.width(), image_.height()), SkClipOp::kIntersect, false);
++    buffer.push<DrawRecordOp>(scoped_result.ReleaseAsRecord());
++    buffer.push<RestoreOp>();
++    return sk_make_sp<RecordPaintFilter>(buffer.ReleaseAsRecord(), dst_rect_,
++        gfx::SizeF(1.f, 1.f), RecordPaintFilter::ScalingBehavior::kRasterAtScale, image_provider);
++  }
++
++  if (image_provider->IsRecordingOnly()) {
++    return sk_make_sp<ImagePaintFilter>(image_, src_rect_, dst_rect_, filter_quality_);
++  }
++
+   auto decoded_sk_image = sk_ref_sp<SkImage>(
+       const_cast<SkImage*>(scoped_result.decoded_image().image().get()));
+   PaintImage decoded_paint_image =
+diff --git a/cc/paint/paint_filter.h b/cc/paint/paint_filter.h
+index 7d8a84c8c7..5ce5cbda6c 100644
+--- a/cc/paint/paint_filter.h
++++ b/cc/paint/paint_filter.h
+@@ -532,6 +532,12 @@ class CC_PAINT_EXPORT RecordPaintFilter final : public PaintFilter {
+       const SkRect& record_bounds,
+       const gfx::SizeF& raster_scale = {1.f, 1.f},
+       ScalingBehavior scaling_behavior = ScalingBehavior::kRasterAtScale);
++  // Preserve recording-only image resolution when composing a record source.
++  RecordPaintFilter(PaintRecord record,
++                    const SkRect& record_bounds,
++                    const gfx::SizeF& raster_scale,
++                    ScalingBehavior scaling_behavior,
++                    ImageProvider* image_provider);
+   ~RecordPaintFilter() override;
+ 
+   // Creates a fixed scale RecordPaintFilter for rasterization at the given
+@@ -556,11 +562,6 @@ class CC_PAINT_EXPORT RecordPaintFilter final : public PaintFilter {
+       ImageProvider* image_provider) const override;
+ 
+  private:
+-  RecordPaintFilter(PaintRecord record,
+-                    const SkRect& record_bounds,
+-                    const gfx::SizeF& raster_scale,
+-                    ScalingBehavior scaling_behavior,
+-                    ImageProvider* image_provider);
+ 
+   PaintRecord record_;
+   SkRect record_bounds_;
+diff --git a/cc/paint/paint_op_buffer.cc b/cc/paint/paint_op_buffer.cc
+index 8b7cf79fe8..96b048fc68 100644
+--- a/cc/paint/paint_op_buffer.cc
++++ b/cc/paint/paint_op_buffer.cc
+@@ -12,6 +12,8 @@
+ #include "base/notreached.h"
+ #include "base/types/optional_util.h"
+ #include "cc/paint/display_item_list.h"
++#include "cc/paint/image_provider.h"
++#include "cc/paint/paint_filter.h"
+ #include "cc/paint/paint_flags.h"
+ #include "cc/paint/paint_image_builder.h"
+ #include "cc/paint/paint_op.h"
+@@ -415,7 +417,15 @@ void PaintOpBuffer::Playback(SkCanvas* canvas,
+     // general case we defer this to the SkCanvas but if we will be
+     // using an ImageProvider for pre-decoding images, we can save
+     // performing an expensive decode that will never be rasterized.
+-    const bool skip_op = new_params.image_provider &&
++    // An unresolved deferred-image filter has empty cached bounds. Resolve
++    // its real record before allowing that optimization to discard the op.
++    const auto* filter = op->IsPaintOpWithFlags()
++        ? static_cast<const PaintOpWithFlags&>(*op).flags.getImageFilter().get()
++        : nullptr;
++    const bool deferred_filter = new_params.image_provider &&
++        new_params.image_provider->IsRecordingOnly() && filter &&
++        filter->has_discardable_images();
++    const bool skip_op = new_params.image_provider && !deferred_filter &&
+                          PaintOp::OpHasDiscardableImages(*op) &&
+                          PaintOp::QuickRejectDraw(*op, canvas);
+     if (skip_op)
+diff --git a/cc/paint/paint_shader.cc b/cc/paint/paint_shader.cc
+index ad7814f6fd..714a502959 100644
+--- a/cc/paint/paint_shader.cc
++++ b/cc/paint/paint_shader.cc
+@@ -421,17 +421,39 @@ sk_sp<PaintShader> PaintShader::CreateScaledPaintRecord(
+ 
+ sk_sp<PaintShader> PaintShader::CreatePaintWorkletRecord(
+     ImageProvider* image_provider) const {
++  if (image_provider->IsRecordingOnly()) {
++    // Remote playback also resolves existing record shaders through this
++    // path. Keep an SkPicture shader; fixed-scale shaders introduce an
++    // unencoded picture-backed SkImage instead of a serializable record.
++    sk_sp<PaintShader> shader(new PaintShader(Type::kPaintRecord));
++    if (shader_type_ == Type::kPaintRecord) {
++      shader->record_ = record_;
++    } else {
++      DCHECK_EQ(shader_type_, Type::kImage);
++      DCHECK(image_ && image_.IsPaintWorklet());
++      auto result = image_provider->GetRasterContent(DrawImage(image_));
++      if (!result || !result.has_paint_record())
++        return nullptr;
++      shader->record_ = result.ReleaseAsRecord();
++    }
++    if (!shader->record_)
++      return nullptr;
++    const auto matrix = GetLocalMatrix();
++    shader->id_ = g_next_shader_id.GetNext();
++    shader->tile_ = tile_;
++    shader->scaling_behavior_ = ScalingBehavior::kRasterAtScale;
++    shader->SetMatrixAndTiling(&matrix, tx_, ty_);
++    shader->ResolveSkObjects(nullptr, image_provider);
++    return shader;
++  }
+   DCHECK_EQ(shader_type_, Type::kImage);
+   DCHECK(image_ && image_.IsPaintWorklet());
+-
+-  ImageProvider::ScopedResult result =
+-      image_provider->GetRasterContent(DrawImage(image_));
+-  if (!result || !result.has_paint_record()) {
++  auto result = image_provider->GetRasterContent(DrawImage(image_));
++  if (!result || !result.has_paint_record())
+     return nullptr;
+-  }
+-  SkMatrix local_matrix = GetLocalMatrix();
++  const auto matrix = GetLocalMatrix();
+   return PaintShader::MakePaintRecord(result.ReleaseAsRecord(), tile_, tx_, ty_,
+-                                      &local_matrix);
++                                     &matrix);
+ }
+ 
+ sk_sp<PaintShader> PaintShader::CreateDecodedImage(
+@@ -458,6 +480,14 @@ sk_sp<PaintShader> PaintShader::CreateDecodedImage(
+     return nullptr;
+ 
+   auto decoded_image = decoded_draw_image.decoded_image();
++  if (image_provider->IsRecordingOnly()) {
++    // Preserve the original lazy shader after validation. Wrapping it as an
++    // already-decoded texture violates PaintImageBuilder's contract.
++    *raster_quality = decoded_image.filter_quality();
++    *needs_mips = false;
++    const auto matrix = GetLocalMatrix();
++    return PaintShader::MakeImage(image_, tx_, ty_, &matrix);
++  }
+   SkMatrix final_matrix = GetLocalMatrix();
+   bool need_scale = !decoded_image.is_scale_adjustment_identity();
+   if (need_scale) {
+diff --git a/cc/paint/scoped_raster_flags.cc b/cc/paint/scoped_raster_flags.cc
+index 175df32874..1a26895f31 100644
+--- a/cc/paint/scoped_raster_flags.cc
++++ b/cc/paint/scoped_raster_flags.cc
+@@ -21,6 +21,15 @@ void ScopedRasterFlags::DecodeImageShader(const SkMatrix& ctm) {
+ 
+   PaintImage image = flags()->getShader()->paint_image();
+   if (image.IsPaintWorklet()) {
++    if (decode_stashing_image_provider_->IsRecordingOnly()) {
++      auto shader = flags()->getShader()->CreatePaintWorkletRecord(
++          &*decode_stashing_image_provider_);
++      if (shader)
++        MutableFlags()->setShader(std::move(shader));
++      else
++        decode_failed_ = true;
++      return;
++    }
+     ImageProvider::ScopedResult result =
+         decode_stashing_image_provider_->GetRasterContent(DrawImage(image));
+     if (result && result.has_paint_record()) {
+@@ -63,6 +72,16 @@ void ScopedRasterFlags::DecodeRecordShader(const SkMatrix& ctm,
+       flags()->getShader()->shader_type() != PaintShader::Type::kPaintRecord)
+     return;
+ 
++  if (decode_stashing_image_provider_->IsRecordingOnly()) {
++    auto shader = flags()->getShader()->CreatePaintWorkletRecord(
++        &*decode_stashing_image_provider_);
++    if (shader)
++      MutableFlags()->setShader(std::move(shader));
++    else
++      decode_failed_ = true;
++    return;
++  }
++
+   // Only replace shaders with animated images. Creating transient shaders for
+   // replacing decodes during raster results in cache misses in skia's picture
+   // shader cache, which results in re-rasterizing the picture for every draw.
+@@ -82,8 +101,8 @@ void ScopedRasterFlags::DecodeRecordShader(const SkMatrix& ctm,
+ void ScopedRasterFlags::DecodeFilter() {
+   if (!flags()->getImageFilter() ||
+       !flags()->getImageFilter()->has_discardable_images() ||
+-      flags()->getImageFilter()->image_analysis_state() !=
+-          ImageAnalysisState::kAnimatedImages) {
++      (!decode_stashing_image_provider_->IsRecordingOnly() &&
++       flags()->getImageFilter()->image_analysis_state() != ImageAnalysisState::kAnimatedImages)) {
+     return;
+   }
+ 
 diff --git a/cc/trees/layer_tree_host_impl.cc b/cc/trees/layer_tree_host_impl.cc
 index ba702d1093..707683dcb4 100644
 --- a/cc/trees/layer_tree_host_impl.cc
@@ -820,7 +1482,7 @@ index ba702d1093..707683dcb4 100644
      // This will cause NotifyTileStateChanged() to be called for any tiles that
      // completed, which will add damage for visible tiles to the frame for them
 diff --git a/cc/trees/layer_tree_impl.cc b/cc/trees/layer_tree_impl.cc
-index aae25d05ab..5fa4fe83bc 100644
+index aae25d05ab..50d63228f4 100644
 --- a/cc/trees/layer_tree_impl.cc
 +++ b/cc/trees/layer_tree_impl.cc
 @@ -13,22 +13,31 @@
@@ -1055,7 +1717,7 @@ index aae25d05ab..5fa4fe83bc 100644
  // Small helper class that saves the current viewport location as the user sees
  // it and resets to the same location.
  class ViewportAnchor {
-@@ -2306,6 +2499,152 @@ void LayerTreeImpl::AsValueInto(base::trace_event::TracedValue* state) const {
+@@ -2306,6 +2499,181 @@ void LayerTreeImpl::AsValueInto(base::trace_event::TracedValue* state) const {
    state->EndArray();
  }
  
@@ -1090,21 +1752,31 @@ index aae25d05ab..5fa4fe83bc 100644
 +    unsupported.push_back("missing-root-surface");
 +  }
 +
++  auto supported_blend = [](SkBlendMode mode) {
++    return mode == SkBlendMode::kSrcOver || mode == SkBlendMode::kDstIn;
++  };
 +  state->BeginArray("surfaces");
 +  for (int effect_id : GetRenderSurfaceList()) {
 +    const auto* surface = GetRenderSurface(effect_id);
 +    state->BeginDictionary();
 +    state->SetInteger("id", effect_id);
 +    MathUtil::AddToTracedValue("content_rect", surface->content_rect(), state);
++    state->SetBoolean("isolated", surface->HasMaskingContributingSurface());
 +    if (!surface->Filters().IsEmpty() ||
 +        !surface->BackdropFilters().IsEmpty() ||
-+        !surface->mask_filter_info().IsEmpty() ||
-+        surface->BlendMode() != SkBlendMode::kSrcOver ||
++        surface->mask_filter_info().HasGradientMask() ||
++        !supported_blend(surface->BlendMode()) ||
 +        !surface->draw_transform().Is2dTransform() ||
-+        surface->HasMaskingContributingSurface() ||
 +        surface->has_view_transition_capture_contributions() ||
 +        surface->CopyOfOutputRequired() || surface->IsUnbounded()) {
-+      unsupported.push_back("surface-effects");
++      if (!surface->Filters().IsEmpty()) unsupported.push_back("surface-filters");
++      if (!surface->BackdropFilters().IsEmpty()) unsupported.push_back("surface-backdrop-filters");
++      if (surface->mask_filter_info().HasGradientMask()) unsupported.push_back("surface-gradient-mask");
++      if (!supported_blend(surface->BlendMode())) unsupported.push_back("surface-blend");
++      if (!surface->draw_transform().Is2dTransform()) unsupported.push_back("surface-3d-transform");
++      if (surface->has_view_transition_capture_contributions()) unsupported.push_back("surface-view-transition");
++      if (surface->CopyOfOutputRequired()) unsupported.push_back("surface-copy-output");
++      if (surface->IsUnbounded()) unsupported.push_back("surface-unbounded");
 +    }
 +    state->EndDictionary();
 +  }
@@ -1115,6 +1787,21 @@ index aae25d05ab..5fa4fe83bc 100644
 +  // before remote picture layers reject WillDraw/AppendQuads. Surface entries
 +  // preserve group opacity; multiplying opacity into individual children is
 +  // incorrect where children overlap.
++  auto add_mask = [state](const gfx::MaskFilterInfo& mask) {
++    if (mask.IsEmpty()) return;
++    const auto& rrect = mask.rounded_corner_bounds();
++    const auto bounds = rrect.rect();
++    state->BeginArray("rounded_clip");
++    for (float value : {bounds.x(), bounds.y(), bounds.width(), bounds.height()})
++      state->AppendDouble(value);
++    for (auto corner : {gfx::RRectF::Corner::kUpperLeft, gfx::RRectF::Corner::kUpperRight,
++                        gfx::RRectF::Corner::kLowerRight, gfx::RRectF::Corner::kLowerLeft}) {
++      const auto radii = rrect.GetCornerRadii(corner);
++      state->AppendDouble(radii.x());
++      state->AppendDouble(radii.y());
++    }
++    state->EndArray();
++  };
 +  state->BeginArray("entries");
 +  int entry_count = 0;
 +  for (EffectTreeLayerListIterator it(this);
@@ -1132,8 +1819,10 @@ index aae25d05ab..5fa4fe83bc 100644
 +      state->SetInteger("id", surface->EffectTreeIndex());
 +      MathUtil::AddToTracedValue("transform", surface->draw_transform(), state);
 +      state->SetDouble("opacity", surface->draw_opacity());
++      state->SetString("blend_mode", SkBlendMode_Name(surface->BlendMode()));
 +      state->SetBoolean("is_clipped", surface->is_clipped());
 +      MathUtil::AddToTracedValue("clip", surface->clip_rect(), state);
++      add_mask(surface->mask_filter_info());
 +    } else {
 +      const auto* layer = it.current_layer();
 +      state->SetInteger("id", layer->id());
@@ -1142,26 +1831,28 @@ index aae25d05ab..5fa4fe83bc 100644
 +      state->SetDouble("opacity", layer->draw_opacity());
 +      state->SetBoolean("is_clipped", layer->is_clipped());
 +      MathUtil::AddToTracedValue("clip", layer->clip_rect(), state);
++      add_mask(layer->draw_properties().mask_filter_info);
 +      const auto& effect = property_trees()->effect_tree().Node(
 +          layer->effect_tree_index());
-+      if (!layer->DrawTransform().Is2dTransform() || layer->Is3dSorted() ||
-+          !layer->draw_properties().mask_filter_info.IsEmpty() ||
-+          (!effect.HasRenderSurface() &&
-+           effect.blend_mode != SkBlendMode::kSrcOver)) {
-+        unsupported.push_back("layer-effects");
-+      }
++      const auto blend = effect.HasRenderSurface() ? SkBlendMode::kSrcOver : effect.blend_mode;
++      state->SetString("blend_mode", SkBlendMode_Name(blend));
++      if (!layer->DrawTransform().Is2dTransform()) unsupported.push_back("layer-3d-transform");
++      if (layer->Is3dSorted()) unsupported.push_back("layer-3d-sorting");
++      if (layer->draw_properties().mask_filter_info.HasGradientMask()) unsupported.push_back("layer-gradient-mask");
++      if (!supported_blend(blend)) unsupported.push_back("layer-blend");
 +      if (layer->GetLayerType() == mojom::LayerType::kPicture) {
 +        state->SetString("kind", "picture");
 +        const auto* picture = static_cast<const PictureLayerImpl*>(layer);
 +        const auto* source = picture->GetRasterSource();
 +        const auto* list = source ? source->GetDisplayItemList().get() : nullptr;
-+        if (list && !list->has_discardable_images()) {
++        if (list) {
 +          const auto offsets = picture->GetRasterInducingScrollOffsets();
 +          state->BeginDictionary("record");
-+          list->AsRemotePaintValueInto(state, offsets);
++          const auto visible = layer->visible_layer_rect();
++          list->AsRemotePaintValueInto(state, offsets, &visible, &picture->GetPaintWorkletRecordMap());
 +          state->EndDictionary();
 +        } else {
-+          unsupported.push_back("picture-images-or-missing-record");
++          unsupported.push_back("picture-missing-record");
 +        }
 +      } else if (layer->GetLayerType() == mojom::LayerType::kSolidColor) {
 +        state->SetString("kind", "solid");

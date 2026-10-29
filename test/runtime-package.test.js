@@ -3,9 +3,21 @@ import assert from 'node:assert/strict';
 import { mkdtemp, mkdir, rename, rm, writeFile, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
+import { createHash } from 'node:crypto';
+import { pathToFileURL } from 'node:url';
 import { selectRuntimeFiles, auditMachOOutput } from '../experiments/chromium-engine/package-runtime.js';
 import { sha256, verifyArtifacts, MONOLITHIC_REQUIRED, MONOLITHIC_FORMAT, LEAN_DIRECTORY } from '../experiments/chromium-engine/artifacts.js';
 import { verifiedEngine } from '../experiments/chromium-engine/verified.js';
+
+test('artifact hashing preserves binary tails and file URLs with a reusable bounded buffer', async t => {
+  const directory = await mkdtemp(join(tmpdir(), 'vd-artifact-hash-')); t.after(() => rm(directory, { recursive: true, force: true }));
+  const path = join(directory, 'binary payload'), data = Buffer.alloc(3 * 65536 + 17);
+  for (let i = 0; i < data.length; i++) data[i] = i * 31 % 251;
+  await writeFile(path, data);
+  assert.equal(await sha256(pathToFileURL(path)), createHash('sha256').update(data).digest('hex'));
+  await writeFile(path, Buffer.alloc(0));
+  assert.equal(await sha256(path), createHash('sha256').digest('hex'));
+});
 
 test('runtime selection retains engine dependencies and rejects unreviewed or escaping paths', () => {
   const selected = selectRuntimeFiles(['./headless_shell', 'icudtl.dat', './libblink_core.dylib', 'snapshot_blob.bin',
@@ -70,7 +82,7 @@ test('monolithic packages bind the current profile and positive C++ evidence to 
     compiled: true, ccTestsPassed: true, vizTestsPassed: true, exitCode: 0, stage: 'engine-tests-complete',
     cppTestsEvidence: { version: 1, revision: source.revision, binarySha256: artifacts.headless_shell, profileSha256,
       testArtifacts: { cc_unittests: 'a'.repeat(64), viz_unittests: 'b'.repeat(64) },
-      results: { cc: { passed: true, count: 19, xmlSha256: 'c'.repeat(64) }, viz: { passed: true, count: 4, xmlSha256: 'd'.repeat(64) } } } };
+      results: { cc: { passed: true, count: 25, xmlSha256: 'c'.repeat(64) }, viz: { passed: true, count: 4, xmlSha256: 'd'.repeat(64) } } } };
   const path = join(root, 'chromium/virtual-desktop-build-state.json');
   await writeFile(path, JSON.stringify(state));
   assert.equal((await verifiedEngine(root, { requireStream: true })).binary, join(root, directory, 'headless_shell'));

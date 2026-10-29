@@ -28,7 +28,7 @@ const report = { version: 1, startedAt: new Date().toISOString(), status: 'initi
   rounds: [], errors: [], scope: 'Bounded local producer benchmark. Same pinned Chromium, fixed fixture, per-session browser process. No claim about 100+ active sessions.',
   exclusions: ['Client raster/decode CPU and end-to-end viewer latency are not included.',
     'Transport bytes count producer payloads to the Node coordinator, not actual HTTP/TLS/compressed network bandwidth.',
-    'producerPayloadBytes counts inline IPC buffers; file-backed fonts are separate referencedFontBytes, not a measured transfer count.',
+    'producerPayloadBytes counts inline IPC buffers; file-backed fonts/images are separate referencedFontBytes/referencedImageBytes, not measured transfer counts.',
     'RSS sums processes and double-counts shared pages; it is not unique physical memory.',
     'Conventional control captures one JPEG quality 80 per action; this is not an optimized video/screencast or pooled-browser baseline.',
     'Small sample, host has other applications running; do not extrapolate production capacity or general websites.'] };
@@ -64,17 +64,18 @@ try {
     try {
       for (let index = 0; index < active; index++) {
         const hub = new NativeFrames(() => ({ owner: 'agent', epoch: 1 }));
-        const entry = { hub, payloadBytes: 0, metadataBytes: 0, referencedFontBytes: 0, frames: 0, faults: [], failed: false };
+        const entry = { hub, payloadBytes: 0, metadataBytes: 0, referencedFontBytes: 0, referencedImageBytes: 0, frames: 0, faults: [], failed: false };
         entry.worker = new WorkerClient(() => { entry.failed = true; }, { backend: mode === 'native-records' ? 'chromium' : 'traditional-benchmark',
           onFrame: payload => { hub.ingest(payload); entry.frames++; entry.metadataBytes += Buffer.byteLength(JSON.stringify(payload.frame));
             entry.payloadBytes += payload.resources.reduce((sum, resource) => sum + (resource.data?.length || 0), 0);
-            entry.referencedFontBytes += payload.frame.resources.filter(resource => resource.kind === 'font').reduce((sum, resource) => sum + resource.bytes, 0); },
+            entry.referencedFontBytes += payload.frame.resources.filter(resource => resource.kind === 'font').reduce((sum, resource) => sum + resource.bytes, 0);
+            entry.referencedImageBytes += payload.frame.resources.filter(resource => resource.kind === 'image').reduce((sum, resource) => sum + resource.bytes, 0); },
           onFault: message => entry.faults.push(message) });
         running.add(entry.worker); guard.add(entry.worker.child.pid); entry.worker.exited.then(() => guard.remove(entry.worker.child.pid)); entries.push(entry);
         await entry.worker.call('init', parameters); guard.check();
         for (let warm = 0; warm < 2; warm++) await entry.worker.call('action', { actionId: `warm-${warm}`, action: { type: 'click', selector: '#increment' } });
       }
-      const start = await hostSample([process.pid]), sampleIndex = guard.samples.length, startBytes = entries.map(entry => ({ bytes: entry.payloadBytes, metadata: entry.metadataBytes, fonts: entry.referencedFontBytes, frames: entry.frames }));
+      const start = await hostSample([process.pid]), sampleIndex = guard.samples.length, startBytes = entries.map(entry => ({ bytes: entry.payloadBytes, metadata: entry.metadataBytes, fonts: entry.referencedFontBytes, images: entry.referencedImageBytes, frames: entry.frames }));
       const latency = [], loop = monitorEventLoopDelay({ resolution: 20 }); loop.enable();
       const began = performance.now();
       await Promise.all(entries.map(async entry => {
@@ -97,6 +98,7 @@ try {
         producerPayloadBytes: entries.reduce((sum, entry, index) => sum + entry.payloadBytes - startBytes[index].bytes, 0),
         producerMetadataBytes: entries.reduce((sum, entry, index) => sum + entry.metadataBytes - startBytes[index].metadata, 0),
         referencedFontBytes: entries.reduce((sum, entry, index) => sum + entry.referencedFontBytes - startBytes[index].fonts, 0),
+        referencedImageBytes: entries.reduce((sum, entry, index) => sum + entry.referencedImageBytes - startBytes[index].images, 0),
         producedFrames: entries.reduce((sum, entry, index) => sum + entry.frames - startBytes[index].frames, 0), correctFinalState: true });
       await save();
     } finally { for (const entry of entries) { await entry.worker.stop(); running.delete(entry.worker); entry.hub.close(); } }

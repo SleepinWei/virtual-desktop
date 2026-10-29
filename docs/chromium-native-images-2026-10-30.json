@@ -1,0 +1,342 @@
+{
+  "version": 1,
+  "generatedAt": "2026-10-29T23:09:51.352012+00:00",
+  "status": "bounded-static-image-and-input-candidate",
+  "engineSplitGate": "not-passed",
+  "serverRasterBypassed": false,
+  "runtime": {
+    "path": "/Volumes/Extreme-APFS/Runtimes/virtual-desktop-web-156-20261030",
+    "kind": "native-runtime-monolithic-v1",
+    "revision": "d0c02bfad08ec92a6ffcf989e53cd995e6381a4c",
+    "patchSha256": "31da69d46799a8485b6a32ea73740bce3974d17ba1c4aeafddfecd168eb77025",
+    "payloadBytes": 529317559,
+    "payloadFiles": 27,
+    "engineFiles": 13,
+    "fontAssets": {
+      "count": 8,
+      "bytes": 10208879,
+      "scope": "Explicitly provisioned common fonts are immutable binary runtime assets. Other website fonts use the authorized session binary endpoint."
+    }
+  },
+  "checks": {
+    "javascriptTests": 135,
+    "pythonTests": 16,
+    "javascriptSyntaxFiles": 101,
+    "cpp": {
+      "cc": {
+        "passed": true,
+        "count": 25,
+        "xmlSha256": "b96d1aab02f46c6d81a2cbb2fb467812aa6cf957d1ffb0cf7b4f1120b46672b4",
+        "names": [
+          "RemotePaintPictureLayerImplTest.PreservesRecordingWithoutTilings",
+          "RemotePaintPictureLayerImplTest.ActivatesSuccessiveRecordings",
+          "RemotePaintPictureLayerImplTest.RejectsEveryPictureDrawBackend",
+          "RemotePaintPictureLayerImplTest.ExportsAuthoritativeMembership",
+          "RemotePaintPictureLayerImplTest.RejectsUnknownDrawableLayer",
+          "LegacySWPictureLayerImplTest.UpdateTilesCreatesTilings",
+          "DisplayItemListTest.RemotePaintPreservesCoordinatesAndScroll",
+          "DisplayItemListTest.RemotePaintExternalFonts",
+          "DisplayItemListTest.RemotePaintOutlineFonts",
+          "DisplayItemListTest.RemotePaintExternalImages",
+          "DisplayItemListTest.RemotePaintImageShader",
+          "DisplayItemListTest.RemotePaintImageFilter",
+          "DisplayItemListTest.RemotePaintRejectsUnencodedImage",
+          "DisplayItemListTest.RemotePaintVisibleImageCull",
+          "DisplayItemListTest.RemotePaintWorkletRecords",
+          "PresentationTimeCallbackBufferTest.TestNoCallbacks",
+          "PresentationTimeCallbackBufferTest.TestMainThreadCallbackOnSuccess",
+          "PresentationTimeCallbackBufferTest.TestMainThreadCallbackOnFailure",
+          "PresentationTimeCallbackBufferTest.TestMainThreadSuccessfulCallback",
+          "PresentationTimeCallbackBufferTest.TestCompositorThreadSuccessfulCallback",
+          "PresentationTimeCallbackBufferTest.TestMixedCallbacksOnSuccess",
+          "PresentationTimeCallbackBufferTest.TestMixedCallbacksOnFailure",
+          "PresentationTimeCallbackBufferTest.TestCallbackBatching",
+          "PresentationTimeCallbackBufferTest.RemotePaintFailedPresentationsDoNotAccumulate",
+          "PresentationTimeCallbackBufferTest.RemotePaintFailureCancellationRequiresBothFeatures"
+        ]
+      },
+      "viz": {
+        "passed": true,
+        "count": 4,
+        "xmlSha256": "1aa08cf46f1bb433555f97debcf71b5c3076756081cfcc10fc71f9846549b9b8",
+        "names": [
+          "DisplayTest.RemotePaintNullDisplayPreservesFrameCallbacks",
+          "DisplayTest.RemotePaintNoDisplayRequiresPictureMode",
+          "DisplayTest.RemotePaintWithoutNoDisplayKeepsPixelBackend",
+          "DisplayTest.DisplayDamaged"
+        ]
+      }
+    }
+  },
+  "imageCases": [
+    {
+      "id": "no-image",
+      "nativeSupported": true,
+      "imagePixelsPassed": true,
+      "denseTextPixelsPassed": false,
+      "assetRejection": null
+    },
+    {
+      "id": "png-image",
+      "nativeSupported": true,
+      "imagePixelsPassed": true,
+      "denseTextPixelsPassed": false,
+      "assetRejection": {
+        "rejected": true,
+        "omitted": 1,
+        "corruptEncodedRejected": true,
+        "truncatedEncodedRejected": true
+      }
+    },
+    {
+      "id": "png-background",
+      "nativeSupported": true,
+      "imagePixelsPassed": true,
+      "denseTextPixelsPassed": false,
+      "assetRejection": {
+        "rejected": true,
+        "omitted": 1,
+        "corruptEncodedRejected": true,
+        "truncatedEncodedRejected": true
+      }
+    },
+    {
+      "id": "png-rounded",
+      "nativeSupported": true,
+      "imagePixelsPassed": true,
+      "denseTextPixelsPassed": false,
+      "assetRejection": {
+        "rejected": true,
+        "omitted": 1,
+        "corruptEncodedRejected": true,
+        "truncatedEncodedRejected": true
+      }
+    },
+    {
+      "id": "png-masked",
+      "nativeSupported": true,
+      "imagePixelsPassed": true,
+      "denseTextPixelsPassed": false,
+      "assetRejection": {
+        "rejected": true,
+        "omitted": 1,
+        "corruptEncodedRejected": true,
+        "truncatedEncodedRejected": true
+      }
+    },
+    {
+      "id": "gif-first-frame",
+      "nativeSupported": true,
+      "imagePixelsPassed": true,
+      "denseTextPixelsPassed": false,
+      "assetRejection": {
+        "rejected": true,
+        "omitted": 1,
+        "corruptEncodedRejected": true,
+        "truncatedEncodedRejected": true,
+        "unmarkedAnimationRejected": true
+      }
+    },
+    {
+      "id": "inline-vector",
+      "nativeSupported": true,
+      "imagePixelsPassed": true,
+      "denseTextPixelsPassed": false,
+      "assetRejection": null
+    }
+  ],
+  "nativeTests": {
+    "static-images": {
+      "status": "passed",
+      "testStatus": "native-diagnostics-complete",
+      "budgetMiB": 1536,
+      "stop": null,
+      "sampledPeakSummedRssMiB": 983.8,
+      "minimumFreePercent": 74,
+      "newSwapoutMiB": 0.0
+    },
+    "static-frames": {
+      "status": "passed",
+      "testStatus": "native-frame-candidate",
+      "budgetMiB": 1536,
+      "stop": null,
+      "sampledPeakSummedRssMiB": 1083.97,
+      "minimumFreePercent": 74,
+      "newSwapoutMiB": 0.0
+    },
+    "final-live": {
+      "status": "passed",
+      "testStatus": "live-native-session-candidate",
+      "budgetMiB": 2048,
+      "stop": null,
+      "sampledPeakSummedRssMiB": 1414.72,
+      "minimumFreePercent": 72,
+      "newSwapoutMiB": 0.0
+    },
+    "static-pool": {
+      "status": "passed",
+      "testStatus": "shared-native-host-candidate",
+      "budgetMiB": 1536,
+      "stop": null,
+      "sampledPeakSummedRssMiB": 976.73,
+      "minimumFreePercent": 74,
+      "newSwapoutMiB": 0.0
+    },
+    "final-smoke": {
+      "status": "passed",
+      "testStatus": "native-runtime-smoke-passed",
+      "budgetMiB": 1536,
+      "stop": null,
+      "sampledPeakSummedRssMiB": 505.36,
+      "minimumFreePercent": 72,
+      "newSwapoutMiB": 0.0
+    },
+    "bilibili-comparison-final": {
+      "status": "test-failed",
+      "testStatus": "public-site-comparison-incomplete",
+      "budgetMiB": 1536,
+      "stop": null,
+      "sampledPeakSummedRssMiB": 1175.8,
+      "minimumFreePercent": 72,
+      "newSwapoutMiB": 0.0
+    }
+  },
+  "bilibili": {
+    "artifact": "test-results/images-runtime-20261030/bilibili-region-input",
+    "status": "public-page-preview-only",
+    "imageAnimationPolicy": "first-frame",
+    "nativeHttpStatus": 201,
+    "ordinaryHttpStatus": 200,
+    "coordinateFocus": {
+      "passed": true,
+      "attempts": 1
+    },
+    "directHumanInput": {
+      "passed": true,
+      "directHumanInput": true,
+      "characters": 8,
+      "urlUnchanged": true,
+      "selectedSource": "bilibili"
+    },
+    "input": {
+      "accepted": 3,
+      "rejected": 0,
+      "pointers": 1,
+      "lastError": null
+    },
+    "downloads": {
+      "resources": 78,
+      "bytes": 20839106,
+      "fonts": 12,
+      "fontBytes": 20050816,
+      "preinstalledFonts": 1,
+      "images": 39,
+      "imageBytes": 659927
+    },
+    "decoder": {
+      "fonts": 7,
+      "fontBytes": 19813467,
+      "images": 35,
+      "encodedImageBytes": 3668943,
+      "imageDecodeCacheBytes": 33554432,
+      "imageDecodeCacheUsedBytes": 32102502
+    },
+    "safety": {
+      "stop": null,
+      "sampledPeakSummedRssMiB": 1991.36,
+      "minimumFreePercent": 72,
+      "newSwapoutMiB": 0.0
+    }
+  },
+  "comparison": {
+    "artifact": "test-results/images-runtime-20261030/bilibili-comparison-final",
+    "status": "public-site-comparison-incomplete",
+    "imageAnimationPolicy": "first-frame",
+    "iterations": 4,
+    "producers": [
+      {
+        "mode": "traditional-jpeg",
+        "status": "passed",
+        "latencyMs": {
+          "p50": 77.5007499999997,
+          "p95": 94.9930830000003,
+          "max": 94.9930830000003
+        },
+        "measurement": {
+          "processCpuSeconds": 0.42000000000000026,
+          "peakSummedRssBytes": 1158643712,
+          "newHostSwapoutBytes": 0,
+          "minHostFreePercent": 72
+        }
+      },
+      {
+        "mode": "native-records",
+        "status": "passed",
+        "latencyMs": {
+          "p50": 29.673416999999972,
+          "p95": 31.236541999999645,
+          "max": 31.236541999999645
+        },
+        "measurement": {
+          "processCpuSeconds": 0.16999999999999993,
+          "peakSummedRssBytes": 1093009408,
+          "newHostSwapoutBytes": 0,
+          "minHostFreePercent": 72
+        }
+      }
+    ],
+    "eligibility": [
+      {
+        "round": 0,
+        "eligible": false,
+        "reason": "Both producers, equal state, fresh native frames, native replay and JPEG80 control must pass the strict visual stages",
+        "nativeOverOrdinary": null
+      }
+    ],
+    "visualStages": [
+      {
+        "stage": "r0-before",
+        "passed": false
+      },
+      {
+        "stage": "r0-after",
+        "passed": false
+      }
+    ]
+  },
+  "supersededFailures": [
+    {
+      "artifact": "test-results/images-worklet-cpp-test-20261030",
+      "reason": "Worklet image filter was culled before resolution; fixed and all 29 C++ tests rerun."
+    },
+    {
+      "artifact": "test-results/images-runtime-20261030/bilibili-worklet",
+      "reason": "Blank-search hot-list has animated images; full animation remains unsupported, explicit first-frame policy added."
+    },
+    {
+      "artifact": "test-results/images-runtime-20261030/bilibili-static-pointer",
+      "reason": "Combined RSS safety stop; fixed-buffer artifact hashing introduced, cap unchanged."
+    },
+    {
+      "artifact": "test-results/images-runtime-20261030/bilibili-fresh-diagnostic",
+      "reason": "Full-frame pointer fence rejected unchanged header while carousel changed; replaced with conservative native coverage fencing."
+    }
+  ],
+  "limitations": [
+    "Xiaohongshu fresh session still returns 300012; user reports daily browser works. No claim of a network-wide block or access fix.",
+    "Bilibili preview explicitly freezes image animations at frame zero; JS/CSS animations and page state remain live. Full image animation and video are not accepted.",
+    "Dense text and strict public-site pixels still fail. No equal-quality performance ratio is accepted.",
+    "Successful browser tests explicitly use macOS in-process GPU; separate-GPU startup is unresolved.",
+    "Coordinate coverage uses conservative native picture bounds and clips. A shared picture changing elsewhere can still reject input. This is not DOM hit-test reconstruction.",
+    "Summed RSS double-counts shared pages and watchdog sampling is not a hard limit or a ToDesk latency guarantee."
+  ],
+  "finalLink": {
+    "artifact": "test-results/images-worklet-final-link-20261030",
+    "dryRun": "[1/1] LINK ./headless_shell",
+    "budgetMiB": 8192,
+    "stop": null,
+    "sampledPeakSummedRssMiB": 6439.83,
+    "minimumFreePercent": 72,
+    "newSwapoutMiB": 0.0
+  }
+}

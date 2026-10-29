@@ -88,3 +88,13 @@ test('typing can use a recently acknowledged frame while stale coordinates remai
   frames.disconnect(epoch);
   assert.throws(() => frames.assertPresented(action, false), error => error.code === 'STALE_FRAME');
 });
+
+test('ACK freshness distinguishes a rendered old frame from current coordinate readiness', t => {
+  const frames = create(t); frames.ingest(payload(1)); const { epoch } = frames.connect('viewer'), sent = [];
+  frames.attach(epoch, 'viewer', packet => sent.push(packet), () => {});
+  frames.ingest(payload(2, 'b'));
+  assert.equal(frames.acknowledge(ack(sent[0]), 'viewer').current, false);
+  assert.throws(() => frames.assertPointer({ connectionEpoch: epoch, seq: 1, frameId: sent[0].frame.id }), error => error.code === 'STALE_FRAME');
+  assert.equal(frames.acknowledge(ack(sent[1]), 'viewer').current, true);
+  assert.equal(frames.acknowledge(ack(sent[1]), 'viewer').current, false);
+});

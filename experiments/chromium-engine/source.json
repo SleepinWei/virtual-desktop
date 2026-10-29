@@ -38,11 +38,11 @@
     },
     "cc/paint/display_item_list.h": {
       "upstreamSha256": "8796e36b51876a6a715e53939181a115fe9fbbc439e71600c311a3e9d73b3a35",
-      "patchedSha256": "89b02c77e4b1a71466c7be790667676303422d182904f0408dfc5cded9648ecf"
+      "patchedSha256": "ddd50500cea381e333e827b5e357e17c127bd5b27ce1dfff7542123f7fb5f5fb"
     },
     "cc/paint/display_item_list.cc": {
       "upstreamSha256": "e88babbfb156dfd3d2e0cce4734ee08ac6431daaa6b1a428c77e120a184cb181",
-      "patchedSha256": "7c13d070f4060c223dc812e042381bca962d4e74c7d01f62e8e29c63b6cf5b3a"
+      "patchedSha256": "f55c6557cf5ae53a3a8a39ae835051a9d6054f276ec47b3bb6968cff58d34200"
     },
     "components/viz/service/BUILD.gn": {
       "upstreamSha256": "15c828cd6a1bf5552b480b5574827359f8a3377ae4e9e8f7f1860511f827f875",
@@ -62,7 +62,7 @@
     },
     "cc/paint/display_item_list_unittest.cc": {
       "upstreamSha256": "42673400361b98333520503067a618f2b1d9c559c1e8d0552f4460d19a0638ed",
-      "patchedSha256": "ea327189f6b77b4305a5e0a4b5a6a2a21b29f9764529887de5475c739724dd8e"
+      "patchedSha256": "5a9a125601fd4bd1096728b9c2002fcc25241b38dbfbd4b0a621a5927350f4fb"
     },
     "cc/trees/layer_tree_host_impl.cc": {
       "upstreamSha256": "d96b905bf5e63dcd9e76707df8c119294651540d671bfc5b0ff14b03ad740efd",
@@ -70,7 +70,7 @@
     },
     "cc/trees/layer_tree_impl.cc": {
       "upstreamSha256": "16ec1ac875aa36b063faecf1dde840db8a0f17cdb92c100f6f4720ed0b605924",
-      "patchedSha256": "68ac762680bd5f216933ab7db47c2478126a8182fc1d918d9cdbae963f3337ed"
+      "patchedSha256": "9cef7137d72fec5d2dbca513ac665e530f4520dc66db16b7e59ee6641119ad58"
     },
     "cc/trees/layer_tree_impl.h": {
       "upstreamSha256": "0d8014fa6b7af4e744e7911163f5e80de20b9799433d4681e0ef1bd3326faeba",
@@ -91,6 +91,42 @@
     "cc/paint/BUILD.gn": {
       "upstreamSha256": "54d1bb9a4680a13b141903cf3d85921d17c873bfc1a222b2ed8a8a4e7132cf2e",
       "patchedSha256": "1216bf01f8cc720d081611a9c8e1e7d875e4c148f5462dce22d929b0d5d72bb6"
+    },
+    "cc/paint/image_provider.h": {
+      "upstreamSha256": "a57eca0abf53c206dfa17a2343ef38df2e5dfa0d14779b388150d41fab0582cd",
+      "patchedSha256": "574f90de699f967d6ac4bc83487778ed7e28612436e158c4718da5c2d04439f0"
+    },
+    "cc/paint/paint_shader.cc": {
+      "upstreamSha256": "b4decce6fd7be52a9a7383f87dc5ac2c4107949704240130d8605dade4a8d49b",
+      "patchedSha256": "d53e345a7bae89868575f4e384607bbf35ed35752cd1eecc3c0abeaa340ac9af"
+    },
+    "cc/paint/paint_filter.cc": {
+      "upstreamSha256": "88aa99c77d67e8bbd16f722d1fe0b99971db4c1247ff5c611021c63aaf4f5b58",
+      "patchedSha256": "9006696c090d42a1d2e07be45147cad2b39299644a5e04b3b2b609ec98b1f43c"
+    },
+    "cc/paint/image_provider.cc": {
+      "upstreamSha256": "0e8505c3bcf7ac06de3fb822dce35ee720c294a0d1c14093f0b4ba3e44f3fda6",
+      "patchedSha256": "83059cec3e4db395f41815145ed4556d89a9b9110be5660d65cc2ae897ea8192"
+    },
+    "cc/paint/decode_stashing_image_provider.h": {
+      "upstreamSha256": "c984e42f50c922638e8b5b9a1c97c469e7c2d04e7ef978b83e76ad0c2a8ea9a7",
+      "patchedSha256": "59625030bb912cd87f88766d055b3d2e7d013c549e059923a0aa2fdbb21a8e8d"
+    },
+    "cc/paint/decode_stashing_image_provider.cc": {
+      "upstreamSha256": "fe87b13c53db4112a7b9541ddc30b5061ae79f93345e0bdc220b5e52e7b51ebd",
+      "patchedSha256": "750add7be894715f7e0e0baea7fbcb0476e634e20d10e6949efba5f92d0a7441"
+    },
+    "cc/paint/paint_filter.h": {
+      "upstreamSha256": "37a4335b614c57b2a171b89ecd55a513eb0bb01253432bc53fd4bd1dc51bfb26",
+      "patchedSha256": "215795422f05ab9042eb4c450331e38c598662b37dd047c939e49077f3432f7b"
+    },
+    "cc/paint/scoped_raster_flags.cc": {
+      "upstreamSha256": "36ad2025513ab685ee67dafb350164f740d985706baecc94c3a60f15dcb030e5",
+      "patchedSha256": "fdeccf15edb9664716f7cf0292e946ac14044e76c61d01e57358ce0534eeee2f"
+    },
+    "cc/paint/paint_op_buffer.cc": {
+      "upstreamSha256": "288c413847814cbf328a35631a223b6deef912f7abeba9beb74055b1ceb0ade5",
+      "patchedSha256": "c5539e8401d5baca5ff39b9acb2c34ed3416d1a9ddb948c6ca2b4b727c2e315b"
     }
   },
   "skiaRevision": "886e42fda11610a56dd1b22e8697e27f9d1e34f2",
@@ -111,6 +147,15 @@
       "maxCacheBytes": 134217728,
       "reference": "vdfont01-sha256-font-descriptor",
       "outlineGlyphLimit": 4096
+    },
+    "imageResources": {
+      "version": 1,
+      "directoryEnvironment": "VIRTUAL_DESKTOP_REMOTE_IMAGE_DIRECTORY",
+      "format": "original-encoded-image",
+      "reference": "vdimage1-sha256",
+      "maxImageBytes": 16777216,
+      "maxImagePixels": 16777216,
+      "maxCacheBytes": 134217728
     }
   }
 }

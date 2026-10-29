@@ -175,13 +175,14 @@ class CanvasKitBuild:
         self.run('build', [self.root / 'chromium/src/third_party/ninja/ninja',
                            '-C', self.output, '-j', str(jobs), 'canvaskit.js'])
         assets = {name: digest(self.output / name) for name in ['canvaskit.js', 'canvaskit.wasm']}
-        metadata = {'schemaVersion': 1, 'id': 'chromium-skia-' + SKIA_REVISION[:12] + '-mac-unhinted-cff-fonts-v1',
+        metadata = {'schemaVersion': 1, 'id': 'chromium-skia-' + SKIA_REVISION[:12] + '-mac-unhinted-assets-v1',
                     'skiaRevision': SKIA_REVISION, 'emsdkVersion': EMSDK_VERSION,
                     'profilingFunctions': True, 'gnArgsSha256': digest(self.output / 'args.gn'),
                     'backend': 'software', 'text': {'gammaAppliesToA8': True, 'gamma': 1, 'contrast': 0,
                                                   'cffStemDarkening': True, 'darkeningCurve': 'FreeType default'},
                     'patchSha256': digest(HERE / SOURCE['patch']),
                     'fontRegistry': SOURCE['fontRegistry'],
+                    'imageRegistry': SOURCE['imageRegistry'],
                     'assets': assets, 'scope': 'Experimental CPU SKP replay; no WebGL or paragraph shaping'}
         (self.output / 'runtime.json').write_text(json.dumps(metadata, indent=2) + '\n')
         self.save(compiled=True, assets=assets)

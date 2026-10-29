@@ -11,7 +11,7 @@ import { normalizeNativeFrame } from '../chromium-paint/native-frame.js';
 import { captureLaunchArgs, recordTrace, settlePage } from '../chromium-paint/capture.js';
 import { embeddedFonts } from './font-inspect.js';
 import { createFrameLab } from '../chromium-paint/frame-server.js';
-import { browserProcessArgs } from './browser-runtime.js';
+import { browserProcessArgs, imageAnimationArgs } from './browser-runtime.js';
 import { comparePixels, crop, decoded } from '../chromium-paint/verify.js';
 
 const { values } = parseArgs({ options: { root: { type: 'string' }, output: { type: 'string' }, canvaskit: { type: 'string' }, images: { type: 'boolean', default: false } } });
@@ -21,11 +21,17 @@ await mkdir(join(output, 'fonts'), { recursive: true });
 const font = await readFile(new URL('../chromium-paint/fonts/fixture-sans.otf', import.meta.url));
 const tile = createCanvas(2, 2), paint = tile.getContext('2d'); paint.fillStyle = '#cc3300'; paint.fillRect(0, 0, 2, 2);
 const png = tile.toBuffer('image/png');
+// Two-frame 1x1 red/green GIF, each frame 100 ms. The explicit browser policy
+// and the client must both retain the first (red) frame, without server pixels.
+const gif = Buffer.from('47494638396101000100800000ff000000ff0021ff0b4e45545343415045322e30030100000021f904040a0000002c000000000100010000020244010021f904040a0000002c00000000010001000002024c01003b', 'hex');
 const cases = values.images ? [
   { id: 'no-image', family: 'Probe', text: 'Image control' },
   { id: 'png-image', family: 'Probe', text: 'Image control', image: '<img id="image" src="/pixel.png" width="32" height="32">' },
-  { id: 'png-background', family: 'Probe', text: 'Image control', image: '<div style="width:32px;height:32px;background:url(/pixel.png)"></div>' },
-  { id: 'inline-vector', family: 'Probe', text: 'Image control', image: '<svg width="32" height="32"><rect width="32" height="32" fill="#c30"/></svg>' },
+  { id: 'png-background', family: 'Probe', text: 'Image control', image: '<div id="image" style="width:32px;height:32px;background:url(/pixel.png)"></div>' },
+  { id: 'png-rounded', family: 'Probe', text: 'Image control', image: '<div id="image" style="width:64px;height:64px;overflow:hidden;border-radius:16px;will-change:transform;background:#06c"><img src="/pixel.png" width="64" height="64" style="opacity:.8"></div>' },
+  { id: 'png-masked', family: 'Probe', text: 'Image control', image: '<div id="image" style="width:64px;height:64px;mask-image:linear-gradient(to right,black,transparent);will-change:transform;background:#06c"><img src="/pixel.png" width="64" height="64" style="opacity:.8"></div>' },
+  { id: 'gif-first-frame', family: 'Probe', text: 'Image control', imageAnimationPolicy: 'first-frame', image: '<img id="image" src="/animated.gif" width="32" height="32">' },
+  { id: 'inline-vector', family: 'Probe', text: 'Image control', image: '<svg id="image" width="32" height="32"><rect width="32" height="32" fill="#c30"/></svg>' },
 ] : [
   { id: 'fixture-latin', family: 'Probe', text: 'Native font probe ABC abc 123' },
   { id: 'serif-latin', family: '"Times New Roman"', text: 'Native font probe ABC abc 123' },
@@ -55,6 +61,7 @@ const server = http.createServer((request, response) => {
   if (request.method !== 'GET') { response.writeHead(405); return response.end(); }
   if (address.pathname === '/font.otf') { response.writeHead(200, { 'Content-Type': 'font/otf' }); return response.end(font); }
   if (address.pathname === '/pixel.png') { response.writeHead(200, { 'Content-Type': 'image/png' }); return response.end(png); }
+  if (address.pathname === '/animated.gif') { response.writeHead(200, { 'Content-Type': 'image/gif' }); return response.end(gif); }
   const item = cases.find(item => item.id === address.searchParams.get('case'));
   if (address.pathname !== '/probe' || !item) { response.writeHead(404); return response.end(); }
   response.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store',
@@ -67,7 +74,8 @@ async function replay(item, result, executablePath) {
   let local;
   try {
     const baseUrl = await lab.listen();
-    local = await chromium.launch({ executablePath, headless: true, args: browserProcessArgs() });
+    local = await chromium.launch({ executablePath, headless: true,
+      args: [...browserProcessArgs(), ...imageAnimationArgs(item.imageAnimationPolicy)] });
     const context = await local.newContext({ viewport: { width: 960, height: 720 }, deviceScaleFactor: 1 });
     const page = await context.newPage();
     await page.goto(baseUrl);
@@ -89,6 +97,57 @@ async function replay(item, result, executablePath) {
     const actualImage = await decoded(picture), expectedImage = await decoded(expected);
     result.replay = { decoded: true, details, visual: comparePixels(expectedImage, actualImage),
       textRegion: { bounds, ...comparePixels(crop(expectedImage, bounds), crop(actualImage, bounds)) } };
+    if (await reference.locator('#image').count()) {
+      const bounds = await reference.locator('#image').boundingBox();
+      result.replay.imageRegion = { bounds, ...comparePixels(crop(expectedImage, bounds), crop(actualImage, bounds)) };
+    }
+    result.replay.imagePixelsPassed = result.replay.visual.passed && result.replay.imageRegion?.passed !== false;
+    result.replay.textPixelsPassed = result.replay.textRegion.passed;
+    if (result.imageAssets?.length) {
+      result.missingImageProbe = await page.evaluate(async ({ images, fonts, pictureId }) => {
+        const kit = await window.CanvasKitInit({ locateFile: name => '/' + name }), registry = new kit.RemoteFontRegistry();
+        let picture;
+        try {
+          for (const font of fonts) {
+            const data = new Uint8Array(await (await fetch('/' + font.path)).arrayBuffer());
+            const pointer = kit._malloc(data.length); kit.HEAPU8.set(data, pointer);
+            if (!registry._addFont(font.id, pointer, data.length)) throw new Error('Font registration failed');
+          }
+          // Valid font inventory and original picture, but intentionally omit
+          // image registration. Skia must not substitute a blank image.
+          const data = new Uint8Array(await (await fetch('/pictures/' + pictureId + '.skp')).arrayBuffer());
+          const pointer = kit._malloc(data.length); kit.HEAPU8.set(data, pointer);
+          picture = registry._makePicture(pointer, data.length);
+          const { createNativeDecoder } = await import('/font-runtime.js');
+          const invalid = new TextEncoder().encode('invalid encoded image asset');
+          const id = [...new Uint8Array(await crypto.subtle.digest('SHA-256', invalid))].map(value => value.toString(16).padStart(2, '0')).join('');
+          const decoder = createNativeDecoder(kit, { fetchResource: async () => new Response(invalid) });
+          let corruptEncodedRejected = false;
+          try { await decoder.load({ kind: 'image', id, bytes: invalid.length, width: 2, height: 2, path: `images/${id}.img` }); }
+          catch { corruptEncodedRejected = true; }
+          finally { decoder.dispose(); }
+          const source = new Uint8Array(await (await fetch('/' + images[0].path)).arrayBuffer());
+          let unmarkedAnimationRejected;
+          if (images[0].animationPolicy === 'first-frame') {
+            const strict = createNativeDecoder(kit, { fetchResource: async () => new Response(source) });
+            const unmarked = { ...images[0] }; delete unmarked.animationPolicy;
+            try { await strict.load(unmarked); unmarkedAnimationRejected = false; }
+            catch { unmarkedAnimationRejected = true; }
+            finally { strict.dispose(); }
+          }
+          const truncated = source.slice(0, Math.min(source.length - 12, 50));
+          const truncatedId = [...new Uint8Array(await crypto.subtle.digest('SHA-256', truncated))].map(value => value.toString(16).padStart(2, '0')).join('');
+          const truncatedDecoder = createNativeDecoder(kit, { fetchResource: async () => new Response(truncated) });
+          let truncatedEncodedRejected = false;
+          try { await truncatedDecoder.load({ ...images[0], id: truncatedId, bytes: truncated.length, path: `images/${truncatedId}.img` }); }
+          catch { truncatedEncodedRejected = true; }
+          finally { truncatedDecoder.dispose(); }
+          return { rejected: !picture, omitted: images.length, corruptEncodedRejected, truncatedEncodedRejected, unmarkedAnimationRejected };
+        } finally { picture?.delete(); registry.delete(); }
+      }, { images: result.imageAssets, fonts: result.fontAssets, pictureId: result.resources.find(resource => resource.imageReferences)?.id });
+      if (!result.missingImageProbe.rejected || !result.missingImageProbe.corruptEncodedRejected || !result.missingImageProbe.truncatedEncodedRejected) throw new Error('Missing, corrupt or truncated native image was accepted');
+      if (item.imageAnimationPolicy && result.missingImageProbe.unmarkedAnimationRejected !== true) throw new Error('Unmarked animation silently became a first-frame preview');
+    }
     if (item.id === 'system-cjk') {
       result.missingGlyphProbe = await page.evaluate(async ({ font, pictureId }) => {
         const asset = new Uint8Array(await (await fetch('/' + font.path)).arrayBuffer());
@@ -138,7 +197,14 @@ try {
       stream = await createNativeStream(message => { const key = `${message.pid}:${message.snapshot?.tree_id ?? 'error'}`;
         if (!messages.has(key) && messages.size >= 4) messages.delete(messages.keys().next().value); messages.set(key, message); });
       browserServer = await chromium.launchServer({ executablePath: engine.binary, headless: true, chromiumSandbox: false, timeout: 15000,
-        args: captureLaunchArgs({ remotePaint: true, noDisplay: true, producerBufferBytes: 8388608 }), env: { ...process.env, ...stream.environment } });
+        args: [...captureLaunchArgs({ remotePaint: true, noDisplay: true, producerBufferBytes: 8388608 }),
+          ...imageAnimationArgs(item.imageAnimationPolicy)], env: { ...process.env, ...stream.environment } });
+      let diagnosticBytes = 0;
+      browserServer.process().stderr?.on('data', chunk => {
+        if (diagnosticBytes >= 16384) return;
+        const bounded = chunk.subarray(0, 16384 - diagnosticBytes); diagnosticBytes += bounded.length;
+        result.nativeDiagnostics = (result.nativeDiagnostics || '') + bounded.toString();
+      });
       browser = await chromium.connect(browserServer.wsEndpoint());
       const context = await browser.newContext({ viewport: { width: 960, height: 720 }, deviceScaleFactor: 1, serviceWorkers: 'block', acceptDownloads: false });
       await context.route('**/*', route => new URL(route.request().url()).origin === origin && route.request().method() === 'GET' ? route.continue() : route.abort());
@@ -146,7 +212,7 @@ try {
       const url = origin + '/probe?case=' + item.id;
       result.url = url;
       const fontReady = 'font-ready-' + item.id;
-      const trace = await recordTrace(cdp, async () => { await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 15000 });
+      const trace = await recordTrace(cdp, async () => { await page.goto(url, { waitUntil: values.images ? 'load' : 'domcontentloaded', timeout: 15000 });
         await page.evaluate(() => document.fonts.ready); await page.evaluate(name => performance.mark(name), fontReady);
         await page.setViewportSize({ width: 961, height: 720 }); await settlePage(page);
         await page.setViewportSize({ width: 960, height: 720 }); await settlePage(page); },
@@ -174,8 +240,9 @@ try {
       result.nativeError = current.error; result.unsupported = current.snapshot?.unsupported;
       if (current.snapshot) {
         try {
-          const normalized = normalizeNativeFrame({ name: 'VirtualDesktop.RemotePaintFrame', cat: 'cc', pid: current.pid, ts: current.ts, args: { snapshot: current.snapshot } });
-          result.nativeSupported = true; result.resources = []; result.fontAssets = [...normalized.fonts.values()];
+          const normalized = normalizeNativeFrame({ name: 'VirtualDesktop.RemotePaintFrame', cat: 'cc', pid: current.pid, ts: current.ts, args: { snapshot: current.snapshot } },
+            { imageAnimationPolicy: item.imageAnimationPolicy });
+          result.nativeSupported = true; result.resources = []; result.fontAssets = [...normalized.fonts.values()]; result.imageAssets = [...normalized.images.values()];
           result.fontFormats = [];
           result.nativeMessageBytes = Buffer.byteLength(JSON.stringify(current));
           for (const asset of normalized.fonts.values()) {
@@ -186,14 +253,17 @@ try {
           if (values.canvaskit) {
             const directory = join(output, item.id);
             await mkdir(join(directory, 'pictures'), { recursive: true }); await mkdir(join(directory, 'fonts'), { recursive: true });
+            await mkdir(join(directory, 'images'), { recursive: true });
             for (const asset of normalized.fonts.values()) await copyFile(stream.fontResource(asset.id).filePath, join(directory, asset.path));
+            for (const asset of normalized.images.values()) await copyFile(stream.imageResource(asset.id).filePath, join(directory, asset.path));
             for (const [id, bytes] of normalized.bytes) await writeFile(join(directory, `pictures/${id}.skp`), bytes);
             await writeFile(join(directory, 'frame-capture.json'), JSON.stringify({ version: 1, viewport: normalized.frame.viewport,
               stages: [{ name: item.id, frame: normalized.frame }] }, null, 2));
           }
           for (const [id, bytes] of normalized.bytes) {
             const fonts = embeddedFonts(bytes);
-            result.resources.push({ id, bytes: bytes.length, fonts, embeddedFontBytes: fonts.reduce((sum, font) => sum + font.bytes, 0) });
+            result.resources.push({ id, bytes: bytes.length, fonts, imageReferences: normalized.frame.resources.find(resource => resource.id === id)?.images?.length || 0,
+              embeddedFontBytes: fonts.reduce((sum, font) => sum + font.bytes, 0) });
           }
         } catch (error) { result.nativeSupported = false; result.nativeError = error.message; }
       } else result.nativeSupported = false;
@@ -203,8 +273,15 @@ try {
     if (values.canvaskit && result.nativeSupported) {
       try { await replay(item, result, engine.binary); }
       catch (error) { result.status = 'diagnostic-failed'; result.replayError = error.message.split('\n')[0]; }
+      // This experiment isolates image pixels. Keep the independent text
+      // result visible; known font differences still block site/performance
+      // acceptance and cannot be hidden by a correct large background.
+      if (values.images && !result.replay?.imagePixelsPassed) {
+        result.status = 'diagnostic-failed'; result.replayError ||= 'Image or whole-frame pixels differ from the ordinary reference';
+      }
       await save();
     }
+    if (values.images && !result.nativeSupported) result.status = 'diagnostic-failed';
   }
   report.status = report.cases.every(item => item.status === 'observed') ? 'native-diagnostics-complete' : 'native-diagnostics-incomplete';
   const assets = new Map(report.cases.flatMap(item => item.fontAssets || []).map(asset => [asset.id, asset]));

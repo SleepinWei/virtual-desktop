@@ -7,7 +7,7 @@ export class NativeClient {
   constructor({ kit, canvas, session, onControl, onStatus, onFrame }) {
     Object.assign(this, { kit, canvas, session, onControl, onStatus, onFrame });
     this.painter = createFramePainter(kit, canvas); this.generation = 0; this.attempts = 0;
-    this.downloads = { resources: 0, bytes: 0 }; this.presented = null; this.stopped = false;
+    this.downloads = { resources: 0, bytes: 0 }; this.presented = null; this.coordinateReady = false; this.stopped = false;
   }
   async call(operation, payload, signal) {
     const response = await fetch(`/api/sessions/${this.session.id}/frames/${operation}`, {
@@ -24,7 +24,7 @@ export class NativeClient {
     if (this.stopped) return;
     if (!retry) this.attempts = 0;
     const generation = ++this.generation, previousEpoch = this.epoch;
-    this.abort?.abort(); this.abort = new AbortController(); this.presented = null;
+    this.abort?.abort(); this.abort = new AbortController(); this.presented = null; this.coordinateReady = false;
     this.receiver?.reset('reconnecting');
     this.decoder?.dispose();
     this.onStatus('connecting', 'Connecting to the running page…');
@@ -82,6 +82,7 @@ export class NativeClient {
     if (generation !== this.generation || this.stopped) return;
     if (packet.control) this.onControl(packet.control);
     if (packet.kind === 'ping' || packet.kind === 'control') return;
+    this.coordinateReady = false;
     if (packet.kind === 'unsupported') throw Object.assign(new Error(packet.message), { code: packet.terminal ? 'SESSION_NOT_ACTIVE' : 'NATIVE_UNSUPPORTED' });
     const receiver = this.receiver, epoch = this.epoch;
     const result = await receiver.receive(packet);
@@ -91,14 +92,15 @@ export class NativeClient {
     this.onControl(acknowledged.control);
     if (!acknowledged.accepted) return;
     this.presented = { connectionEpoch: epoch, seq: packet.seq, frameId: packet.frame.id, revision: packet.frame.bridgeSeq };
+    this.coordinateReady = acknowledged.current === true;
     this.attempts = 0;
-    this.onStatus('connected', 'Live page connected');
+    this.onStatus('connected', this.coordinateReady ? 'Live page connected' : 'Live page connected · catching up');
     this.onFrame({ ...this.presented, frame: packet.frame, receiver: receiver.state, downloads: { ...this.downloads },
       removedLayerIds: result.removedLayerIds });
   }
   async recover(error, generation) {
     if (generation !== this.generation || this.stopped || error.name === 'AbortError') return;
-    this.presented = null; this.receiver?.reset('recovering'); this.abort?.abort(); this.decoder?.dispose();
+    this.presented = null; this.coordinateReady = false; this.receiver?.reset('recovering'); this.abort?.abort(); this.decoder?.dispose();
     if (['SESSION_NOT_ACTIVE', 'SESSION_NOT_FOUND', 'FORBIDDEN'].includes(error.code)) {
       this.stopped = true; this.painter.dispose(); this.onStatus('ended', error.message); return;
     }
@@ -113,10 +115,10 @@ export class NativeClient {
     if (generation === this.generation && !this.stopped) await this.connect({ retry: true });
   }
   async stop() {
-    this.stopped = true; this.generation++; this.presented = null; this.abort?.abort();
+    this.stopped = true; this.generation++; this.presented = null; this.coordinateReady = false; this.abort?.abort();
     this.receiver?.reset('stopped'); this.decoder?.dispose(); this.painter.dispose();
     if (this.epoch) await this.call('disconnect', { epoch: this.epoch }).catch(() => {});
   }
-  get state() { return { epoch: this.epoch, generation: this.generation, presented: this.presented,
-    receiver: this.receiver?.state, downloads: { ...this.downloads } }; }
+  get state() { return { epoch: this.epoch, generation: this.generation, presented: this.presented, coordinateReady: this.coordinateReady,
+    receiver: this.receiver?.state, decoder: this.decoder?.state, downloads: { ...this.downloads } }; }
 }

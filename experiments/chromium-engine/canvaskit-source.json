@@ -8,8 +8,18 @@
     },
     "modules/canvaskit/canvaskit_bindings.cpp": {
       "upstreamSha256": "807cae4d50425fb51160dac958bb7291a295751ab2d60471c20964568d13a9a6",
-      "patchedSha256": "40a2b4a9735fc31522b536e3241d63c78ffa9e7cab009e5dd040e77c4e1ba674"
+      "patchedSha256": "21e69aafba61311a0b288a63ad88122a7bff87af8022e2698e975c941da4c24d"
     }
+  },
+  "imageRegistry": {
+    "version": 1,
+    "reference": "vdimage1-sha256",
+    "missingImage": "reject-picture",
+    "storage": "lazy-encoded-image",
+    "maxImagePixels": 16777216,
+    "maxEncodedBytes": 134217728,
+    "decodeCacheBytes": 33554432,
+    "animationPolicy": "explicit-first-frame-or-reject"
   },
   "fontRegistry": {
     "version": 1,

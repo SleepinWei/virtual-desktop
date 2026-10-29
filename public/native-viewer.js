@@ -4,6 +4,7 @@ import { captureNativeInput } from '/native-input.js';
 const $ = selector => document.querySelector(selector), canvas = $('#desktop');
 let session, client, kit, control = { owner: 'agent', epoch: 1 }, busy = false, draining = false, lastFrame, connectionStatus;
 const inputs = [];
+const inputStats = { accepted: 0, rejected: 0, pointers: 0, lastError: null };
 function notice(message, error = false) { $('#notice').textContent = message; $('#notice').classList.toggle('error', error); }
 function buttons() {
   const active = session?.state === 'ACTIVE', human = active && control.owner === 'human';
@@ -21,6 +22,7 @@ function mergeControl(value) {
 async function attachSession(value) {
   kit ||= await window.CanvasKitInit({ locateFile: file => '/native-runtime/' + file });
   session = value; control = { owner: value.owner, epoch: value.epoch };
+  if ([...$('#fixture').options].some(option => option.value === value.fixture)) $('#fixture').value = value.fixture;
   sessionStorage.setItem('vd-native-viewer', JSON.stringify(session));
   $('#session').textContent = `Chromium session ${session.id.slice(0, 8)}`;
   client = new NativeClient({ kit, canvas, session,
@@ -50,6 +52,10 @@ async function request(operation, payload, credential = session?.humanToken) {
 async function input(action) {
   if (control.owner !== 'human' || session?.state !== 'ACTIVE') return;
   if (!client?.presented) { notice('Wait for a complete frame before sending input.', true); return; }
+  if (action.type === 'wheel' && !client.coordinateReady) {
+    inputStats.rejected++; inputStats.lastError = 'FRAME_CATCHING_UP';
+    notice('The page is catching up. Wait for the current frame before clicking.'); return;
+  }
   if (inputs.length >= 64) { notice('Input queue is full. Wait for the page to catch up.', true); return; }
   const last = inputs.at(-1);
   if (action.type === 'text' && last?.action.type === 'text' && last.epoch === control.epoch && last.action.value.length + action.value.length <= 2000) last.action.value += action.value;
@@ -63,9 +69,12 @@ async function input(action) {
       if (!client?.presented) { inputs.length = 0; notice('Connection interrupted; input stopped. Reconnect before typing.', true); break; }
       const shown = ['pointer', 'wheel'].includes(next.action.type) ? next.shown : client.presented;
       await request('actions', { epoch: next.epoch, actionId: crypto.randomUUID(), action: { ...next.action, ...shown } });
+      inputStats.accepted++; if (next.action.type === 'pointer') inputStats.pointers++;
+      if (inputStats.lastError) { inputStats.lastError = null; notice('Input delivered. Escape returns focus to the toolbar.'); }
     }
   } catch (error) {
     inputs.length = 0;
+    inputStats.rejected++; inputStats.lastError = error.code || 'INPUT_ERROR';
     notice(error.code === 'STALE_FRAME' ? 'The page changed. Click the field again before typing.' : error.message, true);
   } finally { draining = false; }
 }
@@ -124,7 +133,8 @@ canvas.addEventListener('wheel', event => {
     deltaX: Math.max(-2000, Math.min(2000, event.deltaX * multiplier)), deltaY: Math.max(-2000, Math.min(2000, event.deltaY * multiplier)) });
 }, { passive: false });
 window.nativeViewer = { state: () => ({ sessionId: session?.id, control: { ...control }, client: client?.state,
-  pendingInputs: inputs.length + Number(draining), frame: lastFrame ? { id: lastFrame.frameId, revision: lastFrame.revision } : null }), reconnect: () => client?.connect() };
+  pendingInputs: inputs.length + Number(draining), input: { ...inputStats }, frame: lastFrame ? { id: lastFrame.frameId, revision: lastFrame.revision } : null }),
+  frame: () => lastFrame?.frame, reconnect: () => client?.connect() };
 window.addEventListener('pagehide', () => { client?.stop(); });
 buttons();
 try {

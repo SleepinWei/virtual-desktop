@@ -4,6 +4,7 @@
 export const FRAME_VERSION = 1;
 export const FRAME_LIMITS = Object.freeze({ layers: 1024, surfaces: 64, depth: 32,
   resourceBytes: 32 * 1024 * 1024, fontBytes: 64 * 1024 * 1024,
+  imageBytes: 16 * 1024 * 1024, imagePixels: 16 * 1024 * 1024, imageWorkPixels: 64 * 1024 * 1024, imageDecodeCacheBytes: 32 * 1024 * 1024,
   cacheBytes: 128 * 1024 * 1024, resources: 1024 });
 const hash = /^[a-f0-9]{64}$/;
 const fail = message => { throw new Error(`Invalid native frame: ${message}`); };
@@ -15,15 +16,19 @@ const color = value => vector(value, 4) && value.every(item => item >= 0 && item
 const unique = values => new Set(values).size === values.length;
 
 export function validateResource(resource) {
-  const font = resource?.kind === 'font';
+  const font = resource?.kind === 'font', image = resource?.kind === 'image', asset = font || image;
   if (!resource || !hash.test(resource.id) ||
-      resource.kind !== undefined && !['font', 'picture'].includes(resource.kind) ||
-      resource.path !== (font ? `fonts/${resource.id}.font` : `pictures/${resource.id}.skp`) ||
+      resource.kind !== undefined && !['font', 'image', 'picture'].includes(resource.kind) ||
+      resource.path !== (font ? `fonts/${resource.id}.font` : image ? `images/${resource.id}.img` : `pictures/${resource.id}.skp`) ||
       !Number.isSafeInteger(resource.bytes) || resource.bytes < (font ? 12 : 8) ||
-      resource.bytes > (font ? FRAME_LIMITS.fontBytes : FRAME_LIMITS.resourceBytes) ||
-      font && resource.fonts !== undefined ||
-      !font && resource.fonts !== undefined && (!Array.isArray(resource.fonts) ||
-        resource.fonts.length > FRAME_LIMITS.resources || !unique(resource.fonts) || resource.fonts.some(id => !hash.test(id)))) {
+      resource.bytes > (font ? FRAME_LIMITS.fontBytes : image ? FRAME_LIMITS.imageBytes : FRAME_LIMITS.resourceBytes) ||
+      image && (![resource.width, resource.height].every(value => integer(value) && value > 0 && value <= 8192) ||
+        resource.width * resource.height > FRAME_LIMITS.imagePixels) ||
+      resource.animationPolicy !== undefined && (!image || resource.animationPolicy !== 'first-frame') ||
+      !image && (resource.width !== undefined || resource.height !== undefined) ||
+      asset && (resource.fonts !== undefined || resource.images !== undefined) ||
+      !asset && [resource.fonts, resource.images].some(deps => deps !== undefined && (!Array.isArray(deps) ||
+        deps.length > FRAME_LIMITS.resources || !unique(deps) || deps.some(id => !hash.test(id))))) {
     fail('resource descriptor');
   }
 }
@@ -44,31 +49,38 @@ export function validateFrame(frame) {
     if (resources.has(resource.id)) fail('duplicate resource');
     resources.set(resource.id, resource); bytes += resource.bytes;
   }
-  const fontReferences = new Set();
+  const assetReferences = new Set();
+  let imageWorkPixels = 0;
   let picturesStarted = false;
   for (const resource of frame.resources) {
-    if (resource.kind === 'font') {
-      if (picturesStarted) fail('fonts must precede pictures');
+    if (['font', 'image'].includes(resource.kind)) {
+      if (picturesStarted) fail('assets must precede pictures');
+      if (resource.kind === 'image') imageWorkPixels += resource.width * resource.height;
     } else {
       picturesStarted = true;
-      for (const id of resource.fonts || []) {
-        if (resources.get(id)?.kind !== 'font') fail('missing font dependency');
-        fontReferences.add(id);
+      for (const kind of ['font', 'image']) for (const id of resource[kind + 's'] || []) {
+        if (resources.get(id)?.kind !== kind) fail(`missing ${kind} dependency`);
+        assetReferences.add(id);
       }
     }
   }
-  if (frame.resources.some(resource => resource.kind === 'font' && !fontReferences.has(resource.id))) fail('orphan font');
+  if (frame.resources.some(resource => ['font', 'image'].includes(resource.kind) && !assetReferences.has(resource.id))) fail('orphan asset');
+  if (imageWorkPixels > FRAME_LIMITS.imageWorkPixels) fail('image decode workload');
   if (bytes > FRAME_LIMITS.cacheBytes) fail('frame resource budget');
   const surfaces = new Map(), layers = new Set(), referenced = new Set(), parents = new Map();
   for (const surface of frame.surfaces) {
-    if (!integer(surface.id) || surfaces.has(surface.id) || !rect(surface.rect) || !Array.isArray(surface.items)) fail('surface');
+    if (!integer(surface.id) || surfaces.has(surface.id) || !rect(surface.rect) || !Array.isArray(surface.items) ||
+        surface.isolated !== undefined && typeof surface.isolated !== 'boolean') fail('surface');
     surfaces.set(surface.id, surface);
   }
   if (!surfaces.has(frame.root)) fail('missing root');
   let entries = 0;
   for (const surface of frame.surfaces) for (const item of surface.items) {
     if (++entries > FRAME_LIMITS.layers || !integer(item.id) || !vector(item.transform, 16) ||
-        !rect(item.clip) || typeof item.clipped !== 'boolean' || !Number.isFinite(item.opacity) || item.opacity < 0 || item.opacity > 1) fail('entry');
+        !rect(item.clip) || item.roundedClip !== undefined && (!vector(item.roundedClip, 12) ||
+          !rect(item.roundedClip.slice(0, 4)) || item.roundedClip.slice(4).some(value => value < 0)) ||
+        item.blendMode !== undefined && !['SrcOver', 'DstIn'].includes(item.blendMode) ||
+        typeof item.clipped !== 'boolean' || !Number.isFinite(item.opacity) || item.opacity < 0 || item.opacity > 1) fail('entry');
     const m = item.transform;
     if ([2, 6, 8, 9, 11, 12, 13, 14].some(index => m[index] !== 0) || m[10] !== 1 || m[15] !== 1) fail('3D transform');
     if (item.kind === 'surface') {
@@ -78,7 +90,7 @@ export function validateFrame(frame) {
       if (layers.has(item.id) || !rect(item.bounds)) fail('duplicate layer or bounds');
       layers.add(item.id);
       if (item.kind === 'picture') {
-        if (!resources.has(item.resource) || resources.get(item.resource).kind === 'font') fail('missing picture resource');
+        if (!resources.has(item.resource) || ['font', 'image'].includes(resources.get(item.resource).kind)) fail('missing picture resource');
         referenced.add(item.resource);
       } else if (item.kind !== 'solid' || !color(item.color)) fail('unsupported layer');
     }
@@ -90,7 +102,7 @@ export function validateFrame(frame) {
     for (const item of surfaces.get(id).items) if (item.kind === 'surface') visit(item.id, depth + 1);
   }
   visit(frame.root, 0);
-  if (visited.size !== surfaces.size || referenced.size + fontReferences.size !== resources.size) fail('orphan surface or resource');
+  if (visited.size !== surfaces.size || referenced.size + assetReferences.size !== resources.size) fail('orphan surface or resource');
   if (!Array.isArray(frame.scrollOffsets) || frame.scrollOffsets.length > FRAME_LIMITS.layers ||
       frame.scrollOffsets.some(item => typeof item.id !== 'string' || item.id.length > 128 || !vector(item.offset, 2)) ||
       !unique(frame.scrollOffsets.map(item => item.id))) fail('scroll offsets');
@@ -180,7 +192,10 @@ export class FrameReceiver {
       for (const resource of packet.frame.resources) {
         const cached = this.cache.get(resource.id);
         if (cached && (cached.resource.bytes !== resource.bytes || cached.resource.path !== resource.path ||
-            cached.resource.kind !== resource.kind || JSON.stringify(cached.resource.fonts) !== JSON.stringify(resource.fonts))) fail('changed resource descriptor');
+            cached.resource.kind !== resource.kind || cached.resource.width !== resource.width || cached.resource.height !== resource.height ||
+            cached.resource.animationPolicy !== resource.animationPolicy ||
+            JSON.stringify(cached.resource.fonts) !== JSON.stringify(resource.fonts) ||
+            JSON.stringify(cached.resource.images) !== JSON.stringify(resource.images))) fail('changed resource descriptor');
         const value = cached?.value ?? await this.load(resource);
         if (value == null) fail('resource decoder returned no value');
         if (!cached) created.set(resource.id, { resource, value });
@@ -198,10 +213,10 @@ export class FrameReceiver {
       // Outline fonts preserve sparse native glyph IDs. A tiny serialized
       // subset may have a larger decoded index, so retire superseded fonts
       // and their pictures immediately instead of retaining many revisions.
-      const retiredFonts = new Set([...this.cache].filter(([id, entry]) =>
-        entry.resource.kind === 'font' && !active.has(id)).map(([id]) => id));
+      const retiredAssets = new Set([...this.cache].filter(([id, entry]) =>
+        ['font', 'image'].includes(entry.resource.kind) && !active.has(id)).map(([id]) => id));
       for (const [id, entry] of this.cache) if (!active.has(id) &&
-          (retiredFonts.has(id) || entry.resource.fonts?.some(font => retiredFonts.has(font)))) {
+          (retiredAssets.has(id) || [...entry.resource.fonts || [], ...entry.resource.images || []].some(id => retiredAssets.has(id)))) {
         this.release(entry.value); this.cache.delete(id);
       }
       // Keep current-frame resources first; old resources use the remaining
