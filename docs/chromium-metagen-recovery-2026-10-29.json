@@ -1,0 +1,92 @@
+{
+  "version": 1,
+  "date": "2026-10-29",
+  "observedAt": "2026-10-29T01:40:16.211349+00:00",
+  "status": "running",
+  "failure": {
+    "report": "test-results/lean-eight-jobs-20261029/guard-report.json",
+    "reportSha256": "30a50843b96336a78a62c37fe4c6188deeb5456e211c566b75c1e5283ab180fd",
+    "finishedAt": "2026-10-28T17:01:56.343Z",
+    "finishedAtAsiaShanghai": "2026-10-29 01:01:56 +08:00",
+    "status": "build-failed",
+    "exitCode": 1,
+    "safetyStop": null,
+    "lastProgress": "14407/36241 in the interrupted invocation",
+    "cause": "V8 metagen invoked gn desc without the headless root target/pattern, loading the full Chrome test graph and hitting assert(enable_print_preview).",
+    "reproduction": "Unscoped gn desc returned exit 1 with the print_preview BUILD.gn assertion. The same query with the headless root flags returned valid target JSON."
+  },
+  "repair": {
+    "candidateDotfile": {
+      "path": ".gn",
+      "baseSha256": "1c33e1726ea5b347730043bf1837fb17bedbeee4651ae9d8393f0d191fb0dd24",
+      "patchedSha256": "2ce626db4b09cbed3ec57b81ec68853bfc4450970b59b2ad0492eb1912a4a2fd",
+      "snippetSha256": "2adb190ae16cd75768a2c01c328f3289d3395e8c07d12d30e5d9e747ef58038d",
+      "environment": {
+        "VIRTUAL_DESKTOP_LEAN_ROOT": "headless"
+      },
+      "scope": "Candidate build graph only; inactive without its environment flag."
+    },
+    "cppSourcesChanged": false,
+    "v8GeneratorSourceChanged": false,
+    "gnArgumentsChanged": false,
+    "cleanPerformed": false,
+    "gnSubprocessPreflightPassed": true,
+    "v8MetagenPassed": true,
+    "headerSha256": "c5faa42595340b24d2426f4dd51ca90fc3b367e5a0e67d421fc184b14c5455d4",
+    "originalComponentHeaderSha256": "c5faa42595340b24d2426f4dd51ca90fc3b367e5a0e67d421fc184b14c5455d4",
+    "headerBytes": 86849,
+    "headerMatchesOriginalComponent": true,
+    "scope": "Only candidate processes set VIRTUAL_DESKTOP_LEAN_ROOT=headless. Dotfile defaults stay unchanged without it. This header match is not full engine acceptance."
+  },
+  "resumedBuild": {
+    "report": "test-results/lean-metagen-four-jobs-20261029/guard-report.json",
+    "reportMayChange": true,
+    "statePath": "/Volumes/Extreme-APFS/Builds/chromium/virtual-desktop-lean-ninja-build-state.json",
+    "requestedMaximumJobs": 8,
+    "jobs": 4,
+    "reasonForCurrentConcurrency": "Four jobs for the memory-heavy V8 phase, honoring the user priority to avoid disrupting other processes. No automatic upshift or retry loop.",
+    "startedAt": "2026-10-29T01:37:32.491Z",
+    "stage": "build-running",
+    "latestProgressLine": "[108/21011] CXX obj/v8/torque_generated_initializers/regexp-source-tq-csa.o",
+    "safetyPolicy": {
+      "minFreePercent": 35,
+      "maxSwapoutBytes": 67108864,
+      "maxTreeRssBytes": 6442450944,
+      "maxHeartbeatMs": 4000,
+      "maxDurationMs": null,
+      "enforceSystemLoad": false,
+      "systemLoadStopAbove": null
+    },
+    "safetyStop": null,
+    "latestSample": {
+      "time": 1793238012838,
+      "freePercent": 41,
+      "rssBytes": 2211676160,
+      "newSwapoutBytes": 0
+    },
+    "compiled": false,
+    "workingRuntimeReplaced": false
+  },
+  "checks": {
+    "pythonBuildTestsPassed": 12,
+    "javascriptSyntaxFiles": 81,
+    "javascriptSourcesChanged": false,
+    "cppAcceptancePassed": false
+  },
+  "engineSplitGate": "not-passed",
+  "serverRasterBypassed": false,
+  "afterFixEightJobs": {
+    "report": "test-results/lean-metagen-resume-20261029/guard-report.json",
+    "sha256": "6424afb20743adfb395fe428c8ee3ce0debfc416a279d4e1c1cd87dfc71f7404",
+    "status": "safety-stopped",
+    "finishedAt": "2026-10-29T01:33:31.545Z",
+    "safetyStop": "memory-pressure",
+    "lastProgress": "823/21834",
+    "lastSample": {
+      "freePercent": 33,
+      "rssBytes": 3537715200,
+      "newSwapoutBytes": 93847552
+    },
+    "diagnosis": "GN/metagen error was resolved; eight concurrent large V8 compilation units then reached host memory pressure. All sampled build processes were verified exited before resuming at four jobs."
+  }
+}

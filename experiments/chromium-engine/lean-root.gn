@@ -1,0 +1,8 @@
+
+# Virtual Desktop candidate-only build graph. GN subprocesses such as V8's
+# metagen query must see the same root as the initial gn gen invocation.
+# Without the candidate environment flag, upstream defaults are unchanged.
+if (getenv("VIRTUAL_DESKTOP_LEAN_ROOT") == "headless") {
+  root = "//headless:headless_shell"
+  root_patterns = [ "//headless:headless_shell" ]
+}

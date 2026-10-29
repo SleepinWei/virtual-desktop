@@ -20,6 +20,9 @@ class LeanBuildPreservationTest(unittest.TestCase):
         self.src.mkdir(parents=True)
         (self.root / 'logs').mkdir()
         (self.src / 'engine.cc').write_text('tested source')
+        (self.src / '.gn').write_text('buildconfig = "//build/config/BUILDCONFIG.gn"\n')
+        self.gn_base = patch.object(lean, 'GN_ROOT_BASE_SHA256', hashlib.sha256((self.src / '.gn').read_bytes()).hexdigest())
+        self.gn_base.start(); self.addCleanup(self.gn_base.stop)
         config = dict(lean.build.CONFIG, revision='pinned-test', files={'engine.cc': {
             'patchedSha256': hashlib.sha256(b'tested source').hexdigest()}})
         self.config = patch.object(lean.build, 'CONFIG', config)
@@ -48,6 +51,9 @@ class LeanBuildPreservationTest(unittest.TestCase):
         self.assertFalse(runner.state['compiled'])
         self.assertIn('--fail-on-unused-args', commands[0][1])
         self.assertIn('--root-pattern=//headless:headless_shell', commands[0][1])
+        self.assertEqual(commands[1][0], 'v8-gn-preflight')
+        self.assertEqual(runner.env['VIRTUAL_DESKTOP_LEAN_ROOT'], 'headless')
+        self.assertFalse(any(arg.startswith('--root-') for arg in commands[1][1] if isinstance(arg, str)))
 
     def test_changed_source_refuses_compilation_before_starting_a_tool(self):
         runner = lean.LeanBuild(self.root)
@@ -62,13 +68,20 @@ class LeanBuildPreservationTest(unittest.TestCase):
         with patch.object(runner, 'run'):
             runner.configure()
         commands = []
-        with patch.object(runner, 'run', side_effect=lambda phase, command: commands.append((phase, command))):
+        def run(phase, command):
+            commands.append((phase, command))
+            if phase == 'v8-metagen-preflight':
+                header = runner.output / lean.V8_METAGEN_TARGET
+                header.parent.mkdir(parents=True, exist_ok=True)
+                header.write_text('// generated test header\n')
+        with patch.object(runner, 'run', side_effect=run):
             with self.assertRaisesRegex(RuntimeError, 'without an executable'):
                 runner.compile(8)
         self.assertEqual(commands[0][1][-2:], ['-j', '8'])
         self.assertEqual(commands[0][1][2], lean.OUT)
         self.assertEqual(runner.state['jobs'], 8)
         self.assertFalse(runner.state['compiled'])
+        self.assertEqual([phase for phase, command in commands], ['v8-metagen-preflight', 'build'])
 
     def test_jobs_outside_the_eight_command_budget_are_rejected(self):
         runner = lean.LeanBuild(self.root)
@@ -77,6 +90,30 @@ class LeanBuildPreservationTest(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, 'between 1 and 8'):
                     runner.compile(jobs)
                 command.assert_not_called()
+
+    def test_gn_scope_patch_is_idempotent_and_refuses_unrecognized_source(self):
+        runner = lean.LeanBuild(self.root)
+        runner.prepare_gn_root(); first = (self.src / '.gn').read_bytes()
+        runner.prepare_gn_root(); self.assertEqual((self.src / '.gn').read_bytes(), first)
+        (self.src / '.gn').write_bytes(first + b'# user change\n')
+        with self.assertRaisesRegex(ValueError, 'preserving custom'):
+            runner.prepare_gn_root()
+        self.assertEqual((self.src / '.gn').read_bytes(), first + b'# user change\n')
+
+    def test_failed_metagen_cannot_start_the_main_build_or_claim_compilation(self):
+        runner = lean.LeanBuild(self.root)
+        with patch.object(runner, 'run'):
+            runner.configure()
+        calls = []
+        def fail(phase, command):
+            calls.append(phase)
+            raise RuntimeError('V8 preflight failed')
+        with patch.object(runner, 'run', side_effect=fail):
+            with self.assertRaisesRegex(RuntimeError, 'V8 preflight failed'):
+                runner.compile(8)
+        self.assertEqual(calls, ['v8-metagen-preflight'])
+        self.assertFalse(runner.state['compiled'])
+        self.assertFalse(runner.state['v8MetagenPassed'])
 
 
 if __name__ == '__main__':

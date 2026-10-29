@@ -69,7 +69,7 @@ DATA_DIR=.data/native-subset nice -n 10 npm run start:native -- \
 
 | 保护 | 当前编译策略 |
 | --- | --- |
-| 并发 | 一个 `headless_shell` 目标，`-j 8`；最多八条构建命令，由 macOS 分配核心，不是固定 CPU affinity；关闭远程执行和 ThinLTO |
+| 并发 | 一个 `headless_shell` 目标，上限 `-j 8`；当前 V8 大文件阶段因内存压力使用 `-j 4`。由 macOS 分配核心，不是固定 CPU affinity；关闭远程执行和 ThinLTO |
 | CPU / I/O | 只对编译子树使用 utility QoS clamp、nice 10 和磁盘 I/O throttle，子进程继承；监控器保持正常优先级 |
 | 整机 CPU load | 编译专用不按 load >8 直接停止；通过优先级给前台让路。浏览器测试和交互服务的默认 load 保护保留 |
 | 内存 | 整机内存压力 free percentage ≥35%，编译 owned RSS 之和 ≤6 GiB；浏览器默认仍为 1.5 GiB |
@@ -82,6 +82,14 @@ DATA_DIR=.data/native-subset nice -n 10 npm run start:native -- \
 
 最新采样和闲置任务清理见 [chromium-build-8jobs-2026-10-29.json](chromium-build-8jobs-2026-10-29.json)，此前记录见 [chromium-pool-2026-10-29.json](chromium-pool-2026-10-29.json)。持续状态以外置盘的 `chromium/virtual-desktop-lean-ninja-build-state.json`、`logs/chromium-lean-build.log` 及本机 `test-results/lean-eight-jobs-20261029/guard-report.json` 为准。没有定时自动重试；保护停止后不会无限重启。
 
+2026-10-29 后续检查：上述八任务构建于北京时间 01:01:56 因 V8 metagen 的 GN 查询失败退出，停止时 free 43%、新增 swapout 0，资源守护没有触发。约 09:31 已修复并恢复，最新持续报告改为 `test-results/lean-metagen-resume-20261029/guard-report.json`，原八任务报告保留为失败证据；详见 [chromium-metagen-recovery-2026-10-29.json](chromium-metagen-recovery-2026-10-29.json)。
+
+初始 `gn gen` 限定了 headless 根目标，但 V8 生成器内部的 `gn desc` 没有这些开关，重新加载完整 Chrome 测试图，在 `print_preview/BUILD.gn` 触发 `assert(enable_print_preview)`。相同查询加上 headless 根范围即成功。现将 `lean-root.gn` 作为一个有原始哈希校验的条件片段追加到源码 `.gn`：只有候选构建进程的 `VIRTUAL_DESKTOP_LEAN_ROOT=headless` 环境启用，未设置时保持原默认配置。记录原始/修改后/片段哈希，拒绝未知或自定义文件，避免影响其他构建。未修改 V8 生成器及原生 C++，没有改变 args.gn 或清理对象缓存。
+
+候选流程新增两项提前验证：不带 root CLI 开关的真实 V8 GN 子查询，以及单独生成 `gen/v8/metagen/instance-types.h`。本机均已成功；该头文件 86,849 bytes、SHA-256 `c5faa42595340b24d2426f4dd51ca90fc3b367e5a0e67d421fc184b14c5455d4`，与已验证 component 构建的同名头文件相同。主目标继续八任务编译，恢复时余下约 21,834 条 Ninja 命令。新增保护测试后 12 项 Python 和 81 个 JS 语法检查通过；头文件一致不等于新引擎完成或通过 C++/原生/视觉验收。
+
+后续资源结果：八任务在 V8 较大的生成代码编译阶段于 09:33 再次保护停止，free 33%、该次采样新增 swapout 89.5 MiB；代码生成预检已通过，停止原因为内存压力。确认采样进程全部退出、整机余量恢复后，约 09:37 以 **四任务**续编，保留八任务上限配置和全部内存保护。当前报告以 `test-results/lean-metagen-four-jobs-20261029/guard-report.json` 及外置 lean state 为准；此前报告均是历史。当前这台 16 GiB 机器不应在这个阶段为了八并行而继续顶着换页运行，没有自动升档或重试循环。
+
 按用户授权检查并退出了闲置的 Epic Games Launcher 与 UnrealEditorServices：正常 Quit 请求仍留后台，核对路径后发送 SIGTERM，确认两个进程均退出。没有关闭当前 Codex、Chrome、ToDesk 或 8081/8082 的原生会话。83 项 JS、10 项 Python 和 81 个 JS 语法检查通过；本轮没有修改 Chromium C++ 源码或取得新的二进制验收。
 
 ```bash
@@ -90,7 +98,7 @@ python3 -B experiments/chromium-engine/lean-build.py status --root /Volumes/Extr
 
 # 启动器自动对编译子树降低 CPU/I/O 优先级；不要并行跑浏览器压测。
 npm run build:native-lean -- --root /Volumes/Extreme-APFS/Builds \
-  --jobs 8 --max-rss-mib 6144 --output test-results/lean-eight-jobs
+  --jobs 4 --max-rss-mib 6144 --output test-results/lean-metagen-four-jobs
 ```
 
 当前没有新二进制、C++ 验收或轻量引擎的体积/内存结果。构建完成后仍需为 monolithic 工件增加独立验证布局，并用同配置重建/执行相关 C++ 测试、原生输入/帧和本地视觉回归，再决定替换当前引擎。
