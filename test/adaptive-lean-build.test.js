@@ -10,7 +10,7 @@ const rssStop = { status: 'safety-stopped', safety: { stopped: 'owned-process-rs
 
 test('the combined viewer budget cannot be used for producer smoke or arbitrary native limits', async () => {
   const command = fileURLToPath(new URL('../experiments/chromium-engine/guarded-native-tests.js', import.meta.url));
-  for (const [task, limit] of [['smoke', '2048'], ['live', '4096']])
+  for (const [task, limit] of [['smoke', '2048'], ['live', '4096'], ['display', '4096']])
     await assert.rejects(promisify(execFile)(process.execPath, [command, '--task', task, '--root', '/must-not-read',
       '--output', '/must-not-write', '--max-rss-mib', limit]), /Only the combined live producer/);
 });

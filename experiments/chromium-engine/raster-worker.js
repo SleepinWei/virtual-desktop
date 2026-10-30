@@ -6,14 +6,16 @@ import { browserAction } from './browser-actions.js';
 import { settlePage } from '../chromium-paint/capture.js';
 import { browserProcessArgs } from './browser-runtime.js';
 
-let server, page, viewport, stopping = false;
-async function frame() { return page.screenshot({ type: 'jpeg', quality: 80, timeout: 5000 }); }
+let server, page, viewport, stopping = false, imageFormat = 'jpeg';
+async function frame() { return page.screenshot({ type: imageFormat, ...(imageFormat === 'jpeg' ? { quality: 80 } : {}), timeout: 5000 }); }
 async function dispatch(method, params) {
   if (method === 'init') {
+    imageFormat = params.imageFormat ?? 'jpeg';
+    if (!['jpeg', 'png'].includes(imageFormat)) throw new Error('Choose a JPEG80 or lossless PNG screenshot control');
     const verified = await verifiedEngine(params.root);
     if (verified.artifactsSha256 !== params.expectedArtifactsSha256 || verified.patchSha256 !== params.expectedPatchSha256) throw new Error('Build changed');
     viewport = params.viewport;
-    server = await chromium.launchServer({ executablePath: verified.binary, headless: true, host: '127.0.0.1', chromiumSandbox: false, args: browserProcessArgs() });
+    server = await chromium.launchServer({ executablePath: params.controlExecutablePath || verified.binary, headless: true, host: '127.0.0.1', chromiumSandbox: false, args: browserProcessArgs() });
     process.send({ event: 'native-browser', pid: server.process().pid });
     const browser = await chromium.connect(server.wsEndpoint());
     const context = await browser.newContext({ viewport, deviceScaleFactor: 1, acceptDownloads: false, serviceWorkers: 'block' });
@@ -23,13 +25,18 @@ async function dispatch(method, params) {
       return url.origin === origin && paths.has(url.pathname) && route.request().method() === 'GET' ? route.continue() : route.abort();
     });
     page = await context.newPage(); await page.goto(params.url, { timeout: 15000 }); await settlePage(page);
-    return { jpeg: await frame() };
+    return { [imageFormat]: await frame(), browserVersion: browser.version() };
   }
   if (method === 'action') {
     await browserAction(page, viewport, params.action); await settlePage(page);
-    return { actionId: params.actionId, jpeg: await frame() };
+    return { actionId: params.actionId, [imageFormat]: await frame() };
   }
   if (method === 'observe') return { text: await page.locator('body').innerText() };
+  if (method === 'reference') return { png: await page.screenshot({ type: 'png', timeout: 5000 }),
+    regions: await page.evaluate(() => ['header', '#increment', '#count', '#message', '#echo', '#pulse', '#scroller'].map(selector => {
+      const { x, y, width, height } = document.querySelector(selector).getBoundingClientRect();
+      return { selector, bounds: { x, y, width, height } };
+    })) };
   throw new Error('Unsupported raster benchmark method');
 }
 let chain = Promise.resolve();

@@ -1,5 +1,11 @@
 # 测试与本地复现
 
+## 完整 Chromium 截图性能对照（2026-10-30）
+
+[实测报告与复现命令](PERFORMANCE_COMPARISON.md) · [机器可读证据](chromium-performance-2026-10-30.json)。`--task display --iterations 20 --max-rss-mib 2048 --in-process-gpu` 顺序运行真实执行 browser 与本地 viewer，PNG/JPEG80/原生各正反两轮，测到本地 canvas 呈现后的 ACK、两端 CPU/RSS、实际 HTTP body，并对整图与 7 个区域验画质。可显式 `--control-binary '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'` 使用正式版独立临时 profile，默认用同一精简 headless_shell 做控制变量，两组均已实测。只在两边画质合格时给对应收益比值；PNG通过，JPEG80未过局部关卡。CPU移到客户端、首开runtime、资源协议和网关成本均保留，不能只用生产端耗时判定总体更快。
+
+141 JS、106 JS语法、16 Python通过；正式版显示组合峰值1,674.5 MiB、同二进制组1,299.6 MiB，无新增换页。Bilibili两轮仍未取得严格画质资格。截图对照只存在于隔离的 benchmark worker/临时loopback服务，不接入产品native backend或生产截图回退；本轮无C++修改或编译。
+
 ## URL 入口（2026-10-30）
 
 [本轮记录](chromium-native-urls-2026-10-30.json)。UI → 管理 API → 真实执行 browser → 本地 CanvasKit → rendered ACK 全流程测试：Bilibili 首页 shorthand + Enter、搜索 URL（保留 query）、无效 URL 保留旧页、顺序回收/启动、私有 Cookie/localStorage 保存恢复、人工接管延续、刷新重连及 390px 布局。测试标记只记录布尔结果，不输出 Cookie 或会话凭据。

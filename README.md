@@ -73,7 +73,9 @@ flowchart LR
 
 ## 当前进展
 
-固定页面已验证原生多层重放、agent/人工共页、断线恢复与存储冷恢复，共享 host 完成双会话隔离实验。字体与原始图片已改为独立二进制资源；Bilibili 静态图片预览已通过坐标点击和接管后直接输入，轮播变化不再一律使其他区域的点击过期。严格文字及公开网站画质仍未通过，性能收益比值不采纳。[图片与输入](docs/NATIVE_IMAGES.md) · [运行实测](docs/NATIVE_RUNTIME.md) · [精简运行时](docs/CHROMIUM_SUBSET.md)
+固定页面已验证原生多层重放、agent/人工共页、断线恢复与存储冷恢复，共享 host 完成双会话隔离实验。字体与原始图片已改为独立二进制资源；Bilibili 静态图片预览已通过坐标点击和接管后直接输入，轮播变化不再一律使其他区域的点击过期。公开网站的严格文字画质仍未通过，其性能收益比值不采纳。[图片与输入](docs/NATIVE_IMAGES.md) · [运行实测](docs/NATIVE_RUNTIME.md) · [精简运行时](docs/CHROMIUM_SUBSET.md)
+
+[完整链路性能对照](docs/PERFORMANCE_COMPARISON.md)已测固定页面：原生与正式版 Chrome 的无损 PNG 通过相同严格画质关卡。原生降低执行端 CPU、RSS 和预热后 HTTP 数据，客户端 CPU 增加，端到端延迟较高；首次 CanvasKit runtime 下载也计入冷启动。同二进制控制组没有 RSS 收益，正式版差异还包含运行时精简/后台服务。JPEG80 和 Bilibili 的局部画质尚未合格，不将其生产端数字冒充等画质或视频流收益。
 
 **仍处实验阶段：**通用网站、Canvas/WebGL/video、生产多租户隔离与大规模调度尚未通过；原生实验关闭 Chromium sandbox。`engineSplitGate: not-passed`、`serverRasterBypassed: false` 保留。视觉 agent 需要在线绘制端生成截图，不能在所有绘制端离线时继续提供纯视觉观察。
 

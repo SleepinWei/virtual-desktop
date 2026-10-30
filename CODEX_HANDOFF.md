@@ -6,6 +6,10 @@
 
 ## 当前实现
 
+**2026-10-30 最新追加：正式版Chrome156.0.8078.76及同一精简headless_shell的PNG/JPEG80完整链路性能实测。** 用户明确对照不是完整OS VM。[报告](docs/PERFORMANCE_COMPARISON.md) · [证据](docs/chromium-performance-2026-10-30.json)。真实执行browser＋viewer各正反两轮、每轮20次递增；两组PNG与原生严格画质通过（整图+7区域），JPEG80局部及Bilibili4阶段仍失败，未合格比值null。正式版PNG对照：原生执行CPU少43–51%（含网关29–37%）、RSS少44%、热态下行少90%，客户端CPU约2.7倍、合计CPU高14–27%，p95端到端原生122–124 vs PNG106–115ms；首开原生1.08s/4.26MiB，PNG1.06–2.51s波动较大。同二进制控制：原生执行CPU少62–64%但RSS高8–10%，客户端约3.2倍，p95原生114–117/PNG105–113ms；不能把正式版内存差全部归因于raster外移。CanvasKit为软件surface，本地paint p95约20–21ms。`--task display --iterations 20`支持显式 `--control-binary` 指定正式版Chrome；组合可2GiB、服务默认1.5GiB。最大采样峰值1,674.5MiB、最低free57%、零新增换页。原始记录 `test-results/performance-20261030/{stock-chrome,display,bilibili,fixture}`。141JS/106语法/16Python通过，无C++重编、原runtime不变，global gate仍not-passed/serverRasterBypassed:false。
+
+用户“无法create session”已复现为429 NATIVE_SESSION_LIMIT：上一轮手工Bili搜索页d8a744fc占唯一槽位。已保存profile后释放，真实Chrome点击Create呈现fixture，再Close释放复测会话，不要留自建测试占用8082。生产服务仍 `/private/tmp/vd-web-8082-20261030.pid`，本轮无重启或阈值上调。
+
 **2026-10-30 最新追加：Bilibili 首页与搜索 URL 原生预览已通过，viewer 支持粘贴网址 + Enter/Open URL。** [证据](docs/chromium-native-urls-2026-10-30.json)。只接受 `sites.js` 已配置 HTTPS 导航域；管理 preflight 在释放前校验，无效 URL 不关闭旧页。切换先保存 Cookie/localStorage、关闭旧 worker，再同 profile 创建新 session/token 并重新获取原人工接管状态；一次最多 1 个执行 worker。刷新保留 URL/活跃会话；不迁移 JS heap、DOM、sessionStorage。合法 URL 后续网络/绘图失败会显示错误，旧页可能已关闭。Bilibili 继续静态图片预览，视频和完整动画未验收。
 
 139 JS、103 JS 语法、16 Python 通过；真实 `--task urls` 和原 live 回归通过，峰值 1,895.9 / 1,428.9 MiB，最低 free 71%，零新增换页。`urls`/`live` 显式组合测试允许 2 GiB，其余 native 测试与服务默认 1.5 GiB。未重新编译，仍使用下述 web runtime 和 8082 入口。完整网站/严格视觉关卡仍未过，`serverRasterBypassed:false`。新探针可用 `--url`；复现见 [TESTING](docs/TESTING.md#url-入口2026-10-30)。原始证据目录 `test-results/urls-20261030/{urls,live}`。

@@ -1,5 +1,13 @@
 # 直接输入、后端调度与有限压测
 
+## 2026-10-30 完整链路性能对照
+
+[实测与限制](PERFORMANCE_COMPARISON.md) · [证据](chromium-performance-2026-10-30.json)。正式版Chrome156.0.8078.76＋PNG/JPEG80与原生方案各正反两轮，960×720、预热后20动作；包含真实viewer、HTTP body和呈现ACK。原生与PNG的整图及7区域画质通过；JPEG80局部画质未过。正式版PNG对照下原生执行端CPU少43–51%（含网关少29–37%）、RSS少约44%、预热下行少90%；客户端CPU约2.7倍，合计CPU高14–27%，端到端p95原生122–124/PNG106–115/JPEG80 104–107ms。冷首开原生1.08s、初次下行4.26MiB，PNG首开1.06–2.51s波动较大。CanvasKit目前软件surface，paint p95约20–21ms。
+
+同一精简headless_shell二进制的控制组也通过PNG画质：原生执行端CPU少62–64%（含网关54%）、RSS却高8–10%、客户端CPU约3.2倍，端到端p95原生114–117/PNG105–113ms。正式版内存差还包含运行时精简及后台服务，不能全部归因于本地raster；跨组不能直接相减推出某组件成本。
+
+Bilibili同二进制两轮生产端原生p95 43–49/JPEG80约98ms，但4个严格视觉阶段仍未合格、最后阶段有内容漂移，收益比值为空。96请求压力中64接受、32限流，状态正确；接受请求p95约4.09s是排队等待。默认服务仍单会话/1.5GiB，只有显式 `display`/`live`/`urls` 组合可2GiB。本轮最大采样峰值1,674.5MiB、最低free57%、零新增换页，无编译。141JS、106语法、16Python通过。Create session已释放上一轮残留预览、真实UI复测成功并关闭复测会话；完整网站/视频/跨节点容量及 `engineSplitGate` 仍未通过。
+
 ## 2026-10-30 Bilibili URL 入口
 
 原生 viewer 新增 Website URL，支持粘贴、HTTPS 简写和回车打开。服务从 URL 选择已有站点配置；Bilibili 首页与 `search.bilibili.com/all?keyword=virtual%20desktop` 已完成本地 CanvasKit 重放及 ACK 验证。无效网址在关闭旧页前拒绝。合法网址切换保存 Cookie/localStorage，再顺序停止旧 worker、使用同 profile 创建新会话，保留人工接管；刷新 viewer 不启动另一份执行浏览器。它不迁移页面 JS heap、DOM 或 sessionStorage，网络/绘图失败时旧页可能已关闭。

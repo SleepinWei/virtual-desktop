@@ -11,12 +11,13 @@ import { cleanupNativeDirectories } from './native-stream.js';
 const { values } = parseArgs({ options: { root: { type: 'string' }, task: { type: 'string' },
   canvaskit: { type: 'string' }, output: { type: 'string' }, 'in-process-gpu': { type: 'boolean', default: false },
   'max-rss-mib': { type: 'string', default: '1536' }, site: { type: 'string' },
-  iterations: { type: 'string', default: '8' }, rounds: { type: 'string', default: '2' } } });
+  iterations: { type: 'string', default: '8' }, rounds: { type: 'string', default: '2' }, 'control-binary': { type: 'string' } } });
 const tasks = {
   smoke: ['smoke-runtime.js', 'smoke-report.json', 'native-runtime-smoke-passed'],
   frames: ['run-frames.js', 'frame-engine-report.json', 'native-frame-candidate'],
   live: ['run-live.js', 'live-report.json', 'live-native-session-candidate'],
   urls: ['verify-urls.js', 'url-report.json', 'native-url-preview-candidate'],
+  display: ['compare-display.js', 'display-report.json', 'local-display-comparison-complete'],
   engine: ['run.js', 'engine-report.json', 'record-only-display-candidate'],
   pool: ['probe-pool.js', 'pool-report.json', 'shared-native-host-candidate'],
   site: ['compare-site.js', 'site-report.json', 'public-site-comparison-complete'],
@@ -29,9 +30,12 @@ if (!values.root || !values.output || !Object.hasOwn(tasks, values.task)) throw 
 if (values.task === 'site' && (!Object.hasOwn(siteWorkloads, values.site) || !Number.isInteger(Number(values.iterations)) ||
     Number(values.iterations) < 4 || Number(values.iterations) > 12 || ![1, 2].includes(Number(values.rounds))))
   throw new Error('Site tests require a configured --site, --iterations 4..12 and --rounds 1..2');
+if (values.task === 'display' && (!Number.isInteger(Number(values.iterations)) || Number(values.iterations) < 8 || Number(values.iterations) > 20))
+  throw new Error('Display tests require --iterations 8..20');
+if (values['control-binary'] && values.task !== 'display') throw new Error('--control-binary applies only to the isolated display comparison');
 const maxRssMiB = Number(values['max-rss-mib']);
-if (maxRssMiB !== 1536 && !(['live', 'urls'].includes(values.task) && maxRssMiB === 2048))
-  throw new Error('Only the combined live producer/viewer tests (live or urls) may use 2048 MiB; other native tests require 1536 MiB');
+if (maxRssMiB !== 1536 && !(['live', 'urls', 'display'].includes(values.task) && maxRssMiB === 2048))
+  throw new Error('Only the combined live producer/viewer tests (live, urls or display) may use 2048 MiB; other native tests require 1536 MiB');
 const root = resolve(values.root), output = resolve(values.output), [script, resultName, expected] = tasks[values.task];
 const gpuProcessMode = values['in-process-gpu'] ? 'in-process' : 'separate';
 browserProcessArgs({ mode: gpuProcessMode });
@@ -41,7 +45,7 @@ const report = { version: 1, startedAt: new Date().toISOString(), task: values.t
   engineSplitGate: 'not-passed', serverRasterBypassed: false, errors: [], gpuProcessMode, maxRssMiB,
   cpuPolicy: { nice: 10, qosClamp: null, diskThrottle: false,
     scope: 'Keep Chromium rendering/trace thread QoS and IO scheduling; reduce CPU process priority and retain the default resource watchdog.' },
-  scope: 'Sequential fixture or allowlisted public-site tests. Default 1.5 GiB RSS; only an explicit combined live producer/viewer run (live or urls) may use 2 GiB. Host pressure/swap/heartbeat/time limits remain enforced.' };
+  scope: 'Sequential fixture or allowlisted public-site tests. Default 1.5 GiB RSS; only an explicit combined live producer/viewer run (live, urls or display) may use 2 GiB. Host pressure/swap/heartbeat/time limits remain enforced.' };
 let guard, child, log, interval, ended = false, termination;
 const stop = () => termination ||= terminateProcessTree([child.pid], guard.samples.at(-1)?.processes);
 const signal = () => { report.interrupted = true; if (child?.pid && !ended) stop(); };
@@ -55,6 +59,8 @@ try {
   if (values.task === 'images') args.push('--images');
   if (values.task === 'startup-diagnostic') args.push('--startup');
   if (values.task === 'site') args.push('--site', values.site, '--iterations', values.iterations, '--rounds', values.rounds);
+  if (values.task === 'display') args.push('--iterations', values.iterations);
+  if (values.task === 'display' && values['control-binary']) args.push('--control-binary', resolve(values['control-binary']));
   child = spawn('/usr/bin/nice', ['-n', '10',
     process.execPath, fileURLToPath(new URL('./' + script, import.meta.url)), ...args], { detached: true, stdio: ['ignore', log.fd, log.fd],
       env: { ...process.env, VIRTUAL_DESKTOP_MAC_GPU_MODE: gpuProcessMode } });
